@@ -59,3 +59,18 @@ def test_malformed(token):
 def test_errors_are_distinct():
     classes = {ExpiredToken, BadSignature, UnknownKid, MalformedToken}
     assert len(classes) == 4
+
+
+def test_versions_n_and_n_minus_1_accepted():
+    from cauth import CLAIMS_VERSION
+
+    for v in (CLAIMS_VERSION, CLAIMS_VERSION - 1):
+        assert verify(sign(KEY, version=v), JWKS)["version"] == v
+
+
+@pytest.mark.parametrize("v", [0, 3, None])
+def test_other_versions_rejected(v):
+    from cauth import UnsupportedVersion
+
+    with pytest.raises(UnsupportedVersion):
+        verify(sign(KEY, version=v), JWKS)

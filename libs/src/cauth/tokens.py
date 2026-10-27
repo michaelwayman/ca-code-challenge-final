@@ -1,7 +1,10 @@
 import jwt
 from jwt.algorithms import RSAAlgorithm
 
-from .errors import BadSignature, ExpiredToken, MalformedToken, UnknownKid
+from .errors import BadSignature, ExpiredToken, MalformedToken, UnknownKid, UnsupportedVersion
+
+CLAIMS_VERSION = 2
+SUPPORTED_VERSIONS = frozenset({CLAIMS_VERSION - 1, CLAIMS_VERSION})  # N and N-1
 
 
 def verify(token: str, jwks: dict) -> dict:
@@ -17,7 +20,7 @@ def verify(token: str, jwks: dict) -> dict:
     if jwk is None:
         raise UnknownKid(f"no key for kid {kid!r}")
     try:
-        return jwt.decode(
+        claims = jwt.decode(
             token,
             RSAAlgorithm.from_jwk(jwk),
             algorithms=["RS256"],
@@ -29,3 +32,6 @@ def verify(token: str, jwks: dict) -> dict:
         raise BadSignature(str(exc)) from exc
     except jwt.PyJWTError as exc:
         raise MalformedToken(str(exc)) from exc
+    if claims.get("version") not in SUPPORTED_VERSIONS:
+        raise UnsupportedVersion(f"claims version {claims.get('version')!r} not supported")
+    return claims

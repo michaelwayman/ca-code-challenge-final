@@ -17,19 +17,17 @@ Build only what is listed. Out-of-scope items are decisions, not gaps. Anything 
 - S5 Dev tooling: Makefile lint and fmt targets, Ruff, Biome and Stylelint configs
 
 ## Build
-- **R16** [P0] (S3) Installable versioned package
-  - libs/ directory has its own pyproject.toml with a version
-  - `pip install` of the built wheel succeeds in a clean venv
-  - both service Dockerfiles install it and pin the exact version in requirements
-  - library exposes deterministic_uuid(audience, source_id) returning a UUIDv5 of source_id within a namespace derived from audience
-  - a test pins known inputs to expected UUIDs and shows different audiences give different UUIDs for the same id
-- **R17** [P0] (S3) Token verification
-  - verify(token, jwks) returns claims for a valid RS256 token and raises distinct errors for expired, bad signature, unknown kid and malformed tokens
-  - claims include a version field
-- **R29** [P0] (S5) Lint and format via Docker
-  - make lint runs ruff check, ruff format --check, biome check and stylelint on frontend/scss in Docker with no host installs and passes on a clean tree
-  - make fmt applies the fixes
-  - a deliberately bad file makes make lint fail
+- **R18** [P0] (S3) DRF authentication and permission classes
+  - authentication class sets request.user from verified claims with no database lookup
+  - IsEditor permits role editor only and denies reader
+  - missing or invalid token yields 401 not 403
+- **R19** [P0] (S3) Library tests run standalone
+  - `pytest` run inside the library directory in a venv without Django project settings or either service passes
+  - coverage includes expired, tampered and wrong-role cases
+- **R20** [P1] (S3) Claims version compatibility
+  - library accepts claims versions N and N-1
+  - a test passes tokens of both versions
+  - README documents the expand-then-contract release steps for a breaking change, and which module each service imports
 
 ## Do NOT build
 - O1 WP admin and editor experience

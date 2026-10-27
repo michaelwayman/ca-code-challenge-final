@@ -16,3 +16,7 @@ class BadSignature(TokenError):
 
 class ExpiredToken(TokenError):
     pass
+
+
+class UnsupportedVersion(TokenError):
+    pass

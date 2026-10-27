@@ -4,13 +4,21 @@ from .errors import (
     MalformedToken,
     TokenError,
     UnknownKid,
+    UnsupportedVersion,
 )
 from .ids import deterministic_uuid
-from .tokens import verify
+from .roles import EDITOR, READER, ROLES
+from .tokens import CLAIMS_VERSION, SUPPORTED_VERSIONS, verify
 
 __version__ = "0.1.0"
 
 __all__ = [
+    "CLAIMS_VERSION",
+    "EDITOR",
+    "READER",
+    "ROLES",
+    "SUPPORTED_VERSIONS",
+    "UnsupportedVersion",
     "BadSignature",
     "ExpiredToken",
     "MalformedToken",
