@@ -2,6 +2,7 @@ C1 [constraint] Docker is the only prerequisite
 C2 [constraint] Auth service is its own Django project, container and database; main app stores no passwords or roles
 C3 [constraint] URL slugs match WP permalinks
 C4 [constraint] Shared library is small, installable, tested without either Django project
+C5 [constraint] Each slice gets a fresh-context review (/mbuild:review) against its R acceptance before it is marked done
 A1 [unvalidated] Revocation via short TTL
 A2 [removed] Seed password is demo-only; migrated accounts share it
 A3 [unvalidated] R2/R10 can run independently: reviewers link to auth users by WP user id without a runtime call
@@ -14,6 +15,7 @@ S1 [active] Main app (Django)
 S2 [active] Auth service (Django)
 S3 [active] Shared library (Python package)
 S4 [active] Frontend (React + SCSS)
+S5 [active] Dev tooling
 R1 [P0] Relational schema for brands, reviews, industries, reviewers
 R2 [P0] Re-runnable WP migration command
 R3 [P0] Homepage with hero and recent reviews
@@ -42,6 +44,7 @@ R25 [P0] BrandList accessibility
 R26 [P0] BrandList mounted on a Django page
 R27 [P0] README covering run, token, migration and decisions
 R28 [P0] WordPress password hasher
+R29 [P0] Lint and format via Docker
 O1 [active] WP admin and editor experience
 O2 [active] Yoast SEO frontend output
 O3 [active] Review submission and search
@@ -65,3 +68,6 @@ T5 [active] Postgres
 T6 [active] Shared SCSS, theme naming
 T7 [active] SCSS 7-1 layout
 T8 [active] Django runserver
+T9 [active] Ruff
+T10 [active] Biome
+T11 [active] Stylelint

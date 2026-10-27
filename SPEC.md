@@ -26,6 +26,10 @@
 - Source: CHALLENGE.md
 - Real: real
 
+### C5. Each slice gets a fresh-context review (/mbuild:review) against its R acceptance before it is marked done
+- Source: change
+- Real: real
+
 ## Assumptions
 
 <!-- A: something we believe but have not verified. Fields: Status (unvalidated|validated|invalid), Test (how we'd know we're wrong). -->
@@ -79,6 +83,11 @@
 - Owns: BrandList component, SCSS source tree and compiled CSS, Vite build
 - Calls: GET /api/brands/
 - When down: server-rendered pages still work without JS; list shows error state if API fails
+
+### S5. Dev tooling
+- Owns: Makefile lint and fmt targets, Ruff, Biome and Stylelint configs
+- Calls: lint tools run in Docker
+- When down: None: build-time tooling only
 
 ## Requirements
 
@@ -381,6 +390,7 @@
   - following it on a clean clone with docker compose up works
   - README states the project is dev-grade and lists what production would need
   - README notes WP password hashes are carried over and upgraded to Django's default on first login
+  - README documents make lint and make fmt
 - Layer: S1
 - Source: brief
 
@@ -394,6 +404,16 @@
   - wrong password returns 401
   - a test covers each hash format
 - Layer: S2
+- Source: change
+
+### R29. Lint and format via Docker
+- Priority: P0
+- Status: active
+- Acceptance:
+  - make lint runs ruff check, ruff format --check, biome check and stylelint on frontend/scss in Docker with no host installs and passes on a clean tree
+  - make fmt applies the fixes
+  - a deliberately bad file makes make lint fail
+- Layer: S5
 - Source: change
 
 ## Out of scope
@@ -512,6 +532,21 @@
 - Choice: Django services run on manage.py runserver inside their compose containers, DEBUG settings, no gunicorn or nginx
 - Why: dev-grade scope, simplest local run
 - Alternative: gunicorn + nginx
+
+### T9. Ruff
+- Choice: Ruff for lint and format across S1, S2, S3 with one root config
+- Why: one fast tool, replaces black/flake8/isort
+- Alternative: Black + flake8 + isort, mypy
+
+### T10. Biome
+- Choice: Biome for lint and format of frontend JS/JSX
+- Why: one tool, fast
+- Alternative: ESLint + Prettier
+
+### T11. Stylelint
+- Choice: Stylelint for the SCSS tree, since Biome has no SCSS support
+- Why: guards the 7-1 layout and token rules Biome cannot see
+- Alternative: sass compile only
 
 ## Deliverables trace
 
@@ -636,4 +671,11 @@
 | 2026-10-27 | ALTER R10 | mkit |
 | 2026-10-27 | ADD R28: WordPress password hasher | mkit |
 | 2026-10-27 | REMOVE A2: seed password no longer exists; WP hashes are migrated | mkit |
+| 2026-10-27 | ALTER R27 | mkit |
+| 2026-10-27 | ADD T9: Ruff | mkit |
+| 2026-10-27 | ADD T10: Biome | mkit |
+| 2026-10-27 | ADD T11: Stylelint | mkit |
+| 2026-10-27 | ADD S5: Dev tooling | mkit |
+| 2026-10-27 | ADD R29: Lint and format via Docker | mkit |
+| 2026-10-27 | ADD C5: Each slice gets a fresh-context review (/mbuild:review) against its R acceptance before it is marked done | mkit |
 | 2026-10-27 | ALTER R27 | mkit |
