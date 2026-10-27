@@ -33,9 +33,9 @@ R14 [P0] JWKS endpoint
 R15 [P0] Auth service runs as its own container
 R16 [P0] Installable versioned package
 R17 [P0 done] Token verification
-R18 [P0] DRF authentication and permission classes
-R19 [P0] Library tests run standalone
-R20 [P1] Claims version compatibility
+R18 [P0 done] DRF authentication and permission classes
+R19 [P0 done] Library tests run standalone
+R20 [P1 done] Claims version compatibility
 R21 [P0] SCSS source tree compiling to equivalent CSS
 R22 [P0] BrandList fetches and renders brands
 R23 [P0] BrandList filter and sort with URL-synced state

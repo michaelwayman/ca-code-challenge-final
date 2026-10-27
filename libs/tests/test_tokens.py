@@ -68,7 +68,7 @@ def test_versions_n_and_n_minus_1_accepted():
         assert verify(sign(KEY, version=v), JWKS)["version"] == v
 
 
-@pytest.mark.parametrize("v", [0, 3, None])
+@pytest.mark.parametrize("v", [0, 3, None, True, 2.0, [2], {"a": 1}, "2"])
 def test_other_versions_rejected(v):
     from cauth import UnsupportedVersion
 

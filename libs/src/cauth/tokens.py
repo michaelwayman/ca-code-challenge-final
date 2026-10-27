@@ -32,6 +32,7 @@ def verify(token: str, jwks: dict) -> dict:
         raise BadSignature(str(exc)) from exc
     except jwt.PyJWTError as exc:
         raise MalformedToken(str(exc)) from exc
-    if claims.get("version") not in SUPPORTED_VERSIONS:
-        raise UnsupportedVersion(f"claims version {claims.get('version')!r} not supported")
+    version = claims.get("version")
+    if type(version) is not int or version not in SUPPORTED_VERSIONS:
+        raise UnsupportedVersion(f"claims version {version!r} not supported")
     return claims

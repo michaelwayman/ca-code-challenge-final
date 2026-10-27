@@ -25,6 +25,6 @@ raises `UnsupportedVersion` otherwise. A breaking claims change is released expa
 
 1. **Expand**: release the library at version N+1 that accepts N and N+1. Deploy it to the main app (consumer) first, then confirm.
 2. Deploy the auth service (issuer) with the new library; it starts issuing N+1. Existing N tokens still verify (access tokens live 10 minutes).
-3. **Contract**: once all N tokens have expired, release the library that drops N-1 support; consumers update at their leisure.
+3. **Contract**: once all N tokens have expired, release the library with `CLAIMS_VERSION` bumped to the new version, which drops the old N-1; consumers update at their leisure.
 
 Never deploy the issuer before every consumer accepts the new version.
