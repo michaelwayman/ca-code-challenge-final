@@ -3,6 +3,13 @@ C2 [constraint] Auth service is its own Django project, container and database; 
 C3 [constraint] URL slugs match WP permalinks
 C4 [constraint] Shared library is small, installable, tested without either Django project
 A1 [unvalidated] Revocation via short TTL
+A2 [removed] Seed password is demo-only; migrated accounts share it
+A3 [unvalidated] R2/R10 can run independently: reviewers link to auth users by WP user id without a runtime call
+A4 [unvalidated] Main app JWKS cache survives restart or fails closed when auth is down and cache is cold
+A5 [unvalidated] Refresh tokens have a bounded lifetime and a stolen one is tolerable
+A6 [unvalidated] Token verification without iss/aud/alg pinning or refetch limits is acceptable for this scope
+A7 [unvalidated] R20 N and N-1 claims support is worth its cost in a small library
+A8 [unvalidated] MariaDB is reachable from the containers (compose service or host address) with Docker as the only prerequisite
 S1 [active] Main app (Django)
 S2 [active] Auth service (Django)
 S3 [active] Shared library (Python package)
@@ -34,6 +41,7 @@ R24 [P0] BrandList loading, empty and error states
 R25 [P0] BrandList accessibility
 R26 [P0] BrandList mounted on a Django page
 R27 [P0] README covering run, token, migration and decisions
+R28 [P0] WordPress password hasher
 O1 [active] WP admin and editor experience
 O2 [active] Yoast SEO frontend output
 O3 [active] Review submission and search
@@ -41,12 +49,14 @@ O4 [active] Registration, password reset, social login, MFA
 O5 [active] Login UI
 O6 [active] Image uploads
 O7 [active] Pixel-matching the WP theme
+O8 [active] Production hardening: WSGI server, TLS, secrets management, static file serving, DEBUG off
 Q1 [answered] Outcome
 Q2 [answered] Users
 Q3 [answered] Success
 Q4 [answered] Headline scope
 Q5 [answered] Database engine for both services
 Q6 [answered] Token lifetime and key distribution
+Q7 [answered] WP source: SQL dump, live DB or CSV, and how it is mounted into the containers (C1)
 T1 [active] DRF
 T2 [active] JWT local verification
 T3 [active] Reviewer model
@@ -54,3 +64,4 @@ T4 [active] Vite + React
 T5 [active] Postgres
 T6 [active] Shared SCSS, theme naming
 T7 [active] SCSS 7-1 layout
+T8 [active] Django runserver

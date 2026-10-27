@@ -34,6 +34,28 @@
 - Status: unvalidated
 - Test: with refresh tokens, role change or revocation takes effect at next refresh (<=10 min); if panel wants instant effect add a denylist
 
+### A2. Seed password is demo-only; migrated accounts share it
+- Test: README flags it prominently; value comes from env var, not hardcoded in code
+- Status: removed (2026-10-27, seed password no longer exists; WP hashes are migrated)
+
+### A3. R2/R10 can run independently: reviewers link to auth users by WP user id without a runtime call
+- Test: run import_wp with the auth container stopped, then import_wp_users; links resolve
+
+### A4. Main app JWKS cache survives restart or fails closed when auth is down and cache is cold
+- Test: restart main app with auth stopped, PATCH returns defined 401/503, not 500
+
+### A5. Refresh tokens have a bounded lifetime and a stolen one is tolerable
+- Test: decide refresh TTL; if instant revocation or reuse detection is wanted, add rotation (see A1)
+
+### A6. Token verification without iss/aud/alg pinning or refetch limits is acceptable for this scope
+- Test: unknown-kid tokens do not trigger more than one JWKS fetch per interval; alg none/HS256 rejected
+
+### A7. R20 N and N-1 claims support is worth its cost in a small library
+- Test: if the dual-version test is painful to write, demote R20 to a README procedure only
+
+### A8. MariaDB is reachable from the containers (compose service or host address) with Docker as the only prerequisite
+- Test: docker compose up then both imports work from a clean clone; README states where MariaDB runs
+
 ## Services and layers
 
 <!-- S: a service or layer. Fields: Owns, Calls, When down, None (why it has no requirements). Each R names its S in Layer. -->
@@ -80,6 +102,10 @@
   - running it twice leaves row counts identical (verified by a count query before and after)
   - updates to a WP row are reflected on re-run
   - the command prints created/updated/skipped counts
+  - rows are keyed on the WP post ID, slug is an attribute
+  - a test changes a slug in the source and re-runs: row updated, not duplicated
+  - import_wp reads WP data read-only from MariaDB over a connection configured by env vars (host, port, db, user, password)
+  - reviewer key is deterministic_uuid('wp_user', wp_user_id) from the shared library, with no call to auth and no wp_user_id column
 - Layer: S1
 - Source: brief
 
@@ -165,7 +191,9 @@
 - Acceptance:
   - `manage.py import_wp_users` creates one auth user per wp_users row with role mapped from WP role (administrator/editor to editor, others to reader)
   - running twice leaves user count unchanged
-  - passwords are set to the documented seed value, never copied WP hashes
+  - auth user pk is deterministic_uuid('wp_user', wp_user_id) from the shared library
+  - no wp_user_id column
+  - WP password hashes are copied verbatim into the auth user password field (stored in the auth DB only) and are unchanged by a re-run
 - Layer: S2
 - Source: brief
 
@@ -216,6 +244,7 @@
   - docker compose up starts auth and its own Postgres alongside the main app
   - main app has no credentials for the auth database
   - healthcheck URL returns 200
+  - auth container starts with manage.py runserver 0.0.0.0:<port>
 - Layer: S2
 - Source: brief
 
@@ -226,6 +255,8 @@
   - libs/ directory has its own pyproject.toml with a version
   - `pip install` of the built wheel succeeds in a clean venv
   - both service Dockerfiles install it and pin the exact version in requirements
+  - library exposes deterministic_uuid(audience, source_id) returning a UUIDv5 of source_id within a namespace derived from audience
+  - a test pins known inputs to expected UUIDs and shows different audiences give different UUIDs for the same id
 - Layer: S3
 - Source: brief
 
@@ -348,8 +379,22 @@
   - run and safely re-run the migration
   - modeling decisions, what to do differently, and where AI defaults were kept
   - following it on a clean clone with docker compose up works
+  - README states the project is dev-grade and lists what production would need
+  - README notes WP password hashes are carried over and upgraded to Django's default on first login
 - Layer: S1
 - Source: brief
+
+### R28. WordPress password hasher
+- Priority: P0
+- Status: active
+- Acceptance:
+  - auth Django project registers a WP hasher verifying phpass ($P$/$H$) and WP 6.8+ bcrypt ($wp$2y$) hashes
+  - POST /auth/login with a migrated user's original WP password returns tokens
+  - on first successful login the password is rehashed to Django's default hasher
+  - wrong password returns 401
+  - a test covers each hash format
+- Layer: S2
+- Source: change
 
 ## Out of scope
 
@@ -382,6 +427,9 @@
 ### O7. Pixel-matching the WP theme
 - Why: graded on structure not byte parity
 - Revisit: if visual QA is required
+
+### O8. Production hardening: WSGI server, TLS, secrets management, static file serving, DEBUG off
+- Why: project is dev-grade
 
 ## Open questions
 
@@ -417,6 +465,10 @@
 - Answer: 10 min access token, RS256, public key via cached JWKS with kid rotation
 - Decided by: you
 
+### Q7. WP source: SQL dump, live DB or CSV, and how it is mounted into the containers (C1)
+- Answer: Data is read directly from the live MariaDB, not a dump or CSV
+- Decided by: you
+
 ## Technology
 
 <!-- T: a technology choice. Fields: Choice, Why, Alternative. -->
@@ -432,7 +484,7 @@
 - Alternative: opaque tokens with introspection
 
 ### T3. Reviewer model
-- Choice: Reviewer profile table in main app keyed by auth user id
+- Choice: Reviewer profile table in main app keyed by auth user id, which is deterministic_uuid('wp_user', wp_user_id)
 - Why: no passwords/roles in main app, review attribution preserved
 - Alternative: denormalized name strings
 
@@ -455,6 +507,11 @@
 - Choice: frontend/scss/ with abstracts, base, layout, components, pages and main.scss; compiled with the Sass CLI
 - Why: obvious home for each rule, new component is one partial plus one @use
 - Alternative: flat partials
+
+### T8. Django runserver
+- Choice: Django services run on manage.py runserver inside their compose containers, DEBUG settings, no gunicorn or nginx
+- Why: dev-grade scope, simplest local run
+- Alternative: gunicorn + nginx
 
 ## Deliverables trace
 
@@ -556,3 +613,27 @@
 | 2026-10-27 | TRACE R27 | mkit |
 | 2026-10-27 | FRAME stage confirm | mkit |
 | 2026-10-27 | FRAME stage done | mkit |
+| 2026-10-27 | ADD Q7: WP source: SQL dump, live DB or CSV, and how it is mounted into the containers (C1) | mkit |
+| 2026-10-27 | ALTER R2 | mkit |
+| 2026-10-27 | ADD A2: Seed password is demo-only; migrated accounts share it | mkit |
+| 2026-10-27 | ADD A3: R2/R10 can run independently: reviewers link to auth users by WP user id without a runtime call | mkit |
+| 2026-10-27 | ADD A4: Main app JWKS cache survives restart or fails closed when auth is down and cache is cold | mkit |
+| 2026-10-27 | ADD A5: Refresh tokens have a bounded lifetime and a stolen one is tolerable | mkit |
+| 2026-10-27 | ADD A6: Token verification without iss/aud/alg pinning or refetch limits is acceptable for this scope | mkit |
+| 2026-10-27 | ADD A7: R20 N and N-1 claims support is worth its cost in a small library | mkit |
+| 2026-10-27 | ANSWER Q7 | mkit |
+| 2026-10-27 | ALTER R2 | mkit |
+| 2026-10-27 | ALTER R10 | mkit |
+| 2026-10-27 | ADD A8: MariaDB is reachable from the containers (compose service or host address) with Docker as the only prerequisite | mkit |
+| 2026-10-27 | ADD T8: Django runserver | mkit |
+| 2026-10-27 | ALTER R15 | mkit |
+| 2026-10-27 | ADD O8: Production hardening: WSGI server, TLS, secrets management, static file serving, DEBUG off | mkit |
+| 2026-10-27 | ALTER R27 | mkit |
+| 2026-10-27 | ALTER R16 | mkit |
+| 2026-10-27 | ALTER R10 | mkit |
+| 2026-10-27 | ALTER R2 | mkit |
+| 2026-10-27 | ALTER T3 | mkit |
+| 2026-10-27 | ALTER R10 | mkit |
+| 2026-10-27 | ADD R28: WordPress password hasher | mkit |
+| 2026-10-27 | REMOVE A2: seed password no longer exists; WP hashes are migrated | mkit |
+| 2026-10-27 | ALTER R27 | mkit |
