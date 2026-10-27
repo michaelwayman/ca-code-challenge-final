@@ -1,0 +1,56 @@
+C1 [constraint] Docker is the only prerequisite
+C2 [constraint] Auth service is its own Django project, container and database; main app stores no passwords or roles
+C3 [constraint] URL slugs match WP permalinks
+C4 [constraint] Shared library is small, installable, tested without either Django project
+A1 [unvalidated] Revocation via short TTL
+S1 [active] Main app (Django)
+S2 [active] Auth service (Django)
+S3 [active] Shared library (Python package)
+S4 [active] Frontend (React + SCSS)
+R1 [P0] Relational schema for brands, reviews, industries, reviewers
+R2 [P0] Re-runnable WP migration command
+R3 [P0] Homepage with hero and recent reviews
+R4 [P0] Brand detail page at /brand/<slug>/
+R5 [P0] Review detail page at /review/<slug>/
+R6 [P0] Brand listing API with filter, sort, pagination
+R7 [P1] Top review rule documented
+R8 [P0] Protected brand edit endpoint
+R9 [P1] Main app survives auth outage
+R10 [P0] Re-runnable wp_users import
+R11 [P0] Login issues access and refresh tokens
+R12 [P0] Refresh and revoke
+R13 [P0] Roles owned by auth service
+R14 [P0] JWKS endpoint
+R15 [P0] Auth service runs as its own container
+R16 [P0] Installable versioned package
+R17 [P0] Token verification
+R18 [P0] DRF authentication and permission classes
+R19 [P0] Library tests run standalone
+R20 [P1] Claims version compatibility
+R21 [P0] SCSS source tree compiling to equivalent CSS
+R22 [P0] BrandList fetches and renders brands
+R23 [P0] BrandList filter and sort with URL-synced state
+R24 [P0] BrandList loading, empty and error states
+R25 [P0] BrandList accessibility
+R26 [P0] BrandList mounted on a Django page
+R27 [P0] README covering run, token, migration and decisions
+O1 [active] WP admin and editor experience
+O2 [active] Yoast SEO frontend output
+O3 [active] Review submission and search
+O4 [active] Registration, password reset, social login, MFA
+O5 [active] Login UI
+O6 [active] Image uploads
+O7 [active] Pixel-matching the WP theme
+Q1 [answered] Outcome
+Q2 [answered] Users
+Q3 [answered] Success
+Q4 [answered] Headline scope
+Q5 [answered] Database engine for both services
+Q6 [answered] Token lifetime and key distribution
+T1 [active] DRF
+T2 [active] JWT local verification
+T3 [active] Reviewer model
+T4 [active] Vite + React
+T5 [active] Postgres
+T6 [active] Shared SCSS, theme naming
+T7 [active] SCSS 7-1 layout
