@@ -41,3 +41,25 @@ dump:
 
 status:
 	$(COMPOSE) ps
+
+# --- Lint / format (Docker only; tool versions pinned) ---
+RUFF_IMG := ghcr.io/astral-sh/ruff:0.8.4
+NODE_IMG := node:22-alpine
+RUN_NODE := docker run --rm -e NPM_CONFIG_UPDATE_NOTIFIER=false -v "$(CURDIR)":/work -w /work $(NODE_IMG) npx --yes
+BIOME := $(RUN_NODE) @biomejs/biome@1.9.4
+STYLELINT := docker run --rm -e NPM_CONFIG_UPDATE_NOTIFIER=false -v "$(CURDIR)":/work -w /work $(NODE_IMG) sh -c 'npm i -g --silent stylelint@16.12.0 stylelint-config-standard-scss@14.0.0 >/dev/null && stylelint --config-basedir /usr/local/lib --allow-empty-input "$$0" "$$@"'
+RUFF := docker run --rm -v "$(CURDIR)":/work -w /work $(RUFF_IMG)
+
+.PHONY: lint fmt
+
+lint:
+	$(RUFF) check .
+	$(RUFF) format --check .
+	$(BIOME) check --no-errors-on-unmatched frontend
+	$(STYLELINT) "frontend/scss/**/*.scss"
+
+fmt:
+	-$(RUFF) check --fix .
+	-$(RUFF) format .
+	-$(BIOME) check --write --no-errors-on-unmatched frontend
+	-$(STYLELINT) --fix "frontend/scss/**/*.scss"

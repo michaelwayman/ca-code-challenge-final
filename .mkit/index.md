@@ -32,7 +32,7 @@ R13 [P0] Roles owned by auth service
 R14 [P0] JWKS endpoint
 R15 [P0] Auth service runs as its own container
 R16 [P0] Installable versioned package
-R17 [P0] Token verification
+R17 [P0 done] Token verification
 R18 [P0] DRF authentication and permission classes
 R19 [P0] Library tests run standalone
 R20 [P1] Claims version compatibility
@@ -44,7 +44,7 @@ R25 [P0] BrandList accessibility
 R26 [P0] BrandList mounted on a Django page
 R27 [P0] README covering run, token, migration and decisions
 R28 [P0] WordPress password hasher
-R29 [P0] Lint and format via Docker
+R29 [P0 done] Lint and format via Docker
 O1 [active] WP admin and editor experience
 O2 [active] Yoast SEO frontend output
 O3 [active] Review submission and search

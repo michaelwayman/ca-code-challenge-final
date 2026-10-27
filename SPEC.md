@@ -277,6 +277,7 @@
   - claims include a version field
 - Layer: S3
 - Source: brief
+- Built: 2026-10-27
 
 ### R18. DRF authentication and permission classes
 - Priority: P0
@@ -415,6 +416,7 @@
   - a deliberately bad file makes make lint fail
 - Layer: S5
 - Source: change
+- Built: 2026-10-27
 
 ## Out of scope
 
@@ -679,3 +681,4 @@
 | 2026-10-27 | ADD R29: Lint and format via Docker | mkit |
 | 2026-10-27 | ADD C5: Each slice gets a fresh-context review (/mbuild:review) against its R acceptance before it is marked done | mkit |
 | 2026-10-27 | ALTER R27 | mkit |
+| 2026-10-27 | DONE R17 R29 | mkit |
