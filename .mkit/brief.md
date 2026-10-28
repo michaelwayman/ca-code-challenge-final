@@ -17,17 +17,18 @@ Build only what is listed. Out-of-scope items are decisions, not gaps. Anything 
 - S5 Dev tooling: Makefile lint and fmt targets, Ruff, Biome and Stylelint configs
 
 ## Build
-- **R18** [P0] (S3) DRF authentication and permission classes
-  - authentication class sets request.user from verified claims with no database lookup
-  - IsEditor permits role editor only and denies reader
-  - missing or invalid token yields 401 not 403
-- **R19** [P0] (S3) Library tests run standalone
-  - `pytest` run inside the library directory in a venv without Django project settings or either service passes
-  - coverage includes expired, tampered and wrong-role cases
-- **R20** [P1] (S3) Claims version compatibility
-  - library accepts claims versions N and N-1
-  - a test passes tokens of both versions
-  - README documents the expand-then-contract release steps for a breaking change, and which module each service imports
+- **R3** [P0] (S1) Homepage with hero and recent reviews
+  - GET / returns 200 with a hero and the newest reviews in date order
+  - Visual: at 375px content is one column, at 1280px reviews are in a multi-column grid
+  - empty state shown when no reviews exist
+- **R4** [P0] (S1) Brand detail page at /brand/<slug>/
+  - every migrated brand slug returns 200 at /brand/<slug>/ showing name, industry, website, founded year, headquarters, derived rating and its reviews
+  - unknown slug returns 404
+  - Visual: single column at 375px, content plus sidebar at 1280px
+- **R5** [P0] (S1) Review detail page at /review/<slug>/
+  - every migrated review slug returns 200 at /review/<slug>/ showing title, body, rating, reviewer and a link to its brand
+  - unknown slug returns 404
+  - Visual: readable single column at 375px and 1280px
 
 ## Do NOT build
 - O1 WP admin and editor experience

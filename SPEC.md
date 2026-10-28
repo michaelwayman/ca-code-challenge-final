@@ -100,9 +100,12 @@
   - `manage.py migrate` creates Brand, Review, Industry, Reviewer tables with FKs and no postmeta-style key/value table
   - Brand.average_rating is not a stored column and legacy ACF value sits in legacy_average_rating
   - Yoast and unused meta are either typed fields, a JSON field, or listed as dropped in the README
+  - Brand.industry is one FK, lowest WP term id wins
+  - reviewers are only authors of imported reviews, display_name only
+  - a review with a missing author gets reviewer NULL
 - Layer: S1
 - Source: brief
-- Built: 2026-10-27
+- Reopened: 2026-10-27
 
 ### R2. Re-runnable WP migration command
 - Priority: P0
@@ -116,9 +119,13 @@
   - a test changes a slug in the source and re-runs: row updated, not duplicated
   - import_wp reads WP data read-only from MariaDB over a connection configured by env vars (host, port, db, user, password)
   - reviewer key is deterministic_uuid('wp_user', wp_user_id) from the shared library, with no call to auth and no wp_user_id column
+  - import mirrors the import set: rows now unpublished, trashed, deleted or invalid are deleted with cascades
+  - output has a deleted count
+  - drafts, reviews with a missing brand and ratings outside 1-5 are skipped
+  - ACF average_rating outside 0-5 is stored as null
 - Layer: S1
 - Source: brief
-- Built: 2026-10-27
+- Reopened: 2026-10-27
 
 ### R3. Homepage with hero and recent reviews
 - Priority: P0
@@ -164,9 +171,19 @@
   - ?page= and ?page_size= paginate with a max page size
   - unauthenticated call succeeds
   - query count is constant per page (asserted in a test)
+  - page_size default 20, max 100
+  - ordering also accepts ascending avg_rating and review_count and -name
+  - unknown ordering falls back to name
+  - ties break on name then id
+  - row shapes: industry {name, slug} or null
+  - average_rating to one decimal
+  - short_description is excerpt else tag-stripped body, 30 words
+  - top_review has title, slug, rating, reviewer, published_at and a 30-word snippet
+  - JSON renderer only
+  - reads need no authentication
 - Layer: S1
 - Source: brief
-- Built: 2026-10-27
+- Reopened: 2026-10-27
 
 ### R7. Top review rule documented
 - Priority: P1
@@ -188,9 +205,18 @@
   - no or invalid or expired token returns 401
   - only short_description is writable
   - GET stays public
+  - PATCH takes only short_description, stored in its own nullable column with a 1000-character cap (400 above)
+  - any other key gives 400 and writes nothing
+  - PUT gives 405
+  - response is the updated row
+  - public GET /api/brands/<slug>/ returns the listing row
+  - short_description is nullable
+  - NULL derives from excerpt or body
+  - an edited value round-trips exactly
+  - the 1000-character cap is enforced by the API and the response is 400 above it
 - Layer: S1
 - Source: brief
-- Built: 2026-10-27
+- Reopened: 2026-10-27
 
 ### R9. Main app survives auth outage
 - Priority: P1
@@ -199,9 +225,14 @@
   - with the auth container stopped, GET /api/brands/ and all pages still return 200
   - PATCH with a still-valid token succeeds using the cached key
   - documented in README
+  - JWKS cache is per process, refetched after 300s
+  - a failed fetch keeps the last good set and retries after 30s
+  - an unknown kid forces a refetch at most once per 30s
+  - 2s timeout
+  - cold cache with auth down returns 503 Signing keys unavailable
 - Layer: S1
 - Source: brief
-- Built: 2026-10-27
+- Reopened: 2026-10-27
 
 ### R10. Re-runnable wp_users import
 - Priority: P0
@@ -212,9 +243,13 @@
   - auth user pk is deterministic_uuid('wp_user', wp_user_id) from the shared library
   - no wp_user_id column
   - WP password hashes are copied verbatim into the auth user password field (stored in the auth DB only) and are unchanged by a re-run
+  - password and role are set on create only
+  - a re-run never overwrites a rehashed password or a role an operator changed
+  - a re-run refreshes username and email and sets date_joined from user_registered
+  - a re-run first renames users to wp-import-<pk hex> so username swaps cannot collide on the unique index
 - Layer: S2
 - Source: brief
-- Built: 2026-10-27
+- Reopened: 2026-10-27
 
 ### R11. Login issues access and refresh tokens
 - Priority: P0
@@ -223,9 +258,10 @@
   - POST /auth/login with valid credentials returns an RS256 access token (10 min) and a refresh token via curl
   - access token carries sub, role, exp, kid
   - wrong password returns 401 without revealing which field was wrong
+  - kid travels in the JWT header
 - Layer: S2
 - Source: brief
-- Built: 2026-10-27
+- Reopened: 2026-10-27
 
 ### R12. Refresh and revoke
 - Priority: P0
@@ -235,9 +271,14 @@
   - a user demoted in admin gets the reader role on next refresh
   - a revoked or logged-out refresh token returns 401
   - refresh tokens are stored hashed
+  - refresh tokens are opaque random values stored as SHA-256 with a 7-day expiry
+  - refresh does not rotate
+  - POST /auth/logout revokes and returns 204
+  - operators revoke via a Django admin action
+  - unknown, expired, revoked or inactive-user tokens share one 401
 - Layer: S2
 - Source: brief
-- Built: 2026-10-27
+- Reopened: 2026-10-27
 
 ### R13. Roles owned by auth service
 - Priority: P0
@@ -246,9 +287,11 @@
   - User has a role field with reader and editor choices
   - an operator can change it in Django admin
   - the main app database contains no role or password column (checked by a schema query)
+  - Django admin lets an operator edit roles
+  - operator account via manage.py createsuperuser
 - Layer: S2
 - Source: brief
-- Built: 2026-10-27
+- Reopened: 2026-10-27
 
 ### R14. JWKS endpoint
 - Priority: P0
@@ -256,9 +299,11 @@
 - Acceptance:
   - GET /.well-known/jwks.json returns the public key set with kid, publicly and without authentication
   - adding a second key keeps old tokens verifiable until they expire
+  - signing keys are PEM files in the auth_keys volume, kid is a UTC timestamp, newest signs and all are published
+  - rotate with manage.py add_signing_key, retire by deleting the file
 - Layer: S2
 - Source: brief
-- Built: 2026-10-27
+- Reopened: 2026-10-27
 
 ### R15. Auth service runs as its own container
 - Priority: P0
@@ -430,9 +475,10 @@
   - on first successful login the password is rehashed to Django's default hasher
   - wrong password returns 401
   - a test covers each hash format
+  - WP hashes with $P$, $H$ or $wp$2y$ prefixes route to a wordpress hasher and rehash to Django default on first login
 - Layer: S2
 - Source: change
-- Built: 2026-10-27
+- Reopened: 2026-10-27
 
 ### R29. Lint and format via Docker
 - Priority: P0
@@ -719,3 +765,34 @@
 | 2026-10-27 | DONE R6 R7 | mkit |
 | 2026-10-27 | DONE R8 R9 | mkit |
 | 2026-10-27 | DONE R3 R4 R5 R21 R22 R23 R24 R25 R26 R27 | mkit |
+| 2026-10-27 | REOPEN R12 (acceptance changed) | mkit |
+| 2026-10-27 | ALTER R12 | mkit |
+| 2026-10-27 | ALTER R12 | mkit |
+| 2026-10-27 | REOPEN R14 (acceptance changed) | mkit |
+| 2026-10-27 | ALTER R14 | mkit |
+| 2026-10-27 | REOPEN R11 (acceptance changed) | mkit |
+| 2026-10-27 | ALTER R11 | mkit |
+| 2026-10-27 | REOPEN R28 (acceptance changed) | mkit |
+| 2026-10-27 | ALTER R28 | mkit |
+| 2026-10-27 | REOPEN R13 (acceptance changed) | mkit |
+| 2026-10-27 | ALTER R13 | mkit |
+| 2026-10-27 | REOPEN R1 (acceptance changed) | mkit |
+| 2026-10-27 | ALTER R1 | mkit |
+| 2026-10-27 | REOPEN R2 (acceptance changed) | mkit |
+| 2026-10-27 | ALTER R2 | mkit |
+| 2026-10-27 | ALTER R2 | mkit |
+| 2026-10-27 | REOPEN R6 (acceptance changed) | mkit |
+| 2026-10-27 | ALTER R6 | mkit |
+| 2026-10-27 | ALTER R6 | mkit |
+| 2026-10-27 | ALTER R6 | mkit |
+| 2026-10-27 | REOPEN R8 (acceptance changed) | mkit |
+| 2026-10-27 | ALTER R8 | mkit |
+| 2026-10-27 | ALTER R8 | mkit |
+| 2026-10-27 | ALTER R8 | mkit |
+| 2026-10-27 | ALTER R8 | mkit |
+| 2026-10-27 | REOPEN R9 (acceptance changed) | mkit |
+| 2026-10-27 | ALTER R9 | mkit |
+| 2026-10-27 | REOPEN R10 (acceptance changed) | mkit |
+| 2026-10-27 | ALTER R10 | mkit |
+| 2026-10-27 | ALTER R10 | mkit |
+| 2026-10-27 | ALTER R10 | mkit |
