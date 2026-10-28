@@ -11,6 +11,7 @@
   --color-hero-end: #134e4a;
   --color-primary-soft: #ccfbf1;
   --color-accent: #f59e0b;
+  --color-focus: #115e59;
   --color-star: #f59e0b;
   --color-star-empty: #d1d5db;
   --radius: 10px;
@@ -49,7 +50,7 @@ a:hover {
 }
 
 :focus-visible {
-  outline: 3px solid var(--color-accent);
+  outline: 3px solid var(--color-focus);
   outline-offset: 2px;
 }
 
@@ -110,6 +111,9 @@ a:hover {
 }
 .site-footer a {
   color: #9ca3af;
+}
+.site-footer a:focus-visible {
+  outline-color: var(--color-accent);
 }
 
 .section {
@@ -253,6 +257,9 @@ a:hover {
   color: var(--color-muted);
   text-align: center;
 }
+.pagination .page-gap-mobile {
+  display: none;
+}
 .pagination .page-nav {
   display: inline-flex;
   align-items: center;
@@ -266,6 +273,9 @@ a:hover {
   .pagination .page-neighbour,
   .pagination .page-nav-text {
     display: none;
+  }
+  .pagination .page-gap-mobile {
+    display: block;
   }
 }
 .pagination .page-numbers {
@@ -388,7 +398,7 @@ a:hover {
   font-size: 0.8em;
 }
 .brand-filters .chip input:focus-visible + span {
-  outline: 3px solid var(--color-accent);
+  outline: 3px solid var(--color-focus);
   outline-offset: 2px;
 }
 .brand-filters .chip:hover input:not(:checked) + span {

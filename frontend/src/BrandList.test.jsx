@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import axe from "axe-core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import BrandList from "./BrandList.jsx";
-import { pageItems } from "./url.js";
+import { pageItems, pagerItems } from "./url.js";
 
 const INDUSTRIES = [
   { slug: "insurance", name: "Insurance" },
@@ -53,6 +53,23 @@ describe("pageItems", () => {
     expect(shape(18, 18)).toEqual([1, "…", 14, 15, 16, 17, 18]);
     expect(shape(15, 18)).toEqual([1, "…", 14, 15, 16, 17, 18]);
     expect(shape(3, 5)).toEqual([1, 2, 3, 4, 5]);
+  });
+});
+
+describe("pagerItems", () => {
+  const phone = (cur, total) =>
+    pagerItems(cur, total)
+      .filter((i) => i.type === "gap" || !i.hiddenOnMobile)
+      .map((i) => (i.type === "gap" ? "…" : i.n));
+
+  it("never skips a page silently on a phone", () => {
+    expect(phone(8, 18)).toEqual([1, "…", 8, "…", 18]);
+    expect(phone(4, 18)).toEqual([1, "…", 4, "…", 18]);
+    expect(phone(2, 18)).toEqual([1, 2, "…", 18]);
+    expect(phone(1, 18)).toEqual([1, "…", 18]);
+    expect(phone(18, 18)).toEqual([1, "…", 18]);
+    expect(phone(3, 5)).toEqual([1, "…", 3, "…", 5]);
+    expect(phone(2, 3)).toEqual([1, 2, 3]);
   });
 });
 
@@ -190,6 +207,19 @@ describe("BrandList", () => {
     await waitFor(() =>
       expect(fetchImpl.mock.calls.at(-1)[0]).toContain("page=18"),
     );
+  });
+
+  it("clicking the current page does not add a history entry", async () => {
+    setup(
+      vi.fn(() => ok(page([brand()], 105))),
+      "?page=8",
+    );
+    await screen.findByRole("link", { name: "Acme Insurance Co." });
+    const before = window.history.length;
+    await userEvent
+      .setup()
+      .click(screen.getByRole("button", { name: "Page 8" }));
+    expect(window.history.length).toBe(before);
   });
 
   it("disables Previous on the first page and Next on the last", async () => {

@@ -1,5 +1,6 @@
-// Visible keyboard focus everywhere (R25).
+// Visible keyboard focus everywhere (R25). The ring is the dark teal (7.7:1 on white, 3:1 or
+// better on the page background) because the amber accent is only about 2:1 on light surfaces.
 :focus-visible {
-  outline: 3px solid var(--color-accent);
+  outline: 3px solid var(--color-focus);
   outline-offset: 2px;
 }

@@ -3,7 +3,7 @@ import {
   ORDERINGS,
   PAGE_SIZE,
   apiUrl,
-  pageItems,
+  pagerItems,
   parseState,
   toSearch,
 } from "./url.js";
@@ -278,9 +278,13 @@ export default function BrandList({
             <span aria-hidden="true">‹</span>
             <span className="page-nav-text">Previous</span>
           </button>
-          {pageItems(state.page, pages).map((item) =>
+          {pagerItems(state.page, pages).map((item) =>
             item.type === "gap" ? (
-              <span key={item.key} className="page-gap" aria-hidden="true">
+              <span
+                key={item.key}
+                className={`page-gap${item.mobileOnly ? " page-gap-mobile" : ""}`}
+                aria-hidden="true"
+              >
                 …
               </span>
             ) : (
@@ -289,14 +293,12 @@ export default function BrandList({
                 type="button"
                 className={`page-numbers page-number${
                   item.n === state.page ? " current" : ""
-                }${
-                  item.n !== 1 && item.n !== pages && item.n !== state.page
-                    ? " page-neighbour"
-                    : ""
-                }`}
+                }${item.hiddenOnMobile ? " page-neighbour" : ""}`}
                 aria-label={`Page ${item.n}`}
                 aria-current={item.n === state.page ? "page" : undefined}
-                onClick={() => update({ ...state, page: item.n })}
+                onClick={() => {
+                  if (item.n !== state.page) update({ ...state, page: item.n });
+                }}
               >
                 {item.n}
               </button>

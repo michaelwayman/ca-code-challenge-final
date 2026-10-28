@@ -45,3 +45,7 @@
 - [x] I43 2026-10-27 bug: R27 README: add explicit main-app and auth-service run sections (headings), not only a paragraph -> fixed in c5417d6
 - [x] I44 2026-10-27 adjust: drift kept: 6 sort options in BrandList, sidebar repeats founded/HQ, noscript message, 'No ratings yet' star variant, pages/_page.scss partial -> kept by decision
 - [x] I45 2026-10-27 adjust: README still opens with the WordPress quick start; consider a top-level Django-system intro -> README now opens with a Django-system intro
+- [x] I46 2026-10-28 bug: Focus ring (--color-accent #f59e0b) is 2.15:1 on white, below 3:1; R23 claims WCAG AA focus contrast (also global in base/_focus.scss) -> R23
+- [x] I47 2026-10-28 bug: Phone pagination hides neighbours with no gap marker near the ends (page 4 of 18 shows 1 [4] … 18, pages 2-3 vanish) -> R22
+- [x] I48 2026-10-28 bug: Clicking the current page number pushState's an identical URL, adding a duplicate history entry (BrandList.jsx page button, no guard) -> R22
+- [ ] I49 2026-10-28 adjust: R26 says hero uses the existing shared token, but color-hero-start/end were added; colour matches WP exactly. Reword R26 or accept
