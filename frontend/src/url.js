@@ -41,3 +41,32 @@ export function apiUrl(state, apiBase = "/api/brands/") {
   p.set("page_size", String(PAGE_SIZE));
   return `${apiBase}?${p}`;
 }
+
+/**
+ * Page list for the pager: first and last always, the current page and one neighbour either
+ * side, "gap" markers between. Near an end it shows 5 consecutive pages so a gap never hides
+ * a single page. Returns [{type: "page", n} | {type: "gap", key}].
+ */
+export function pageItems(current, total) {
+  const page = (n) => ({ type: "page", n });
+  const range = (a, b) =>
+    Array.from({ length: b - a + 1 }, (_, i) => page(a + i));
+  if (total <= 7) return range(1, total);
+  if (current <= 4) {
+    return [...range(1, 5), { type: "gap", key: "gap-end" }, page(total)];
+  }
+  if (current >= total - 3) {
+    return [
+      page(1),
+      { type: "gap", key: "gap-start" },
+      ...range(total - 4, total),
+    ];
+  }
+  return [
+    page(1),
+    { type: "gap", key: "gap-start" },
+    ...range(current - 1, current + 1),
+    { type: "gap", key: "gap-end" },
+    page(total),
+  ];
+}

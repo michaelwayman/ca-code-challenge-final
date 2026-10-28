@@ -399,12 +399,15 @@
 - Status: active
 - Acceptance:
   - component renders a card per row from GET /api/brands/ showing name, slug link to /brand/<slug>/, industry, rating, review count, short description and top review snippet
-  - pagination controls use page and page_size
+  - pagination uses page and page_size and is a numbered list with Previous/Next: first and last page always shown, the current page and one neighbour each side, and an ellipsis for gaps (e.g. 1 … 7 [8] 9 … 18
+  - near either end it shows 5 consecutive pages so there is never a lone gap)
+  - each number is a button or link, the current one has aria-current=page, and Previous/Next are disabled at the ends
+  - Visual: at 375px the neighbours and the Previous/Next text are dropped (e.g. ‹ 1 … [8] … 18 ›) so it fits one row
   - Visual: 1 column at 375px, 3 columns at 1280px
   - cards use theme classes
 - Layer: S4
 - Source: brief
-- Built: 2026-10-27
+- Reopened: 2026-10-28
 
 ### R23. BrandList filter and sort with URL-synced state
 - Priority: P0
@@ -432,7 +435,7 @@
   - first load shows skeleton cards matching the card grid's size with aria-busy and status text for screen readers
   - on later fetches (filter, sort, page) the previous results stay visible, dimmed with aria-busy and a small spinner, and are replaced when the new data arrives
   - no layout jump while loading (results area keeps its height, heading and pagination stay mounted)
-  - a response already fetched for the same URL is shown without a loading state and revalidated in the background
+  - a response fetched in the last 30s for the same URL is shown with no loading state and no network request, and an older cached response is shown immediately and revalidated in the background, using the same window as R6's max-age
   - motion respects prefers-reduced-motion
   - zero results shows an empty message with a clear-filters button
   - a failed request (API stopped) shows an error message with a Retry button that refetches
@@ -827,3 +830,7 @@
 | 2026-10-27 | ALTER R24 | mkit |
 | 2026-10-27 | REOPEN R6 (acceptance changed) | mkit |
 | 2026-10-27 | ALTER R6 | mkit |
+| 2026-10-28 | REOPEN R22 (acceptance changed) | mkit |
+| 2026-10-28 | ALTER R22 | mkit |
+| 2026-10-28 | ALTER R22 | mkit |
+| 2026-10-28 | ALTER R24 | mkit |

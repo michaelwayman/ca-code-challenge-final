@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import axe from "axe-core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import BrandList from "./BrandList.jsx";
+import { pageItems } from "./url.js";
 
 const INDUSTRIES = [
   { slug: "insurance", name: "Insurance" },
@@ -40,6 +41,20 @@ function setup(fetchImpl, search = "") {
 }
 
 beforeEach(() => window.history.replaceState(null, "", "/brands/"));
+
+const shape = (cur, total) =>
+  pageItems(cur, total).map((i) => (i.type === "gap" ? "…" : i.n));
+
+describe("pageItems", () => {
+  it("windows the page list with gaps", () => {
+    expect(shape(8, 18)).toEqual([1, "…", 7, 8, 9, "…", 18]);
+    expect(shape(1, 18)).toEqual([1, 2, 3, 4, 5, "…", 18]);
+    expect(shape(4, 18)).toEqual([1, 2, 3, 4, 5, "…", 18]);
+    expect(shape(18, 18)).toEqual([1, "…", 14, 15, 16, 17, 18]);
+    expect(shape(15, 18)).toEqual([1, "…", 14, 15, 16, 17, 18]);
+    expect(shape(3, 5)).toEqual([1, 2, 3, 4, 5]);
+  });
+});
 
 describe("BrandList", () => {
   it("renders a card per row with link, industry, rating, count, description and top review", async () => {
@@ -158,6 +173,57 @@ describe("BrandList", () => {
     expect(section).not.toHaveClass("is-fetching");
   });
 
+  it("renders numbered pagination, marks the current page and jumps on click", async () => {
+    const fetchImpl = vi.fn(() => ok(page([brand()], 105)));
+    setup(fetchImpl, "?page=8");
+    await screen.findByRole("link", { name: "Acme Insurance Co." });
+    const nav = screen.getByRole("navigation", { name: "Pagination" });
+    expect(screen.getByRole("button", { name: "Page 8" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(nav.textContent).toContain("…");
+    await userEvent
+      .setup()
+      .click(screen.getByRole("button", { name: "Page 18" }));
+    expect(window.location.search).toBe("?page=18");
+    await waitFor(() =>
+      expect(fetchImpl.mock.calls.at(-1)[0]).toContain("page=18"),
+    );
+  });
+
+  it("disables Previous on the first page and Next on the last", async () => {
+    setup(
+      vi.fn(() => ok(page([brand()], 105))),
+      "?page=18",
+    );
+    await screen.findByRole("link", { name: "Acme Insurance Co." });
+    expect(screen.getByRole("button", { name: "Next page" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Previous page" })).toBeEnabled();
+  });
+
+  it("makes no request for a URL fetched in the last 30s, and revalidates after that", async () => {
+    const now = vi.spyOn(Date, "now");
+    now.mockReturnValue(1_000_000);
+    const fetchImpl = vi.fn(() => ok(page([brand()])));
+    setup(fetchImpl);
+    await screen.findByRole("link", { name: "Acme Insurance Co." });
+    const user = userEvent.setup();
+    const telecom = screen.getByRole("checkbox", { name: "Telecom" });
+    await user.click(telecom);
+    await waitFor(() => expect(fetchImpl).toHaveBeenCalledTimes(2));
+    await user.click(telecom); // unfiltered again, fetched 0s ago
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+    now.mockReturnValue(1_000_000 + 31_000);
+    await user.click(telecom);
+    await user.click(telecom); // unfiltered, now older than 30s: shown, then revalidated
+    await waitFor(() => expect(fetchImpl.mock.calls.length).toBeGreaterThan(2));
+    expect(
+      screen.getByRole("link", { name: "Acme Insurance Co." }),
+    ).toBeInTheDocument();
+    now.mockRestore();
+  });
+
   it("restores controls from the URL and re-fetches on back/forward", async () => {
     const fetchImpl = vi.fn(() => ok(page([brand()])));
     setup(fetchImpl, "?industry=telecom&ordering=-review_count");
@@ -176,10 +242,13 @@ describe("BrandList", () => {
   it("paginates with Next", async () => {
     const fetchImpl = vi.fn(() => ok(page([brand()], 13)));
     setup(fetchImpl);
-    await screen.findByText("Page 1 of 3");
-    await userEvent.click(screen.getByRole("button", { name: "Next" }));
+    const one = await screen.findByRole("button", { name: "Page 1" });
+    expect(one).toHaveAttribute("aria-current", "page");
+    await userEvent.click(screen.getByRole("button", { name: "Next page" }));
     expect(window.location.search).toBe("?page=2");
-    await screen.findByText("Page 2 of 3");
+    expect(
+      await screen.findByRole("button", { name: "Page 2" }),
+    ).toHaveAttribute("aria-current", "page");
   });
 
   it("empty result offers Clear filters", async () => {

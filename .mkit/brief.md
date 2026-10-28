@@ -17,30 +17,19 @@ Build only what is listed. Out-of-scope items are decisions, not gaps. Anything 
 - S5 Dev tooling: Makefile lint and fmt targets, Ruff, Biome and Stylelint configs
 
 ## Build
-- **R6** [P0] (S1) Brand listing API with filter, sort, pagination
-  - GET /api/brands/ returns count/next/previous/results
-  - each row has name, slug, industry, average_rating, review_count, short_description, top_review snippet
-  - ?industry=<slug> (repeatable) filters
-  - ?ordering=-avg_rating, -review_count and name sort
-  - ?page= and ?page_size= paginate with a max page size
-  - unauthenticated call succeeds
-  - query count is constant per page (asserted in a test)
-  - page_size default 20, max 100
-  - ordering also accepts ascending avg_rating and review_count and -name
-  - unknown ordering falls back to name
-  - ties break on name then id
-  - row shapes: industry {name, slug} or null
-  - average_rating to one decimal
-  - short_description is excerpt else tag-stripped body, 30 words
-  - top_review has title, slug, rating, reviewer, published_at and a 30-word snippet
-  - JSON renderer only
-  - reads need no authentication
-  - GET /api/brands/ sends Cache-Control: public, max-age=30, stale-while-revalidate=120 (covered by a test)
+- **R22** [P0] (S4) BrandList fetches and renders brands
+  - component renders a card per row from GET /api/brands/ showing name, slug link to /brand/<slug>/, industry, rating, review count, short description and top review snippet
+  - pagination uses page and page_size and is a numbered list with Previous/Next: first and last page always shown, the current page and one neighbour each side, and an ellipsis for gaps (e.g. 1 … 7 [8] 9 … 18
+  - near either end it shows 5 consecutive pages so there is never a lone gap)
+  - each number is a button or link, the current one has aria-current=page, and Previous/Next are disabled at the ends
+  - Visual: at 375px the neighbours and the Previous/Next text are dropped (e.g. ‹ 1 … [8] … 18 ›) so it fits one row
+  - Visual: 1 column at 375px, 3 columns at 1280px
+  - cards use theme classes
 - **R24** [P0] (S4) BrandList loading, empty and error states
   - first load shows skeleton cards matching the card grid's size with aria-busy and status text for screen readers
   - on later fetches (filter, sort, page) the previous results stay visible, dimmed with aria-busy and a small spinner, and are replaced when the new data arrives
   - no layout jump while loading (results area keeps its height, heading and pagination stay mounted)
-  - a response already fetched for the same URL is shown without a loading state and revalidated in the background
+  - a response fetched in the last 30s for the same URL is shown with no loading state and no network request, and an older cached response is shown immediately and revalidated in the background, using the same window as R6's max-age
   - motion respects prefers-reduced-motion
   - zero results shows an empty message with a clear-filters button
   - a failed request (API stopped) shows an error message with a Retry button that refetches

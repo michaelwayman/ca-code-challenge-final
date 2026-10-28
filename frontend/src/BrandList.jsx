@@ -1,5 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ORDERINGS, PAGE_SIZE, apiUrl, parseState, toSearch } from "./url.js";
+import {
+  ORDERINGS,
+  PAGE_SIZE,
+  apiUrl,
+  pageItems,
+  parseState,
+  toSearch,
+} from "./url.js";
 
 function Stars({ rating }) {
   if (rating == null) {
@@ -56,6 +63,7 @@ function BrandCard({ brand }) {
 }
 
 const CACHE_LIMIT = 50;
+const CACHE_TTL_MS = 30_000; // matches max-age in the API's Cache-Control (R6)
 
 function SkeletonCard() {
   return (
@@ -73,7 +81,7 @@ function SkeletonCard() {
  * Filterable, sortable brand list. `industries` is [{slug, name}] for the checkboxes.
  * State is URL-synced: filter and sort changes replaceState (no history entry),
  * page changes pushState; popstate re-fetches. Results are cached per URL for the life of
- * the component; a refetch keeps the previous results on screen (dimmed) until the new ones land.
+ * the component (no request within 30s, then shown and revalidated); a refetch keeps the previous results on screen (dimmed) until the new ones land.
  */
 export default function BrandList({
   industries = [],
@@ -102,11 +110,13 @@ export default function BrandList({
     const id = ++latest.current;
     const controller = new AbortController();
     const url = apiUrl(state, apiBase);
-    const cached = cache.current.get(url);
+    const entry = cache.current.get(url);
+    const cached = entry?.json;
     if (cached) {
       setData(cached);
       setStatus("ready");
       setFetching(false);
+      if (Date.now() - entry.at < CACHE_TTL_MS) return undefined;
     } else {
       setStatus((s) => (s === "error" ? "loading" : s));
       setFetching(true);
@@ -131,7 +141,7 @@ export default function BrandList({
         if (id !== latest.current || json === null) return;
         const entries = cache.current;
         entries.delete(url);
-        entries.set(url, json);
+        entries.set(url, { json, at: Date.now() });
         if (entries.size > CACHE_LIMIT) {
           entries.delete(entries.keys().next().value);
         }
@@ -256,26 +266,51 @@ export default function BrandList({
         )}
       </section>
 
-      {status === "ready" && pages > 1 && (
+      {data && status !== "error" && pages > 1 && (
         <nav className="pagination" aria-label="Pagination">
           <button
             type="button"
-            className="page-numbers"
+            className="page-numbers page-nav"
+            aria-label="Previous page"
             disabled={state.page <= 1}
             onClick={() => update({ ...state, page: state.page - 1 })}
           >
-            Previous
+            <span aria-hidden="true">‹</span>
+            <span className="page-nav-text">Previous</span>
           </button>
-          <span className="page-numbers current" aria-current="page">
-            Page {state.page} of {pages}
-          </span>
+          {pageItems(state.page, pages).map((item) =>
+            item.type === "gap" ? (
+              <span key={item.key} className="page-gap" aria-hidden="true">
+                …
+              </span>
+            ) : (
+              <button
+                key={item.n}
+                type="button"
+                className={`page-numbers page-number${
+                  item.n === state.page ? " current" : ""
+                }${
+                  item.n !== 1 && item.n !== pages && item.n !== state.page
+                    ? " page-neighbour"
+                    : ""
+                }`}
+                aria-label={`Page ${item.n}`}
+                aria-current={item.n === state.page ? "page" : undefined}
+                onClick={() => update({ ...state, page: item.n })}
+              >
+                {item.n}
+              </button>
+            ),
+          )}
           <button
             type="button"
-            className="page-numbers"
+            className="page-numbers page-nav"
+            aria-label="Next page"
             disabled={state.page >= pages}
             onClick={() => update({ ...state, page: state.page + 1 })}
           >
-            Next
+            <span className="page-nav-text">Next</span>
+            <span aria-hidden="true">›</span>
           </button>
         </nav>
       )}
