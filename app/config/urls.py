@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from django.urls import path
 from django.views.decorators.http import require_GET
 
+from catalog import views
 from catalog.api import BrandDetail, BrandList
 
 
@@ -16,6 +17,9 @@ def healthz(request):
 
 
 urlpatterns = [
+    path("", views.home, name="home"),
+    path("brand/<slug:slug>/", views.brand_detail, name="brand-page"),
+    path("review/<slug:slug>/", views.review_detail, name="review-page"),
     path("healthz", healthz, name="healthz"),
     path("api/brands/", BrandList.as_view(), name="brand-list"),
     path("api/brands/<slug:slug>/", BrandDetail.as_view(), name="brand-detail"),

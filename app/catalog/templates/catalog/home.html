@@ -1,0 +1,20 @@
+{% extends "catalog/base.html" %}
+{% block title %}Brand Reviews{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="container">
+    <h1>Honest reviews of the brands you use</h1>
+    <p>Browse brands by industry and read what real customers say.</p>
+  </div>
+</section>
+<section class="section">
+  <div class="container">
+    <div class="section-header"><h2>Recent reviews</h2><a href="/brands/">All brands</a></div>
+    {% if reviews %}
+    <div class="grid">{% for review in reviews %}{% include "catalog/_review_card.html" %}{% endfor %}</div>
+    {% else %}
+    <p class="meta">No reviews yet. Check back soon.</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

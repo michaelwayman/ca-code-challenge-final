@@ -11,6 +11,7 @@ ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     "django.contrib.contenttypes",
+    "django.contrib.staticfiles",
     "rest_framework",
     "catalog",
 ]
@@ -18,6 +19,20 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.middleware.common.CommonMiddleware",
+]
+
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "APP_DIRS": True,
+        "OPTIONS": {"context_processors": ["django.template.context_processors.request"]},
+    }
+]
+
+# Compiled CSS/JS from frontend/dist (mounted at /srv/frontend); runserver serves it (O8).
+STATIC_URL = "/static/"
+STATICFILES_DIRS = [
+    p for p in [Path("/srv/frontend/dist"), BASE_DIR.parent / "frontend" / "dist"] if p.exists()
 ]
 
 ROOT_URLCONF = "config.urls"

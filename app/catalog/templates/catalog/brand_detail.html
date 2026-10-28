@@ -1,0 +1,47 @@
+{% extends "catalog/base.html" %}
+{% load stars %}
+{% block title %}{{ brand.name }} reviews{% endblock %}
+{% block content %}
+<section class="brand-hero">
+  <div class="container">
+    {% if brand.industry %}<span class="badge">{{ brand.industry.name }}</span>{% endif %}
+    <h1>{{ brand.name }}</h1>
+    {% stars brand.average_rating %}
+    <span class="meta">{{ brand.review_count }} review{{ brand.review_count|pluralize }}</span>
+    <div class="brand-meta">
+      {% if brand.website_url %}<span><strong>Website</strong> <a href="{{ brand.website_url }}" rel="noopener">{{ brand.website_url }}</a></span>{% endif %}
+      {% if brand.founded_year %}<span><strong>Founded</strong> {{ brand.founded_year }}</span>{% endif %}
+      {% if brand.headquarters %}<span><strong>Headquarters</strong> {{ brand.headquarters }}</span>{% endif %}
+    </div>
+  </div>
+</section>
+<section class="brand-body">
+  <div class="container brand-layout">
+    <div class="content">{{ brand.description|safe }}</div>
+    <aside class="brand-sidebar" aria-label="Brand facts">
+      <dl>
+        <dt>Industry</dt><dd>{{ brand.industry.name|default:"—" }}</dd>
+        <dt>Founded</dt><dd>{{ brand.founded_year|default:"—" }}</dd>
+        <dt>Headquarters</dt><dd>{{ brand.headquarters|default:"—" }}</dd>
+      </dl>
+    </aside>
+  </div>
+</section>
+<section class="reviews-section">
+  <div class="container">
+    <h2>Reviews of {{ brand.name }}</h2>
+    {% for review in reviews %}
+    <article class="review-item">
+      <div class="review-head">
+        <h3><a href="/review/{{ review.slug }}/">{{ review.title }}</a></h3>
+        {% stars review.rating %}
+      </div>
+      <p class="review-byline">
+        {% if review.reviewer %}{{ review.reviewer.display_name }} · {% endif %}{{ review.published_at|date:'j M Y' }}
+      </p>
+      <div class="review-body">{{ review.body|safe }}</div>
+    </article>
+    {% empty %}<p class="meta">No reviews yet.</p>{% endfor %}
+  </div>
+</section>
+{% endblock %}

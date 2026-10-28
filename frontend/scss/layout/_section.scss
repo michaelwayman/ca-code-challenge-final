@@ -1,0 +1,24 @@
+.section {
+  padding: 48px 0;
+
+  h2 {
+    font-size: 1.5rem;
+    margin: 0 0 24px;
+    letter-spacing: -0.01em;
+  }
+}
+
+.section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 24px;
+
+  h2 {
+    margin: 0;
+  }
+
+  a {
+    font-size: 0.9rem;
+  }
+}

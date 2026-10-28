@@ -1,0 +1,68 @@
+from datetime import UTC, datetime
+
+from django.test import TestCase
+
+from .models import Brand, Industry, Review
+
+
+def make_brand(n=1, **kw):
+    now = datetime(2024, 1, n, tzinfo=UTC)
+    ind, _ = Industry.objects.get_or_create(
+        wp_id=1, defaults={"name": "Banking", "slug": "banking"}
+    )
+    return Brand.objects.create(
+        wp_id=n, name=f"Brand {n}", slug=f"brand-{n}", industry=ind, published_at=now,
+        modified_at=now, website_url="https://example.com", founded_year=1990,
+        headquarters="Berlin", **kw,
+    )  # fmt: skip
+
+
+def make_review(brand, n, rating=4):
+    d = datetime(2024, 2, n, tzinfo=UTC)
+    return Review.objects.create(
+        wp_id=100 + n, brand=brand, title=f"Review {n}", slug=f"review-{n}",
+        body=f"<p>Body {n}</p>", rating=rating, published_at=d, modified_at=d,
+    )  # fmt: skip
+
+
+class PageTests(TestCase):
+    def test_home_empty_state(self):
+        r = self.client.get("/")
+        self.assertContains(r, "hero")
+        self.assertContains(r, "No reviews yet")
+
+    def test_home_newest_first(self):
+        b = make_brand()
+        for n in (1, 3, 2):
+            make_review(b, n)
+        body = self.client.get("/").content.decode()
+        self.assertLess(body.index("Review 3"), body.index("Review 2"))
+        self.assertLess(body.index("Review 2"), body.index("Review 1"))
+
+    def test_brand_page(self):
+        b = make_brand()
+        make_review(b, 1, 5)
+        make_review(b, 2, 3)
+        r = self.client.get("/brand/brand-1/")
+        for text in (
+            "Brand 1",
+            "Banking",
+            "https://example.com",
+            "1990",
+            "Berlin",
+            "4.0",
+            "Review 1",
+        ):
+            self.assertContains(r, text)
+
+    def test_review_page(self):
+        b = make_brand()
+        make_review(b, 1)
+        r = self.client.get("/review/review-1/")
+        self.assertContains(r, "Review 1")
+        self.assertContains(r, "Body 1")
+        self.assertContains(r, 'href="/brand/brand-1/"')
+
+    def test_unknown_slugs_404(self):
+        self.assertEqual(self.client.get("/brand/nope/").status_code, 404)
+        self.assertEqual(self.client.get("/review/nope/").status_code, 404)
