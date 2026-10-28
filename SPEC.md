@@ -471,10 +471,10 @@
   - README gives the build and dev commands
   - page works against the docker compose stack with no extra install
   - component has unit tests that run in CI command npm test
-  - Visual: the hero at the top of /brands/ uses the same background colour as the WordPress site's hero, via the existing shared SCSS token (R21) rather than a hardcoded value, and matches the homepage hero from R3
+  - Visual: the hero at the top of /brands/ uses the same background colour as the WordPress site's hero, through shared SCSS tokens (R21) rather than hardcoded values, and matches the homepage hero from R3
 - Layer: S4
 - Source: brief
-- Reopened: 2026-10-27
+- Reopened: 2026-10-28
 - Built: 2026-10-28
 
 ### R27. README covering run, token, migration and decisions
@@ -846,3 +846,6 @@
 | 2026-10-28 | ALTER R14 | mkit |
 | 2026-10-28 | ANSWER Q6 | mkit |
 | 2026-10-28 | DONE R6 R14 R22 R23 R24 R26 | mkit |
+| 2026-10-28 | REOPEN R26 (acceptance changed) | mkit |
+| 2026-10-28 | ALTER R26 | mkit |
+| 2026-10-28 | DONE R26 | mkit |
