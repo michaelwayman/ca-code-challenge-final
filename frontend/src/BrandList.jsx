@@ -77,6 +77,7 @@ export default function BrandList({
   }, []);
 
   // Only the newest request may write state: a superseded response is ignored.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `attempt` re-runs the fetch on Retry
   useEffect(() => {
     const id = ++latest.current;
     const controller = new AbortController();
@@ -160,9 +161,7 @@ export default function BrandList({
           Brands{status === "ready" && data ? ` (${data.count})` : ""}
         </h2>
         {status === "loading" && (
-          <p className="state-message" role="status">
-            Loading brands…
-          </p>
+          <output className="state-message">Loading brands…</output>
         )}
         {status === "error" && (
           <div className="state-message state-error" role="alert">
