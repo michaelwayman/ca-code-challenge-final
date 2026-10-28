@@ -16,20 +16,20 @@ S2 [active] Auth service (Django)
 S3 [active] Shared library (Python package)
 S4 [active] Frontend (React + SCSS)
 S5 [active] Dev tooling
-R1 [P0] Relational schema for brands, reviews, industries, reviewers
-R2 [P0] Re-runnable WP migration command
+R1 [P0 done] Relational schema for brands, reviews, industries, reviewers
+R2 [P0 done] Re-runnable WP migration command
 R3 [P0 done] Homepage with hero and recent reviews
 R4 [P0 done] Brand detail page at /brand/<slug>/
 R5 [P0 done] Review detail page at /review/<slug>/
-R6 [P0] Brand listing API with filter, sort, pagination
+R6 [P0 done] Brand listing API with filter, sort, pagination
 R7 [P1 done] Top review rule documented
-R8 [P0] Protected brand edit endpoint
-R9 [P1] Main app survives auth outage
-R10 [P0] Re-runnable wp_users import
-R11 [P0] Login issues access and refresh tokens
-R12 [P0] Refresh and revoke
-R13 [P0] Roles owned by auth service
-R14 [P0] JWKS endpoint
+R8 [P0 done] Protected brand edit endpoint
+R9 [P1 done] Main app survives auth outage
+R10 [P0 done] Re-runnable wp_users import
+R11 [P0 done] Login issues access and refresh tokens
+R12 [P0 done] Refresh and revoke
+R13 [P0 done] Roles owned by auth service
+R14 [P0 done] JWKS endpoint
 R15 [P0 done] Auth service runs as its own container
 R16 [P0 done] Installable versioned package
 R17 [P0 done] Token verification
@@ -43,7 +43,7 @@ R24 [P0 done] BrandList loading, empty and error states
 R25 [P0 done] BrandList accessibility
 R26 [P0 done] BrandList mounted on a Django page
 R27 [P0 done] README covering run, token, migration and decisions
-R28 [P0] WordPress password hasher
+R28 [P0 done] WordPress password hasher
 R29 [P0 done] Lint and format via Docker
 O1 [active] WP admin and editor experience
 O2 [active] Yoast SEO frontend output

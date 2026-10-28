@@ -106,6 +106,7 @@
 - Layer: S1
 - Source: brief
 - Reopened: 2026-10-27
+- Built: 2026-10-27
 
 ### R2. Re-runnable WP migration command
 - Priority: P0
@@ -126,6 +127,7 @@
 - Layer: S1
 - Source: brief
 - Reopened: 2026-10-27
+- Built: 2026-10-27
 
 ### R3. Homepage with hero and recent reviews
 - Priority: P0
@@ -184,6 +186,7 @@
 - Layer: S1
 - Source: brief
 - Reopened: 2026-10-27
+- Built: 2026-10-27
 
 ### R7. Top review rule documented
 - Priority: P1
@@ -217,6 +220,7 @@
 - Layer: S1
 - Source: brief
 - Reopened: 2026-10-27
+- Built: 2026-10-27
 
 ### R9. Main app survives auth outage
 - Priority: P1
@@ -233,6 +237,7 @@
 - Layer: S1
 - Source: brief
 - Reopened: 2026-10-27
+- Built: 2026-10-27
 
 ### R10. Re-runnable wp_users import
 - Priority: P0
@@ -250,6 +255,7 @@
 - Layer: S2
 - Source: brief
 - Reopened: 2026-10-27
+- Built: 2026-10-27
 
 ### R11. Login issues access and refresh tokens
 - Priority: P0
@@ -262,6 +268,7 @@
 - Layer: S2
 - Source: brief
 - Reopened: 2026-10-27
+- Built: 2026-10-27
 
 ### R12. Refresh and revoke
 - Priority: P0
@@ -279,6 +286,7 @@
 - Layer: S2
 - Source: brief
 - Reopened: 2026-10-27
+- Built: 2026-10-27
 
 ### R13. Roles owned by auth service
 - Priority: P0
@@ -292,6 +300,7 @@
 - Layer: S2
 - Source: brief
 - Reopened: 2026-10-27
+- Built: 2026-10-27
 
 ### R14. JWKS endpoint
 - Priority: P0
@@ -304,6 +313,7 @@
 - Layer: S2
 - Source: brief
 - Reopened: 2026-10-27
+- Built: 2026-10-27
 
 ### R15. Auth service runs as its own container
 - Priority: P0
@@ -479,6 +489,7 @@
 - Layer: S2
 - Source: change
 - Reopened: 2026-10-27
+- Built: 2026-10-27
 
 ### R29. Lint and format via Docker
 - Priority: P0
@@ -796,3 +807,4 @@
 | 2026-10-27 | ALTER R10 | mkit |
 | 2026-10-27 | ALTER R10 | mkit |
 | 2026-10-27 | ALTER R10 | mkit |
+| 2026-10-27 | DONE R1 R2 R6 R8 R9 R10 R11 R12 R13 R14 R28 | mkit |
