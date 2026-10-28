@@ -44,6 +44,14 @@ WP_DB = {
 }
 WP_TABLE_PREFIX = os.environ.get("WP_TABLE_PREFIX", "wp_")
 
+# No django.contrib.auth here (C2): anonymous requests carry user None, JSON only.
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [],
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.AllowAny"],
+    "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
+    "UNAUTHENTICATED_USER": None,
+}
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 USE_TZ = True
 TIME_ZONE = "UTC"

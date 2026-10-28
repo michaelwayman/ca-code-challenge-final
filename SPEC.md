@@ -163,6 +163,7 @@
   - query count is constant per page (asserted in a test)
 - Layer: S1
 - Source: brief
+- Built: 2026-10-27
 
 ### R7. Top review rule documented
 - Priority: P1
@@ -173,6 +174,7 @@
   - brand with no reviews returns top_review null
 - Layer: S1
 - Source: brief
+- Built: 2026-10-27
 
 ### R8. Protected brand edit endpoint
 - Priority: P0
@@ -702,3 +704,4 @@
 | 2026-10-27 | DONE R12 R13 | mkit |
 | 2026-10-27 | DONE R1 R2 R16 | mkit |
 | 2026-10-27 | DONE R1 R2 R16 | mkit |
+| 2026-10-27 | DONE R6 R7 | mkit |

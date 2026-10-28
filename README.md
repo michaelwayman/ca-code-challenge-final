@@ -104,6 +104,18 @@ Seeded volume: 5 brands (one per industry), 60 reviews (12 per brand) authored b
 
 Dropped: the ACF field-reference meta (`_website_url`, `_rating`, ...), ACF `reviewer_name` (identical to the author's display name in every row; the reviewer FK carries it), `_wp_page_template`, and WP pages and posts (out of scope).
 
+## Brand listing API (main app)
+
+`GET http://localhost:8000/api/brands/` is public (no token) and returns `{count, next, previous, results}`. Each row has `name`, `slug`, `industry` (`{name, slug}` or null), `average_rating` (mean of review ratings to one decimal, null with no reviews), `review_count`, `short_description` (the WP excerpt, else the body with tags stripped, 30 words) and `top_review` (`title`, `slug`, `rating`, `reviewer`, `published_at`, 30-word `snippet`, or null).
+
+| Parameter | Effect |
+|---|---|
+| `industry=<slug>` | Filter; repeat for several (`?industry=finance&industry=retail`) |
+| `ordering=` | `name` (default), `avg_rating`, `review_count`; prefix `-` for descending. Brands without reviews sort last; ties fall back to name. Unknown values sort by name |
+| `page=`, `page_size=` | 20 per page by default, at most 100 |
+
+**Top review rule:** a brand's top review is the one with the highest rating; among equal ratings the newest (`published_at`) wins, and WP id breaks any remaining tie. A brand with no reviews has `top_review: null`. One windowed query (`ROW_NUMBER() OVER (PARTITION BY brand ORDER BY rating DESC, published_at DESC)`) picks it for every brand on the page, so a page costs three queries whatever its size (count, brands with stats, top reviews); a test asserts this.
+
 ## Theme
 
 The active theme is a custom one at `wp-content/themes/consumer-reviews/` (committed to the repo). It renders:
