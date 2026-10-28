@@ -1,6 +1,6 @@
 import uuid
 
-from cauth import deterministic_uuid
+from shared_auth import deterministic_uuid
 
 
 def test_pinned_values():
@@ -8,7 +8,7 @@ def test_pinned_values():
     assert deterministic_uuid("wp_user", 2) == uuid.UUID("0b49e386-5700-51ad-91de-e70869095fdc")
 
 
-def test_audiences_differ():
+def test_namespaces_differ():
     assert deterministic_uuid("wp_user", 1) != deterministic_uuid("other", 1)
 
 

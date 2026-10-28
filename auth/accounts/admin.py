@@ -1,5 +1,3 @@
-from datetime import UTC, datetime
-
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
@@ -8,7 +6,7 @@ from .models import RefreshToken, User
 
 @admin.register(User)
 class AccountAdmin(UserAdmin):
-    # Role is the only authorization the main app sees (R13); operators edit it here.
+    # Role is the only authorization the main app sees; operators edit it here.
     list_display = ("username", "email", "role", "is_active", "is_staff")
     list_filter = ("role", "is_active", "is_staff")
     fieldsets = UserAdmin.fieldsets + (("Role", {"fields": ("role",)}),)
@@ -28,5 +26,5 @@ class RefreshTokenAdmin(admin.ModelAdmin):
 
     @admin.action(description="Revoke selected refresh tokens")
     def revoke(self, request, queryset):
-        count = queryset.filter(revoked_at__isnull=True).update(revoked_at=datetime.now(UTC))
+        count = queryset.revoke()
         self.message_user(request, f"Revoked {count} refresh token(s).")

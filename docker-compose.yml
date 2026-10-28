@@ -87,7 +87,7 @@ services:
       PMA_PASSWORD: ${WORDPRESS_DB_PASSWORD:-wp}
       UPLOAD_LIMIT: 256M
 
-  # --- Auth service (S2): own container, own Postgres (C2) ---
+  # --- Auth service: own container, own Postgres ---
   auth-db:
     image: postgres:16
     restart: unless-stopped
@@ -120,7 +120,7 @@ services:
       AUTH_DB_PASSWORD: ${AUTH_DB_PASSWORD:-auth}
       AUTH_SECRET_KEY: ${AUTH_SECRET_KEY:-dev-only-auth-secret}
       AUTH_KEYS_DIR: /keys
-      # Read-only source for import_wp_users (R10): the WP MariaDB above.
+      # Read-only source for import_wp_users: the WP MariaDB above.
       WP_DB_HOST: db
       WP_DB_PORT: "3306"
       WP_DB_NAME: ${WORDPRESS_DB_NAME:-wp}
@@ -136,7 +136,7 @@ services:
       timeout: 5s
       retries: 20
 
-  # --- Main app (S1): own container, own Postgres; no auth DB credentials (C2) ---
+  # --- Main app: own container, own Postgres; no auth DB credentials ---
   app-db:
     image: postgres:16
     restart: unless-stopped
@@ -168,9 +168,9 @@ services:
       APP_DB_USER: ${APP_DB_USER:-app}
       APP_DB_PASSWORD: ${APP_DB_PASSWORD:-app}
       APP_SECRET_KEY: ${APP_SECRET_KEY:-dev-only-app-secret}
-      # Public keys only; deliberately no depends_on auth, so the app runs without it (R9).
+      # Public keys only; deliberately no depends_on auth, so the app runs without it.
       AUTH_JWKS_URL: http://auth:8001/.well-known/jwks.json
-      # Read-only source for import_wp (R2): the WP MariaDB above.
+      # Read-only source for import_wp: the WP MariaDB above.
       WP_DB_HOST: db
       WP_DB_PORT: "3306"
       WP_DB_NAME: ${WORDPRESS_DB_NAME:-wp}

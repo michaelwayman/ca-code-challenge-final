@@ -1,4 +1,4 @@
-"""Auth service settings. Dev-grade by design (O8): DEBUG on, runserver, env-provided secrets."""
+"""Auth service settings. Dev-grade by design: DEBUG on, runserver, env-provided secrets."""
 
 import os
 from datetime import timedelta
@@ -11,7 +11,7 @@ DEBUG = True
 ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
-    # Admin is the operator tool for roles and token revocation (R13, R12).
+    # Admin is the operator tool for roles and token revocation.
     "django.contrib.admin",
     "django.contrib.contenttypes",
     "django.contrib.auth",
@@ -44,7 +44,7 @@ TEMPLATES = [
     }
 ]
 
-STATIC_URL = "static/"  # served by runserver with DEBUG on (O8)
+STATIC_URL = "static/"  # served by runserver with DEBUG on
 
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"
@@ -62,13 +62,13 @@ DATABASES = {
 
 AUTH_USER_MODEL = "accounts.User"
 
-# Django's default first (new and rehashed passwords), WP last for imported hashes (R28).
+# Django's default first (new and rehashed passwords), WP last for imported hashes.
 PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.PBKDF2PasswordHasher",
     "accounts.hashers.WordPressPasswordHasher",
 ]
 
-# Read-only source for import_wp_users (R10); MariaDB from the WP compose stack (A8).
+# Read-only source for import_wp_users: MariaDB from the WP compose stack.
 WP_DB = {
     "host": os.environ.get("WP_DB_HOST", "db"),
     "port": int(os.environ.get("WP_DB_PORT", "3306")),
@@ -81,8 +81,8 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 USE_TZ = True
 TIME_ZONE = "UTC"
 
-# Token issuing (Q6: 10 min RS256 access token, public keys via JWKS).
+# Token issuing: 10 min RS256 access token, public keys via JWKS.
 AUTH_KEYS_DIR = Path(os.environ.get("AUTH_KEYS_DIR", BASE_DIR / "keys"))
 ACCESS_TOKEN_TTL = timedelta(minutes=10)
-REFRESH_TOKEN_TTL = timedelta(days=7)  # A5: bounded lifetime
+REFRESH_TOKEN_TTL = timedelta(days=7)  # bounded, so a leaked refresh token stops working
 JWKS_MAX_AGE = 300  # seconds consumers may cache the key set

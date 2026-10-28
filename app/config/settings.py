@@ -1,4 +1,4 @@
-"""Main app settings. Dev-grade by design (O8). Holds credentials for its own DB only (C2)."""
+"""Main app settings. Dev-grade by design. Holds credentials for its own DB only."""
 
 import os
 from pathlib import Path
@@ -29,7 +29,7 @@ TEMPLATES = [
     }
 ]
 
-# Compiled CSS/JS from frontend/dist (mounted at /srv/frontend); runserver serves it (O8).
+# Compiled CSS/JS from frontend/dist (mounted at /srv/frontend); runserver serves it.
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [
     p for p in [Path("/srv/frontend/dist"), BASE_DIR.parent / "frontend" / "dist"] if p.exists()
@@ -49,7 +49,7 @@ DATABASES = {
     }
 }
 
-# Read-only source for import_wp (R2): the WP MariaDB.
+# Read-only source for import_wp: the WP MariaDB.
 WP_DB = {
     "host": os.environ.get("WP_DB_HOST", "db"),
     "port": int(os.environ.get("WP_DB_PORT", "3306")),
@@ -59,13 +59,14 @@ WP_DB = {
 }
 WP_TABLE_PREFIX = os.environ.get("WP_TABLE_PREFIX", "wp_")
 
-# Public keys for token verification (R8, R9); see config/auth.py.
+# Public keys for token verification; see catalog/auth.py.
 AUTH_JWKS_URL = os.environ.get("AUTH_JWKS_URL", "http://auth:8001/.well-known/jwks.json")
 JWKS_CACHE_SECONDS = 300  # matches the auth service's Cache-Control max-age
 JWKS_RETRY_SECONDS = 30  # wait after a failed fetch or a refetch for an unknown kid
 JWKS_TIMEOUT_SECONDS = 2
 
-# No django.contrib.auth here (C2): anonymous requests carry user None, JSON only.
+# No django.contrib.auth here (users live in the auth service): anonymous requests carry
+# user None, JSON only.
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.AllowAny"],

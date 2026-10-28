@@ -1,5 +1,5 @@
 {% extends "catalog/base.html" %}
-{% load stars %}
+{% load display %}
 {% block title %}{{ brand.name }} reviews{% endblock %}
 {% block content %}
 <section class="brand-hero">
@@ -33,7 +33,7 @@
     {% for review in reviews %}
     <article class="review-item">
       <div class="review-head">
-        <h3><a href="/review/{{ review.slug }}/">{{ review.title }}</a></h3>
+        <h3><a href="{% url 'review-detail' review.slug %}">{{ review.title }}</a></h3>
         {% stars review.rating %}
       </div>
       <p class="review-byline">

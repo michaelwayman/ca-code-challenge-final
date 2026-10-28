@@ -10,7 +10,7 @@
 </section>
 <section class="section">
   <div class="container">
-    <div id="brand-list-root" data-api="/api/brands/"></div>
+    <div id="brand-list-root" data-api="{% url 'api:brand-list' %}"></div>
     <noscript><p class="meta">The brand list needs JavaScript.</p></noscript>
     {{ industries|json_script:"brand-list-industries" }}
   </div>

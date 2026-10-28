@@ -1,4 +1,4 @@
-"""Server-rendered pages (R3-R5). Slugs match the WP permalinks (C3)."""
+"""Server-rendered pages. Slugs match the WordPress permalinks, so old links keep working."""
 
 from django.shortcuts import get_object_or_404, render
 
@@ -24,7 +24,7 @@ def review_detail(request, slug):
 
 
 def brand_list(request):
-    """Mount point for the React BrandList (R26); it reads the industry options from json_script."""
+    """Mount point for the React BrandList; it reads the industry options from json_script."""
     with_brands = Industry.objects.filter(brands__isnull=False).distinct()
     industries = list(with_brands.values("slug", "name"))
     return render(request, "catalog/brand_list.html", {"industries": industries})

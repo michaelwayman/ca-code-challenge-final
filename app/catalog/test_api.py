@@ -163,7 +163,7 @@ class BrandListTests(TestCase):
 
 
 class TopReviewRuleTests(TestCase):
-    """R7: top review = highest rating, then newest."""
+    """Top review = highest rating, then newest."""
 
     def test_ties_on_rating_return_the_newest(self):
         brand = make_brand("acme-insurance")

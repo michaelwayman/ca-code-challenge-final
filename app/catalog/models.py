@@ -1,8 +1,9 @@
-"""Brands, reviews, industries and reviewers (R1). Every WP-sourced row carries the WP id
-it came from (wp_id, unique) so import_wp can re-run as an upsert; slug is an attribute."""
+"""Brands, reviews, industries and reviewers. Every WP-sourced row carries the WP id it came
+from (wp_id, unique) so import_wp can re-run as an upsert; slug is an attribute."""
 
 from django.db import models
-from django.db.models import Avg, Count
+from django.db.models import Avg, Count, F, Prefetch, Window
+from django.db.models.functions import RowNumber
 
 
 class Industry(models.Model):
@@ -20,7 +21,8 @@ class Industry(models.Model):
 
 class Reviewer(models.Model):
     """Public profile of a review author. The pk is the auth service user id,
-    deterministic_uuid('wp_user', wp_user_id), so no WP id or credentials live here (C2)."""
+    deterministic_uuid('wp_user', wp_user_id), so no WP id or credentials live here; those
+    belong to the auth service."""
 
     id = models.UUIDField(primary_key=True)
     display_name = models.CharField(max_length=250)
@@ -31,8 +33,31 @@ class Reviewer(models.Model):
 
 class BrandQuerySet(models.QuerySet):
     def with_stats(self):
-        """average_rating is derived from reviews, never stored (R1)."""
+        """Annotate average_rating and review_count; both are derived, never stored."""
         return self.annotate(average_rating=Avg("reviews__rating"), review_count=Count("reviews"))
+
+    def with_top_review(self):
+        """Prefetch each brand's top review into `top_reviews` (a list of zero or one).
+
+        Top review = highest rating, then newest (published_at, then wp_id as the last
+        tie-break). One windowed query covers every brand in the queryset.
+        """
+        ranked = (
+            Review.objects.select_related("reviewer")
+            .annotate(
+                rank=Window(
+                    RowNumber(),
+                    partition_by=F("brand_id"),
+                    order_by=[F("rating").desc(), F("published_at").desc(), F("wp_id").desc()],
+                )
+            )
+            .filter(rank=1)
+        )
+        return self.prefetch_related(Prefetch("reviews", queryset=ranked, to_attr="top_reviews"))
+
+    def for_api(self):
+        """Everything the brand serializer reads, in a fixed number of queries."""
+        return self.with_stats().select_related("industry").with_top_review()
 
 
 class Brand(models.Model):
@@ -44,7 +69,7 @@ class Brand(models.Model):
     short_description = models.TextField(
         null=True,
         blank=True,
-        help_text="Editor-set (R8), shown as is; NULL derives it from excerpt/description",
+        help_text="Editor-set, shown as is; NULL derives it from excerpt/description",
     )
     industry = models.ForeignKey(
         Industry, null=True, blank=True, on_delete=models.SET_NULL, related_name="brands"

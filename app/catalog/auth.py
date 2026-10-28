@@ -1,8 +1,7 @@
-"""Token authentication against the auth service (R8, R9). The main app never calls the auth
-service per request: it verifies tokens locally with public keys from the JWKS, cached in
-process. While the auth service is down the last good key set keeps working; with a cold
-cache and the auth service down there is nothing to verify against, so writes fail closed
-with a 503 (A4)."""
+"""Token authentication against the auth service. The main app never calls the auth service
+per request: it verifies tokens locally with public keys from the JWKS, cached in process.
+While the auth service is down the last good key set keeps working; with a cold cache and
+the auth service down there is nothing to verify against, so writes fail closed with a 503."""
 
 import json
 import logging
@@ -10,10 +9,9 @@ import threading
 import time
 import urllib.request
 
-from cauth import UnknownKid
-from cauth.drf import JWTAuthentication
 from django.conf import settings
 from rest_framework import exceptions
+from shared_auth.drf import JWTAuthentication
 
 logger = logging.getLogger(__name__)
 
@@ -96,13 +94,4 @@ jwks_cache = JWKSCache(
 
 
 class AuthServiceJWT(JWTAuthentication):
-    def get_jwks(self):
-        return jwks_cache.get()
-
-    def authenticate(self, request):
-        try:
-            return super().authenticate(request)
-        except exceptions.AuthenticationFailed as exc:
-            if not isinstance(exc.__cause__, UnknownKid) or not jwks_cache.refresh():
-                raise
-            return super().authenticate(request)
+    key_source = jwks_cache

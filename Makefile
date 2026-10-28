@@ -101,10 +101,10 @@ import-users:
 	$(COMPOSE) exec -T auth python manage.py import_wp_users
 
 token:
-	@$(COMPOSE) exec -T -e AUTH_USER=$(AUTH_USER) -e AUTH_PASS=$(AUTH_PASS) auth python - < scripts/token.py
+	@$(COMPOSE) exec -T -e AUTH_USER=$(AUTH_USER) -e AUTH_PASS=$(AUTH_PASS) app python - token < scripts/api_client.py
 
 patch-brand:
-	@$(COMPOSE) exec -T -e AUTH_USER=$(AUTH_USER) -e AUTH_PASS=$(AUTH_PASS) -e SLUG=$(SLUG) -e DESC="$(DESC)" app python - < scripts/patch_brand.py
+	@$(COMPOSE) exec -T -e AUTH_USER=$(AUTH_USER) -e AUTH_PASS=$(AUTH_PASS) -e SLUG=$(SLUG) -e DESC="$(DESC)" app python - patch-brand < scripts/api_client.py
 
 admin-password:
 	$(COMPOSE) exec auth python manage.py changepassword $(AUTH_USER)

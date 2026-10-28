@@ -1,10 +1,10 @@
-{% load stars %}<article class="card">
-  <h3><a href="/review/{{ review.slug }}/">{{ review.title }}</a></h3>
+{% load display %}<article class="card">
+  <h3><a href="{% url 'review-detail' review.slug %}">{{ review.title }}</a></h3>
   {% stars review.rating %}
   <div class="meta">
-    <a href="/brand/{{ review.brand.slug }}/">{{ review.brand.name }}</a>
+    <a href="{% url 'brand-detail' review.brand.slug %}">{{ review.brand.name }}</a>
     {% if review.reviewer %}· {{ review.reviewer.display_name }}{% endif %}
     · <time datetime="{{ review.published_at|date:'c' }}">{{ review.published_at|date:'j M Y' }}</time>
   </div>
-  <p class="excerpt">{{ review.body|striptags|truncatewords:30 }}</p>
+  <p class="excerpt">{{ review.body|snippet }}</p>
 </article>

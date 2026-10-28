@@ -50,3 +50,4 @@
 - [x] I48 2026-10-28 bug: Clicking the current page number pushState's an identical URL, adding a duplicate history entry (BrandList.jsx page button, no guard) -> R22
 - [x] I49 2026-10-28 adjust: R26 says hero uses the existing shared token, but color-hero-start/end were added; colour matches WP exactly. Reword R26 or accept -> R26
 - [x] I50 2026-10-28 bug: README quick start fails from a wiped state; README should only reference make targets (no raw docker compose exec lines) -> R27
+- [ ] I51 2026-10-28 adjust: assumed ratings round half-up to one decimal in both API and pages (was Python banker's rounding; pages and React list disagreed at .5)
