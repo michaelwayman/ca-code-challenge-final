@@ -18,6 +18,7 @@ def healthz(request):
 
 urlpatterns = [
     path("", views.home, name="home"),
+    path("brands/", views.brand_list, name="brand-list-page"),
     path("brand/<slug:slug>/", views.brand_detail, name="brand-page"),
     path("review/<slug:slug>/", views.review_detail, name="review-page"),
     path("healthz", healthz, name="healthz"),

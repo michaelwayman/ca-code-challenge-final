@@ -2,7 +2,7 @@
 
 from django.shortcuts import get_object_or_404, render
 
-from .models import Brand, Review
+from .models import Brand, Industry, Review
 
 HOME_REVIEW_COUNT = 9
 
@@ -21,3 +21,10 @@ def brand_detail(request, slug):
 def review_detail(request, slug):
     review = get_object_or_404(Review.objects.select_related("brand", "reviewer"), slug=slug)
     return render(request, "catalog/review_detail.html", {"review": review})
+
+
+def brand_list(request):
+    """Mount point for the React BrandList (R26); it reads the industry options from json_script."""
+    with_brands = Industry.objects.filter(brands__isnull=False).distinct()
+    industries = list(with_brands.values("slug", "name"))
+    return render(request, "catalog/brand_list.html", {"industries": industries})

@@ -89,6 +89,80 @@ git commit -m "Refresh seed data"
 
 Seeded volume: 5 brands (one per industry), 60 reviews (12 per brand) authored by 8 reviewer users, 3 static pages (Home/About/Contact), 1 admin user.
 
+## Django system: run it
+
+Dev-grade by design. This is a challenge submission, not a deployable service. Docker is the only prerequisite.
+
+```bash
+cp .env.example .env
+docker compose up -d --build        # WordPress + MariaDB, auth + auth-db, app + app-db
+docker compose exec app python manage.py import_wp          # WP -> main app (safe to re-run)
+docker compose exec auth python manage.py import_wp_users   # wp_users -> auth users (safe to re-run)
+make fe-build                        # compile SCSS and bundle the React component into frontend/dist
+```
+
+| What | URL |
+|---|---|
+| Main app (home, `/brand/<slug>/`, `/review/<slug>/`, `/brands/`, `/api/brands/`) | <http://localhost:8000> |
+| Auth service (`POST /auth/login`, JWKS) | <http://localhost:8001> |
+| WordPress source | <http://localhost:8080> |
+
+**Auth service.** Own Django project, container and Postgres. `import_wp_users` creates one user per `wp_users` row (id = `deterministic_uuid('wp_user', ID)`); WP `administrator` and `editor` become `editor`, everything else `reader`. WP password hashes are carried over verbatim and upgraded to Django's default hasher on the user's first successful login. The main app stores no passwords or roles and verifies tokens locally against the auth service's JWKS.
+
+**Get a token and edit a brand:** see [Editing a brand](#editing-a-brand) below for the `curl` login and `PATCH`.
+
+### React BrandList
+
+`frontend/src/BrandList.jsx` is mounted on `/brands/` by `main.jsx`; Django passes the industry options through `json_script`. State (`industry`, `ordering`, `page`) lives in the URL.
+
+```bash
+make fe-build   # npm ci + sass + vite build -> frontend/dist/css/main.css, frontend/dist/js/brand-list.js
+make fe-dev     # same, rebuilding on change
+make fe-test    # npm test (vitest + Testing Library + axe), in Docker
+```
+
+`./frontend` is mounted read-only into the app container and served by `runserver` at `/static/`, so a rebuild shows on refresh with no restart.
+
+### SCSS
+
+`frontend/scss/` is a 7-1-style tree compiled by `sass frontend/scss/main.scss`:
+
+- `abstracts/_tokens.scss` is the only place design tokens are defined (emitted once as `:root` custom properties); `_mixins.scss` holds the `mobile` breakpoint.
+- `base/` reset, links and focus; `layout/` container, header, footer, section, grid; `components/` hero, card, stars, badge, pagination, review-item, brand-list; `pages/` brand, review, page.
+- **To add a component:** create `components/_name.scss` and add `@use "components/name";` to `main.scss`.
+
+`reference/theme.css` is the compiled WP theme; every selector group in it has a home partial above. Equivalence is structural, not byte-for-byte.
+
+### Shared library (`libs/`)
+
+`cauth` (JWT verification, DRF `JWTAuthentication` and `IsEditor`, roles, `deterministic_uuid`) is a versioned package. Tests run standalone, with no Django project or service:
+
+```bash
+cd libs && python -m venv .venv && .venv/bin/pip install -e '.[test]' && .venv/bin/pytest
+```
+
+A new version reaches each service by bumping `version` in `libs/pyproject.toml`, building the wheel, and changing the exact pin (`cauth==X.Y.Z`) in `auth/requirements.txt` and `app/requirements.txt`, then `docker compose up -d --build`. Claims-version rollout order is in `libs/README.md`.
+
+### Lint and format
+
+```bash
+make lint   # ruff check + format --check, biome check, stylelint (all via Docker)
+make fmt    # apply the fixes
+```
+
+### Decisions, trade-offs, what I'd do differently
+
+- **Two Django projects, one shared library.** Auth owns users, hashes and roles (C2); the main app only verifies RS256 tokens via cached JWKS. Short 10-minute access tokens replace revocation lookups.
+- **`Reviewer` keyed by `deterministic_uuid('wp_user', id)`.** Lets the migration and the auth import run independently, with no runtime call between services.
+- **Average rating is derived, never stored.** The ACF `average_rating` is kept only as `legacy_average_rating` for audit.
+- **Migration is an upsert keyed on `wp_id`**, mirrors WP (unpublished rows are removed), and reads MariaDB in a `READ ONLY` transaction.
+- **Differently with more time:** a real `/api/industries/` endpoint instead of `json_script` options; server-side rendering of the first list page; Playwright tests against the compose stack; a refresh-token rotation story beyond the bounded lifetime; WP body HTML sanitised on import instead of rendered with `|safe`.
+- **Where AI defaults were kept:** DRF generics and page-number pagination, `ModelSerializer`-style shapes, `select_related`/`prefetch_related` for N+1, React hooks with `fetch` and no data library, Vite library-mode IIFE bundle. Defaults that were replaced: unbounded pagination, hash-only passwords, trusting claims without a version check.
+
+### What production would need (dev-grade now)
+
+A WSGI server (gunicorn) instead of `runserver`, TLS, secrets management instead of the committed `.env` defaults, `DEBUG` off and `ALLOWED_HOSTS` set, static files served by a CDN or web server, signing-key rotation and storage, rate limiting on login, HTML sanitising on import, backups and monitoring.
+
 ## Django schema and migration (main app)
 
 `docker compose exec app python manage.py import_wp` copies WP into the main app's Postgres. It reads MariaDB inside a `READ ONLY` transaction (connection from `WP_DB_HOST`, `WP_DB_PORT`, `WP_DB_NAME`, `WP_DB_USER`, `WP_DB_PASSWORD`), keys every row on its WP id (`wp_id`, slug is an ordinary column), and prints created/updated/unchanged/deleted/skipped per table. Re-running it is safe: unchanged rows are not written, edited rows (including renamed slugs) are updated in place. Drafts, reviews pointing at a missing brand, and ratings outside 1-5 are skipped. Postgres mirrors what was imported: a row imported earlier that is now unpublished, trashed, deleted or skipped in WP is deleted (with its reviews, and reviewers left without reviews), which also frees its slug for a new post. An ACF `average_rating` outside 0-5 is stored as null.

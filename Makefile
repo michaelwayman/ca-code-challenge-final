@@ -63,3 +63,17 @@ fmt:
 	-$(RUFF) format .
 	-$(BIOME) check --write --no-errors-on-unmatched frontend
 	-$(STYLELINT) --fix "frontend/scss/**/*.scss"
+
+# --- Frontend (Docker only): SCSS -> dist/css/main.css, Vite -> dist/js/brand-list.js ---
+FE := docker run --rm -v "$(CURDIR)/frontend":/work -w /work -e NPM_CONFIG_UPDATE_NOTIFIER=false $(NODE_IMG) sh -c
+
+.PHONY: fe-build fe-dev fe-test
+
+fe-build:
+	$(FE) 'npm ci --no-audit --no-fund --silent && npm run build'
+
+fe-dev:
+	$(FE) 'npm ci --no-audit --no-fund --silent && npm run dev'
+
+fe-test:
+	$(FE) 'npm ci --no-audit --no-fund --silent && npm test'

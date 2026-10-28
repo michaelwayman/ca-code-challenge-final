@@ -3,6 +3,7 @@
 @use "abstracts";
 @use "base/reset";
 @use "base/links";
+@use "base/focus";
 @use "layout/container";
 @use "layout/header";
 @use "layout/footer";
@@ -14,6 +15,7 @@
 @use "components/badge";
 @use "components/pagination";
 @use "components/review-item";
+@use "components/brand-list";
 @use "pages/brand";
 @use "pages/review";
 @use "pages/page";

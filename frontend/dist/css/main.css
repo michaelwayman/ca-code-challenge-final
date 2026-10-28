@@ -44,6 +44,11 @@ a:hover {
   text-decoration: underline;
 }
 
+:focus-visible {
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
 .container {
   max-width: var(--max-width);
   margin: 0 auto;
@@ -216,6 +221,7 @@ a:hover {
 }
 
 .badge {
+  align-self: flex-start;
   display: inline-block;
   background: #ecfdf5;
   color: var(--color-primary-dark);
@@ -275,6 +281,125 @@ a:hover {
 .review-item .review-body {
   color: #1f2937;
   font-size: 0.95rem;
+}
+
+.brand-filters {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+.brand-filters fieldset {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin: 0;
+  padding: 12px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-card);
+}
+.brand-filters legend {
+  padding: 0 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.brand-filters .check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.95rem;
+}
+.brand-filters .sort {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.brand-filters select {
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-card);
+  font: inherit;
+}
+@media (max-width: 640px) {
+  .brand-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.brand-list ul.grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.brand-list h2 {
+  font-size: 1.25rem;
+  margin: 0 0 16px;
+}
+.brand-list .top-review {
+  margin: 4px 0 0;
+  padding-left: 12px;
+  border-left: 3px solid var(--color-border);
+  font-size: 0.88rem;
+}
+.brand-list .top-review p {
+  margin: 4px 0 0;
+  color: var(--color-muted);
+}
+
+.brand-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+@media (width <= 900px) {
+  .brand-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .brand-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.state-message {
+  padding: 24px;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-card);
+  color: var(--color-muted);
+}
+.state-message p {
+  margin: 0 0 12px;
+}
+.state-message.state-error {
+  border-color: #fca5a5;
+  color: #991b1b;
+}
+.state-message button {
+  padding: 8px 16px;
+  border: 1px solid var(--color-primary);
+  border-radius: 6px;
+  background: var(--color-primary);
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+.state-message button:hover {
+  background: var(--color-primary-dark);
+}
+
+.pagination button.page-numbers {
+  font: inherit;
+  cursor: pointer;
+}
+.pagination button.page-numbers:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .brand-hero {
@@ -380,5 +505,3 @@ a:hover {
   margin-top: 0;
   font-size: 1.75rem;
 }
-
-/*# sourceMappingURL=main.css.map */
