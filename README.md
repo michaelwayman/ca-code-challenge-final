@@ -1,112 +1,15 @@
 # Brand Reviews: WordPress to Django
 
-A WP brand-reviews site migrated to a Django system: a main app with server-rendered pages and a brand API, a React `BrandList`, an SCSS tree, a separate auth service with roles, and a shared token library. The migration is re-runnable. Dev-grade, Docker only.
+A small consumer-reviews site (brands, reviews, industries) rebuilt from WordPress as a Django system: a main app with server-rendered pages and a brand-listing API, a React `<BrandList />` component, an SCSS source tree, a separate Django auth service, and a shared Python library. Docker is the only prerequisite.
 
-**Start here: [Django system: run it](#django-system-run-it).** The sections below that cover the WordPress source (the migration input) come first in this file.
-
----
-
-## The WordPress source
-
-Self-contained, reproducible WordPress site used as the source for a WP → Django migration challenge.
-
-The site is a small consumer-reviews directory: **brands** with profile pages plus user-submitted **reviews** linked to each brand. Two custom post types, one taxonomy, ACF fields, Yoast SEO metadata.
+**This is dev-grade by design.** It's a challenge submission, not a deployable service; see [What production would need](#what-production-would-need).
 
 ## Quick start
 
 ```bash
 cp .env.example .env
-make up
-```
-
-After ~20 seconds:
-
-- Public site: <http://localhost:8080>
-- WP admin:    <http://localhost:8080/wp-admin> (`admin` / `admin`)
-- phpMyAdmin:  <http://localhost:8081>
-- REST root:   <http://localhost:8080/wp-json/wp/v2/>
-
-The DB is auto-imported from `db/dump.sql` on first boot. No manual setup required for candidates.
-
-## Stack
-
-| Service     | Image                            | Port  | Purpose                                |
-|-------------|----------------------------------|-------|----------------------------------------|
-| `db`        | `mariadb:11`                     | -     | Database; auto-imports `db/dump.sql`   |
-| `wordpress` | `wordpress:6.9-php8.3-apache`    | 8080  | WP + Apache + PHP                      |
-| `wpcli`     | `wordpress:cli-php8.3`           | -     | Helper for re-seeding / dumping        |
-| `phpmyadmin`| `phpmyadmin:5`                   | 8081  | Optional DB browser                    |
-
-## What's committed
-
-```
-docker-compose.yml          # the stack
-.env.example                # config defaults
-Makefile                    # make targets
-db/dump.sql                 # seeded database snapshot
-scripts/seed.sh             # bootstrap script (install + plugins + seed)
-wp-content/plugins/         # WP default plugins + ACF + Yoast (committed for offline reproducibility)
-wp-content/mu-plugins/
-  cpt.php                   # registers `brand` and `review` CPTs and `industry` taxonomy
-  acf-fields.php            # registers ACF field groups in code
-wp-content/themes/
-  consumer-reviews/         # custom theme used by the site
-```
-
-WP core files and the default themes (e.g. twentytwentyfour) live inside the `wp_files` named volume and are recreated from the image on first boot. Only the custom `consumer-reviews` theme is committed to the repo.
-
-## Make targets
-
-```
-make up         # start db + wordpress + phpmyadmin
-make down       # stop containers (keeps volumes)
-make reset      # stop AND wipe volumes (next 'up' re-imports dump.sql)
-make logs       # tail wordpress + db
-make wp ARGS="plugin list"   # run wp-cli inside the stack
-make bootstrap  # full re-seed: WP core install + plugin install + content seed
-make dump       # export the current DB to db/dump.sql
-make status     # show running services
-```
-
-## Rebuilding the dump from scratch
-
-If you change the schema or seed data:
-
-```bash
-make reset
-make up
-make bootstrap
-make dump
-git add db/dump.sql wp-content/plugins
-git commit -m "Refresh seed data"
-```
-
-`make bootstrap` is idempotent enough to re-run, but the cleanest path is reset → up → bootstrap → dump.
-
-## Content model
-
-**`brand` CPT** at `/brand/<slug>/`
-- Standard fields: title, content (body), featured image (optional)
-- ACF fields: `website_url`, `founded_year`, `headquarters`, `average_rating`
-- Taxonomy: `industry`
-- Yoast: `_yoast_wpseo_title`, `_yoast_wpseo_metadesc` in postmeta
-
-**`review` CPT** at `/review/<slug>/`
-- Standard fields: title, content (review body), post_author (mapped to a real WP user)
-- ACF fields: `rating` (1-5), `reviewer_name`, `reviewer_location`, `brand` (post object → brand id)
-
-Seeded volume: 5 brands (one per industry), 60 reviews (12 per brand) authored by 8 reviewer users, 3 static pages (Home/About/Contact), 1 admin user.
-
-## Django system: run it
-
-Dev-grade by design. This is a challenge submission, not a deployable service. Docker is the only prerequisite.
-
-### Main app
-
-```bash
-cp .env.example .env
 docker compose up -d --build        # WordPress + MariaDB, auth + auth-db, app + app-db
-docker compose exec app python manage.py import_wp          # WP -> main app (safe to re-run)
+docker compose exec app python manage.py import_wp          # WordPress -> main app (safe to re-run)
 docker compose exec auth python manage.py import_wp_users   # wp_users -> auth users (safe to re-run)
 make fe-build                        # compile SCSS and bundle the React component into frontend/dist
 ```
@@ -115,102 +18,39 @@ make fe-build                        # compile SCSS and bundle the React compone
 |---|---|
 | Main app (home, `/brand/<slug>/`, `/review/<slug>/`, `/brands/`, `/api/brands/`) | <http://localhost:8000> |
 | Auth service (`POST /auth/login`, JWKS) | <http://localhost:8001> |
-| WordPress source | <http://localhost:8080> |
+| WordPress source (admin / admin) | <http://localhost:8080> |
+
+The WordPress database is seeded from `db/dump.sql` on first boot, and both imports read it live from MariaDB.
+
+## Run the pieces
+
+### Main app
+
+`docker compose up -d --build` starts `app` (Django `runserver`) with its own Postgres. `./frontend` is mounted read-only and served at `/static/`, so a frontend rebuild shows on refresh with no restart.
 
 ### Auth service
 
-Own Django project, container and Postgres. `import_wp_users` creates one user per `wp_users` row (id = `deterministic_uuid('wp_user', ID)`); WP `administrator` and `editor` become `editor`, everything else `reader`. WP password hashes are carried over verbatim and upgraded to Django's default hasher on the user's first successful login. The main app stores no passwords or roles and verifies tokens locally against the auth service's JWKS.
+Its own Django project, container and Postgres. `import_wp_users` creates one user per `wp_users` row (id = `deterministic_uuid('wp_user', ID)`); WP `administrator` and `editor` become `editor`, everything else `reader`. **WP password hashes are carried over verbatim and upgraded to Django's default hasher on the user's first successful login** (see `auth/accounts/hashers.py`). Roles are edited in the Django admin; create an operator with `docker compose exec auth python manage.py createsuperuser`. The main app stores no passwords or roles.
 
-**Get a token and edit a brand:** see [Editing a brand](#editing-a-brand) below for the `curl` login and `PATCH`.
+### React component and SCSS
 
-### React BrandList
-
-`frontend/src/BrandList.jsx` is mounted on `/brands/` by `main.jsx`; Django passes the industry options through `json_script`. State (`industry`, `ordering`, `page`) lives in the URL. Filter and sort changes use `replaceState` (so Back leaves the list instead of stepping through earlier filters); page changes use `pushState`. Pagination is a numbered, windowed list (`1 … 7 8 9 … 18`, first/last always shown). Results are cached per URL in the component for 30s (no request inside that window, then shown and revalidated), and a refetch keeps the old results dimmed with a spinner instead of blanking the list.
+`frontend/src/BrandList.jsx` is mounted on `/brands/` by `main.jsx`; Django passes the industry options through `json_script`.
 
 ```bash
 make fe-build   # npm ci + sass + vite build -> frontend/dist/css/main.css, frontend/dist/js/brand-list.js
 make fe-dev     # same, rebuilding on change
-make fe-test    # npm test (vitest + Testing Library + axe), in Docker
+make fe-test    # vitest + Testing Library + axe, in Docker
 ```
 
-`./frontend` is mounted read-only into the app container and served by `runserver` at `/static/`, so a rebuild shows on refresh with no restart.
+The SCSS tree under `frontend/scss/` is compiled with `sass frontend/scss/main.scss` (no warnings). `abstracts/_tokens.scss` is the only place design tokens are defined; `components/` has one partial per component. **To add a component:** create `components/_name.scss` and add `@use "components/name";` to `main.scss`.
 
-### SCSS
+## Get a token and call the protected endpoint
 
-`frontend/scss/` is a 7-1-style tree compiled by `sass frontend/scss/main.scss`:
-
-- `abstracts/_tokens.scss` is the only place design tokens are defined (emitted once as `:root` custom properties); `_mixins.scss` holds the `mobile` breakpoint.
-- `base/` reset, links and focus; `layout/` container, header, footer, section, grid; `components/` hero, card, stars, badge, pagination, review-item, brand-list; `pages/` brand, review, page.
-- **To add a component:** create `components/_name.scss` and add `@use "components/name";` to `main.scss`.
-
-`reference/theme.css` is the compiled WP theme; every selector group in it has a home partial above. Equivalence is structural, not byte-for-byte.
-
-### Shared library (`libs/`)
-
-`cauth` (JWT verification, DRF `JWTAuthentication` and `IsEditor`, roles, `deterministic_uuid`) is a versioned package. Tests run standalone, with no Django project or service:
+`PATCH /api/brands/<slug>/` needs an editor's access token from the auth service. WordPress's `admin` user is an editor; on a fresh import its password is `admin`.
 
 ```bash
-cd libs && python -m venv .venv && .venv/bin/pip install -e '.[test]' && .venv/bin/pytest
-```
-
-A new version reaches each service by bumping `version` in `libs/pyproject.toml`, building the wheel, and changing the exact pin (`cauth==X.Y.Z`) in `auth/requirements.txt` and `app/requirements.txt`, then `docker compose up -d --build`. Claims-version rollout order is in `libs/README.md`.
-
-### Lint and format
-
-```bash
-make lint   # ruff check + format --check, biome check, stylelint (all via Docker)
-make fmt    # apply the fixes
-```
-
-### Decisions, trade-offs, what I'd do differently
-
-- **Two Django projects, one shared library.** Auth owns users, hashes and roles (C2); the main app only verifies RS256 tokens via cached JWKS. Short 10-minute access tokens replace revocation lookups.
-- **`Reviewer` keyed by `deterministic_uuid('wp_user', id)`.** Lets the migration and the auth import run independently, with no runtime call between services.
-- **Average rating is derived, never stored.** The ACF `average_rating` is kept only as `legacy_average_rating` for audit.
-- **Migration is an upsert keyed on `wp_id`**, mirrors WP (unpublished rows are removed), and reads MariaDB in a `READ ONLY` transaction.
-- **Differently with more time:** a real `/api/industries/` endpoint instead of `json_script` options; server-side rendering of the first list page; Playwright tests against the compose stack; a refresh-token rotation story beyond the bounded lifetime; WP body HTML sanitised on import instead of rendered with `|safe`.
-- **Where AI defaults were kept:** DRF generics and page-number pagination, `ModelSerializer`-style shapes, `select_related`/`prefetch_related` for N+1, React hooks with `fetch` and no data library, Vite library-mode IIFE bundle. Defaults that were replaced: unbounded pagination, hash-only passwords, trusting claims without a version check.
-
-### What production would need (dev-grade now)
-
-A WSGI server (gunicorn) instead of `runserver`, TLS, secrets management instead of the committed `.env` defaults, `DEBUG` off and `ALLOWED_HOSTS` set, static files served by a CDN or web server, signing-key rotation and storage, rate limiting on login, HTML sanitising on import, backups and monitoring.
-
-## Django schema and migration (main app)
-
-`docker compose exec app python manage.py import_wp` copies WP into the main app's Postgres. It reads MariaDB inside a `READ ONLY` transaction (connection from `WP_DB_HOST`, `WP_DB_PORT`, `WP_DB_NAME`, `WP_DB_USER`, `WP_DB_PASSWORD`), keys every row on its WP id (`wp_id`, slug is an ordinary column), and prints created/updated/unchanged/deleted/skipped per table. Re-running it is safe: unchanged rows are not written, edited rows (including renamed slugs) are updated in place. Drafts, reviews pointing at a missing brand, and ratings outside 1-5 are skipped. Postgres mirrors what was imported: a row imported earlier that is now unpublished, trashed, deleted or skipped in WP is deleted (with its reviews, and reviewers left without reviews), which also frees its slug for a new post. An ACF `average_rating` outside 0-5 is stored as null.
-
-| WP source | Django |
-|---|---|
-| `industry` term | `Industry` (`wp_id` = term_id) |
-| `brand` post + ACF | `Brand`: `website_url`, `founded_year`, `headquarters` as typed columns; `industry` FK (lowest term id if WP has several) |
-| ACF `average_rating` | `Brand.legacy_average_rating`, audit only. The displayed rating is derived from reviews (`Brand.objects.with_stats()`), never stored |
-| `_yoast_wpseo_title`, `_yoast_wpseo_metadesc` | `Brand.seo_title`, `Brand.seo_description` |
-| `review` post + ACF | `Review`: `rating` (1-5 check constraint), `reviewer_location`, `brand` FK |
-| `post_author` (wp_users) | `Reviewer`, pk = `deterministic_uuid('wp_user', ID)` = the auth service user id. Only `display_name` is kept; no WP id, password or role |
-
-Dropped: the ACF field-reference meta (`_website_url`, `_rating`, ...), ACF `reviewer_name` (identical to the author's display name in every row; the reviewer FK carries it), `_wp_page_template`, and WP pages and posts (out of scope).
-
-## Brand listing API (main app)
-
-The listing sends `Cache-Control: public, max-age=30, stale-while-revalidate=120`, so browsers reuse repeat filter/sort/page URLs for 30s (an editor's PATCH can take that long to show).
-
-`GET http://localhost:8000/api/brands/` is public (no token) and returns `{count, next, previous, results}`. Each row has `name`, `slug`, `industry` (`{name, slug}` or null), `average_rating` (mean of review ratings to one decimal, null with no reviews), `review_count`, `short_description` (an editor's value exactly as saved; otherwise the WP excerpt, else the body with tags stripped, 30 words) and `top_review` (`title`, `slug`, `rating`, `reviewer`, `published_at`, 30-word `snippet`, or null).
-
-| Parameter | Effect |
-|---|---|
-| `industry=<slug>` | Filter; repeat for several (`?industry=finance&industry=retail`) |
-| `ordering=` | `name` (default), `avg_rating`, `review_count`; prefix `-` for descending. Brands without reviews sort last; ties fall back to name. Unknown values sort by name |
-| `page=`, `page_size=` | 20 per page by default, at most 100 |
-
-**Top review rule:** a brand's top review is the one with the highest rating; among equal ratings the newest (`published_at`) wins, and WP id breaks any remaining tie. A brand with no reviews has `top_review: null`. One windowed query (`ROW_NUMBER() OVER (PARTITION BY brand ORDER BY rating DESC, published_at DESC)`) picks it for every brand on the page, so a page costs three queries whatever its size (count, brands with stats, top reviews); a test asserts this.
-
-### Editing a brand
-
-`GET /api/brands/<slug>/` returns one row in the listing shape and is public: reads never look at the `Authorization` header, so a stale or broken token cannot fail them. `PATCH /api/brands/<slug>/` with `{"short_description": "..."}` needs an editor's access token from the auth service:
-
-```sh
 TOKEN=$(curl -s -X POST localhost:8001/auth/login -H 'Content-Type: application/json' \
-  -d '{"username": "<editor>", "password": "<password>"}' | python3 -c 'import sys, json; print(json.load(sys.stdin)["access_token"])')
+  -d '{"username": "admin", "password": "admin"}' | python3 -c 'import sys, json; print(json.load(sys.stdin)["access_token"])')
 curl -X PATCH localhost:8000/api/brands/acme-insurance/ -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' -d '{"short_description": "Fair prices, slow claims."}'
 ```
@@ -223,46 +63,95 @@ curl -X PATCH localhost:8000/api/brands/acme-insurance/ -H "Authorization: Beare
 | Any key besides `short_description`, or none | 400; nothing is written |
 | `PUT` | 405 |
 
-`short_description` (at most 1000 characters) is stored in its own nullable column, `Brand.short_description`, and every read returns it exactly as saved: an empty string stays empty and long values are not trimmed. Until a brand is edited the column is NULL and reads derive the value from the WP excerpt or body as in the listing. `import_wp` only rewrites the excerpt, so a re-run keeps editors' values.
+Login also returns a refresh token. `POST /auth/refresh` returns a new access token with the user's current role, and `POST /auth/logout` revokes the refresh token.
 
 ### When the auth service is down
 
-The main app never calls the auth service per request. It verifies tokens locally with the public keys from `http://auth:8001/.well-known/jwks.json`, cached in process (`config/auth.py`), and compose deliberately has no `depends_on: auth` for it.
+The main app never calls the auth service per request. It verifies tokens locally with the public keys from `http://auth:8001/.well-known/jwks.json`, cached in process (`app/config/auth.py`), and compose deliberately has no `depends_on: auth` for it.
 
-- **Reads** (`/api/brands/`, `/api/brands/<slug>/`, pages, `/healthz`) do not touch auth at all and keep returning 200.
-- **Writes with a still-valid token** keep working: the key set is refetched every 5 minutes (the JWKS `max-age`), and a failed refetch keeps the last good set. Revocation therefore rests on the 10 minute token lifetime, not on reaching the auth service.
-- **Cold cache** (main app restarted while auth is down): there is nothing to verify against, so writes fail closed with **503** `Signing keys unavailable`, never a 500 and never an unverified write.
-- A failed fetch is not retried for 30 seconds, so an outage costs one 2 second timeout per window rather than one per request. A token with an unknown `kid` (the auth service rotated keys) triggers an immediate refetch, limited to one per 30 seconds.
+- **Reads** (`/api/brands/`, `/api/brands/<slug>/`, pages, `/healthz`) never touch auth and keep returning 200.
+- **Writes with a still-valid token** keep working: the key set is refetched every 5 minutes, and a failed refetch keeps the last good set. Revocation therefore rests on the 10-minute token lifetime.
+- **Cold cache** (main app restarted while auth is down): there is nothing to verify against, so writes fail closed with **503** `Signing keys unavailable`.
+- A failed fetch is not retried for 30 seconds, and a token with an unknown `kid` triggers an immediate refetch, at most once per 30 seconds.
 
-Try it: `docker compose stop auth`, then repeat the `PATCH` above with a token obtained before stopping it; `docker compose restart app` and the same `PATCH` returns 503; `docker compose start auth` and it succeeds again within 30 seconds.
+Try it: `docker compose stop auth`, repeat the `PATCH` with the token you already have (200), then `docker compose restart app` and repeat it (503), then `docker compose start auth`.
 
-## Theme
+## Brand listing API
 
-The active theme is a custom one at `wp-content/themes/consumer-reviews/` (committed to the repo). It renders:
+`GET /api/brands/` is public and returns `{count, next, previous, results}`. Each row has `name`, `slug`, `industry` (`{name, slug}` or null), `average_rating` (mean of review ratings to one decimal, null with no reviews), `review_count`, `short_description` and `top_review` (`title`, `slug`, `rating`, `reviewer`, `published_at`, 30-word `snippet`, or null).
 
-- Homepage with featured brands and recent reviews
-- Brand archive (`/brand/`) — card grid
-- Single brand page (`/brand/<slug>/`) — hero with industry badge, star rating, website / founded / HQ metadata, body content, and full list of customer reviews
-- Review archive (`/review/`) — paginated list
-- Single review (`/review/<slug>/`) — back-link to brand, star rating, reviewer name/location, body
-- Page template for About / Contact / Home pages
+| Parameter | Effect |
+|---|---|
+| `industry=<slug>` | Filter; repeat for several (`?industry=finance&industry=retail`) |
+| `ordering=` | `name` (default), `avg_rating`, `review_count`; prefix `-` for descending. Brands without reviews sort last; ties fall back to name, then id. Unknown values sort by name |
+| `page=`, `page_size=` | 20 per page by default, at most 100 |
 
-The theme is intentionally small (~10 PHP files + one stylesheet) and is meant to show candidates what the data renders as. They are not expected to clone the theme — just to migrate the underlying data.
+The response sends `Cache-Control: public, max-age=30, stale-while-revalidate=120`, so browsers reuse repeat URLs for 30s (an editor's `PATCH` can take that long to show).
 
-## Endpoints worth knowing
+**Top review rule:** a brand's top review is the one with the highest rating; among equal ratings the newest (`published_at`) wins. A brand with no reviews has `top_review: null`. One windowed query picks it for every brand on the page, so a page costs three queries whatever its size; a test asserts this.
 
-- `/wp-json/wp/v2/brands` — list brands (note: `rest_base` is `brands` even though post type is `brand`)
-- `/wp-json/wp/v2/brands/<id>` — single brand with ACF fields under `acf`
-- `/wp-json/wp/v2/reviews` — list reviews
-- `/wp-json/wp/v2/industry` — taxonomy terms
-- `/wp-json/wp/v2/users` — reviewer users
-- `/wp-json/wp/v2/pages` — static pages
+## Shared library (`libs/`)
 
-ACF fields are exposed natively via `show_in_rest: true` set in `wp-content/mu-plugins/acf-fields.php`.
+`cauth` (JWT verification, DRF `JWTAuthentication` and `IsEditor`, roles, `deterministic_uuid`) is a versioned package. Its tests run standalone, with no Django project or service:
 
-## Notes for the maintainer
+```bash
+cd libs && python -m venv .venv && .venv/bin/pip install -e '.[test]' && .venv/bin/pytest
+```
 
-- The `wp-content/plugins/advanced-custom-fields/` and `wp-content/plugins/wordpress-seo/` plugin code is GPL and committed to the repo so candidates don't need internet on first boot.
-- `wp-content/plugins/akismet/` and `hello.php` are WP defaults — left in place but inactive.
-- The site URL is hardcoded as `http://localhost:8080` in the dump (in `wp_options.siteurl` and `home`). Changing the port requires a search/replace in `db/dump.sql` before commit, or just override via `WP_HOME` / `WP_SITEURL` constants.
-- `_yoast_wpseo_*` postmeta is seeded for brand posts only.
+**How a new version reaches each service:** bump `version` in `libs/pyproject.toml`, build the wheel, change the exact pin (`cauth==X.Y.Z`) in `auth/requirements.txt` and `app/requirements.txt`, then `docker compose up -d --build`.
+
+**Which module each service imports:** the auth service imports `cauth.roles` and `cauth.ids.deterministic_uuid` (and `cauth.tokens` in tests); the main app imports `cauth.drf` (`JWTAuthentication`, `IsEditor`), which uses `cauth.tokens.verify`, and `deterministic_uuid` for reviewer links.
+
+**Releasing a breaking claims change (expand-then-contract).** Tokens carry a `version` claim and `verify` accepts the current version N and N-1. (1) Release the library accepting N and N+1 and deploy it to the main app first. (2) Deploy the auth service with it; it starts issuing N+1 while N tokens still verify. (3) Once the N tokens have expired (10 minutes), release the library with N dropped. Never deploy the issuer before every consumer accepts the new version.
+
+## Run the migration and re-run it safely
+
+```bash
+docker compose exec app python manage.py import_wp          # brands, reviews, industries, reviewers
+docker compose exec auth python manage.py import_wp_users   # wp_users -> auth users
+```
+
+`import_wp` reads MariaDB inside a `READ ONLY` transaction (connection from `WP_DB_HOST`, `WP_DB_PORT`, `WP_DB_NAME`, `WP_DB_USER`, `WP_DB_PASSWORD`), keys every row on its WP id (`wp_id`; the slug is an ordinary column), and prints created, updated, unchanged, deleted and skipped counts per table. **Re-running is safe**: unchanged rows are not written, and edited rows (including renamed slugs) are updated in place. Drafts, reviews pointing at a missing brand, and ratings outside 1 to 5 are skipped. Postgres mirrors the import set: a row imported earlier that is now unpublished, trashed, deleted or invalid in WP is deleted (with its reviews), which also frees its slug. An ACF `average_rating` outside 0 to 5 is stored as null. `import_wp` never overwrites an editor's `short_description`.
+
+| WP source | Django |
+|---|---|
+| `industry` term | `Industry` (`wp_id` = term_id) |
+| `brand` post + ACF | `Brand`: `website_url`, `founded_year`, `headquarters` as typed columns; `industry` FK (lowest term id if WP has several) |
+| ACF `average_rating` | `Brand.legacy_average_rating`, audit only. The displayed rating is derived from reviews, never stored |
+| `_yoast_wpseo_title`, `_yoast_wpseo_metadesc` | `Brand.seo_title`, `Brand.seo_description` |
+| `review` post + ACF | `Review`: `rating` (1 to 5 check constraint), `reviewer_location`, `brand` FK |
+| `post_author` (wp_users) | `Reviewer`, pk = `deterministic_uuid('wp_user', ID)` = the auth user id; only `display_name` is kept |
+
+**Dropped:** the ACF field-reference meta (`_website_url`, `_rating`, ...), ACF `reviewer_name` (identical to the author's display name in every row), `_wp_page_template`, and WP pages and posts (out of scope).
+
+## Lint and format
+
+```bash
+make lint   # ruff check + format --check, biome check, stylelint (all via Docker)
+make fmt    # apply the fixes
+```
+
+## Decisions I'd defend live
+
+| # | Question | Answer | Where it lives |
+|---|---|---|---|
+| 1 | **Schema modeling.** A brand has an `average_rating` ACF field AND has reviews with individual ratings. Do you store the average, derive it, or both? Why? How do you handle reviewer users — full Django users, a separate Reviewer model, or denormalized strings on each review? | Derived, never stored: `average_rating` is computed from reviews (`Brand.objects.with_stats()`), and the ACF value is kept only as `legacy_average_rating` for audit. Reviewers are a separate `Reviewer` model, not Django users and not strings on each review. Its pk is `deterministic_uuid('wp_user', id)`, which is also the auth user id, so the two services link without a runtime call. Only `display_name` is kept. | `app/catalog/models.py`; R1, T3 |
+| 2 | **Postmeta strategy.** `wp_postmeta` has ~30 fields per brand (including Yoast SEO). Which became first-class model fields, which became JSON, which did you drop? | First-class columns: `website_url`, `founded_year`, `headquarters`, review `rating` and `reviewer_location`, and the Yoast title and description as `seo_title` and `seo_description`. No JSON field was needed. Dropped: the ACF field-reference meta, ACF `reviewer_name` (the same as the author's display name in every row), `_wp_page_template`, and WP pages and posts. | `models.py`; R1; [Migration](#run-the-migration-and-re-run-it-safely) |
+| 3 | **Migration approach.** Why this approach? How do you re-run it safely? How would you scale it to 100x the data? | `import_wp` is an upsert keyed on the WP post id, read-only against MariaDB, and it mirrors WP, so rows now unpublished or invalid are deleted. It reports created, updated, unchanged, deleted and skipped counts, and a test shows a second run changes nothing. **At 100x** (proposed, not implemented): today it reads every row into memory and writes row by row inside one transaction, which is fine for hundreds of rows and not for tens of thousands. I would read the source in id-range chunks, `bulk_create` and `bulk_update` in batches, commit per table, keep the mirror-delete step as a set of seen ids, and run it as a job instead of a one-off shell command. | `app/catalog/wp_import.py`; R2, R10 |
+| 4 | **API contract.** Why this pagination shape? Why these filter/sort param names? What would change if a mobile client also consumed it? | DRF page-number pagination with the standard `count / next / previous / results` envelope. Params are `industry` (repeatable), `ordering`, `page` and `page_size` (default 20, max 100); ties break on name then id so pages never overlap, and the query count is constant per page. Reads are public JSON with `Cache-Control: public, max-age=30, stale-while-revalidate=120`. **For a mobile client** (proposed, not implemented): cursor pagination for infinite scroll, because page numbers shift when rows are added; a `fields=` option to trim the payload; a `/api/v1/` prefix, since installed apps can't be forced to update; and conditional requests (`ETag`). Token auth needs no change, since a bearer token plus the refresh endpoint already suits a mobile app. | `app/catalog/api.py`; R6 |
+| 5 | **Component & state.** Where does `<BrandList />` state live? How do you handle URL-synced filter/sort state? What's your loading/error UX? | State lives in the URL (`?industry=&ordering=&page=`), read on mount and on back/forward. Filter and sort changes use `replaceState` so Back leaves the list instead of stepping through earlier filters, and page changes use `pushState`. Loading shows skeleton cards on first load, then keeps the old results dimmed with a spinner so the grid never jumps. Responses are cached per URL for 30s. Errors show a message with Retry, empty results offer Clear filters, and a superseded response is ignored. | `frontend/src/BrandList.jsx`, `url.js`; R22 to R25 |
+| 6 | **SCSS architecture.** Why these partials? Why these tokens? How would a second engineer add a new component without breaking yours? | A 7-1 layout (`abstracts`, `base`, `layout`, `components`, `pages`, `main.scss`) compiled with the Sass CLI. Every design token is defined once in `abstracts/_tokens.scss` and emitted as `:root` custom properties; class names follow the WP `theme.css`. To add a component, create `components/_name.scss` and add one `@use` line to `main.scss`. | `frontend/scss/`; R21, T6, T7 |
+| 7 | **Service boundary.** What does the auth service own and what does the main app own? How does the main app validate a token, and what happens when the auth service is down? How do you revoke a token or change a user's role before the token expires? | Auth owns users, password hashes and roles; the main app has no password or role column. The main app verifies RS256 tokens locally against the auth service's JWKS, cached in process. If auth is down, reads and valid-token edits keep working, and a cold cache returns 503, never an unverified write. Revocation is the 10-minute access-token lifetime plus refresh tokens stored hashed and revocable (logout or a Django admin action). A role change takes effect on the next refresh. | `auth/`, `app/config/auth.py`; R8 to R15; C2 |
+| 8 | **Shared library.** What went into it and what did you keep out? How do the two services pin and upgrade it? How would you release a breaking change without deploying both services at the same moment? | `cauth` holds only JWT verification, the DRF `JWTAuthentication` and `IsEditor` classes, the role constants and `deterministic_uuid`. It has no models, views or service logic. It is a versioned wheel installed by both Dockerfiles at an exact pinned version. A breaking claims change is released expand-then-contract: the library accepts claims versions N and N-1, the consumer deploys first, then the issuer, then N-1 is dropped. Its tests run standalone. | `libs/`; R16 to R20; C4 |
+
+## Modeling decisions, what I'd do differently, and AI defaults
+
+**Modeling decisions.** The average rating is derived from reviews so it can never disagree with them. Reviewers are a small profile table keyed by the same deterministic id as the auth user, so the migration and the user import can run independently with no call between services. The migration is an upsert keyed on `wp_id` that mirrors WordPress, so it is safe to re-run.
+
+**What I would do differently with more time.** A real `/api/industries/` endpoint instead of passing industry options through `json_script`; server-side rendering of the first list page; Playwright tests against the compose stack; a refresh-token rotation story beyond the bounded 7-day lifetime; sanitising WP body HTML on import instead of rendering it with `|safe`; and the chunked, batched migration described in the decisions table.
+
+**Where I chose the AI's default.** DRF generics and page-number pagination, `select_related` / `prefetch_related` for N+1, React hooks with plain `fetch` and no data library, and a Vite library-mode bundle. Defaults I replaced: unbounded pagination, hash-only passwords, and trusting token claims without a version check.
+
+## What production would need
+
+A WSGI server (gunicorn) instead of `runserver`, TLS, secrets management instead of the committed `.env` defaults, `DEBUG` off and `ALLOWED_HOSTS` set, static files served by a CDN or web server, signing-key rotation on a schedule with secure storage (rotation is manual today, via `add_signing_key`), rate limiting on login, HTML sanitising on import, backups and monitoring.
