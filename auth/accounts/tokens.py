@@ -5,12 +5,12 @@ import jwt
 from cauth import CLAIMS_VERSION
 from django.conf import settings
 
-from .keys import signing_key
+from .keys import active_key
 from .models import RefreshToken, User
 
 
 def issue_access_token(user: User) -> str:
-    key = signing_key()
+    key = active_key()
     now = datetime.now(UTC)
     claims = {
         "sub": str(user.pk),

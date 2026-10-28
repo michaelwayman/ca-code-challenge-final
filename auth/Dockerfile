@@ -12,4 +12,4 @@ COPY auth/requirements.txt .
 RUN pip install --no-cache-dir --find-links /wheels -r requirements.txt
 COPY auth/ .
 EXPOSE 8001
-CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py ensure_signing_key && exec python manage.py runserver 0.0.0.0:8001"]
+CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py add_signing_key --if-none && exec python manage.py runserver 0.0.0.0:8001"]
