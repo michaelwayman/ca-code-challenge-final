@@ -1,9 +1,10 @@
 """Public brand listing API (R6). Each page costs a fixed number of queries: one count,
 one for brands with their stats and industry, one for every brand's top review (R7)."""
 
+from html.parser import HTMLParser
+
 from django.db.models import F, Prefetch, Window
-from django.db.models.functions import RowNumber
-from django.utils.html import strip_tags
+from django.db.models.functions import NullIf, RowNumber
 from django.utils.text import Truncator
 from rest_framework import generics, pagination, serializers
 
@@ -15,12 +16,28 @@ SNIPPET_WORDS = 30
 ORDERINGS = {
     "name": F("name"),
     "avg_rating": F("average_rating"),
-    "review_count": F("review_count"),
+    # NULL for zero reviews so nulls_last puts unreviewed brands last in both directions.
+    "review_count": NullIf(F("review_count"), 0),
 }
 
 
+class _TextExtractor(HTMLParser):
+    """Collects text outside tags with entities decoded. Unlike strip_tags + unescape,
+    a bare ampersand ("AT&T") stays as written instead of becoming "AT&T;"."""
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self.parts = []
+
+    def handle_data(self, data):
+        self.parts.append(data)
+
+
 def snippet(html):
-    return Truncator(strip_tags(html)).words(SNIPPET_WORDS)
+    parser = _TextExtractor()
+    parser.feed(html)
+    parser.close()
+    return Truncator("".join(parser.parts)).words(SNIPPET_WORDS)
 
 
 def top_review_prefetch():
@@ -95,7 +112,8 @@ class BrandList(generics.ListAPIView):
             .select_related("industry")
             .prefetch_related(top_review_prefetch())
         )
-        industries = self.request.query_params.getlist("industry")
+        # Blank values (a cleared filter form sends ?industry=) mean "no filter".
+        industries = [s for s in self.request.query_params.getlist("industry") if s]
         if industries:
             qs = qs.filter(industry__slug__in=industries)
         return qs.order_by(*self.ordering())

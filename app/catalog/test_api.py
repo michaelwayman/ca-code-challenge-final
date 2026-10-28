@@ -20,13 +20,13 @@ def make_brand(slug, industry=None, **fields):
 
 def make_review(brand, rating, days=0, reviewer=None, **fields):
     n = next(ids)
+    fields.setdefault("body", "<p>Solid <b>service</b></p>")
     return Review.objects.create(
         wp_id=n,
         brand=brand,
         reviewer=reviewer,
         title=f"Review {n}",
         slug=f"review-{n}",
-        body="<p>Solid <b>service</b></p>",
         rating=rating,
         published_at=T0 + timedelta(days=days),
         modified_at=T0,
@@ -91,6 +91,13 @@ class BrandListTests(TestCase):
         zephyr = next(r for r in self.get()["results"] if r["slug"] == "zephyr-mobile")
         self.assertEqual(zephyr["short_description"], "Fast 5G")
 
+    def test_snippets_decode_html_entities(self):
+        brand = make_brand("fish-shop", description="<p>Fish &amp; chips &#8211; it&#8217;s</p>")
+        make_review(brand, 4, body="<p>Tom &amp; Jerry&#8217;s at AT&T</p>")
+        row = next(r for r in self.get()["results"] if r["slug"] == "fish-shop")
+        self.assertEqual(row["short_description"], "Fish & chips – it’s")
+        self.assertEqual(row["top_review"]["snippet"], "Tom & Jerry’s at AT&T")
+
     def test_unauthenticated_call_succeeds(self):
         response = self.client.get(URL)
         self.assertEqual(response.status_code, 200)
@@ -102,6 +109,9 @@ class BrandListTests(TestCase):
             self.slugs(industry=["telecom", "insurance"]), ["acme-insurance", "zephyr-mobile"]
         )
         self.assertEqual(self.slugs(industry="nope"), [])
+        all_brands = ["acme-insurance", "bolt-bank", "zephyr-mobile"]
+        self.assertEqual(self.slugs(industry=""), all_brands)
+        self.assertEqual(self.slugs(industry=["", "telecom"]), ["zephyr-mobile"])
 
     def test_ordering(self):
         by_name = ["acme-insurance", "bolt-bank", "zephyr-mobile"]
@@ -114,6 +124,9 @@ class BrandListTests(TestCase):
         )
         self.assertEqual(
             self.slugs(ordering="-review_count"), ["zephyr-mobile", "acme-insurance", "bolt-bank"]
+        )
+        self.assertEqual(
+            self.slugs(ordering="review_count"), ["acme-insurance", "zephyr-mobile", "bolt-bank"]
         )
         self.assertEqual(self.slugs(ordering="bogus"), self.slugs(ordering="name"))
 
