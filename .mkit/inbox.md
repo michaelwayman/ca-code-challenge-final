@@ -36,7 +36,7 @@
 - [x] I34 2026-10-27 adjust: assumed R8 shape: GET /api/brands/<slug>/ public, returns the listing row; PATCH body {short_description} required, stored as Brand.excerpt (plain text, max 1000 chars), response is the updated row; any other key 400 (nothing written); PUT 405 -> R8
 - [x] I35 2026-10-27 adjust: assumed R9/A4 JWKS cache: in-process per app process, refetch after 300s (auth max-age), failed fetch keeps last good set and is retried after 30s, unknown kid forces a refetch throttled to 1 per 30s, 2s timeout; cold cache with auth down -> PATCH 503 'Signing keys unavailable' (fails closed) -> R9
 - [x] I36 2026-10-27 bug: re-running import_wp overwrites an editor's short_description (Brand.excerpt) with the WP excerpt; R2 upsert and R8 edits conflict; decide whether edited fields win or the doc note in README is enough -> R8: short_description column survives re-import
-- [ ] I37 2026-10-27 adjust: R9.1 'all pages still return 200' only checkable for /api/brands/, /api/brands/<slug>/ and /healthz in B8; recheck with auth stopped once R3-R5 pages exist (B9)
+- [x] I37 2026-10-27 adjust: R9.1 'all pages still return 200' only checkable for /api/brands/, /api/brands/<slug>/ and /healthz in B8; recheck with auth stopped once R3-R5 pages exist (B9) -> R9: all pages, API and healthz return 200 with auth stopped
 - [x] I38 2026-10-27 adjust: An edited short_description is silently overwritten by the next import_wp run; R8 does not say whether edits survive re-import -> duplicate of I36
 - [x] I39 2026-10-27 adjust: Unlisted 1000-character cap on short_description (400 above it); R8 sets no length limit -> R8
 - [x] I40 2026-10-27 adjust: New public GET /api/brands/<slug>/ detail endpoint added alongside the PATCH; R8 only requires that GET stays public -> R8
@@ -44,4 +44,4 @@
 - [x] I42 2026-10-27 bug: BrandList: /brands/?page=99 (or stale back/forward) gets a 404 from the API and shows an unrecoverable error; clamp to page 1 -> fixed in c5417d6
 - [x] I43 2026-10-27 bug: R27 README: add explicit main-app and auth-service run sections (headings), not only a paragraph -> fixed in c5417d6
 - [x] I44 2026-10-27 adjust: drift kept: 6 sort options in BrandList, sidebar repeats founded/HQ, noscript message, 'No ratings yet' star variant, pages/_page.scss partial -> kept by decision
-- [ ] I45 2026-10-27 adjust: README still opens with the WordPress quick start; consider a top-level Django-system intro
+- [x] I45 2026-10-27 adjust: README still opens with the WordPress quick start; consider a top-level Django-system intro -> README now opens with a Django-system intro

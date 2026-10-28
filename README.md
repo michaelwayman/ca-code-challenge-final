@@ -1,4 +1,12 @@
-# Brand Reviews WordPress (Interview Challenge Source)
+# Brand Reviews: WordPress to Django
+
+A WP brand-reviews site migrated to a Django system: a main app with server-rendered pages and a brand API, a React `BrandList`, an SCSS tree, a separate auth service with roles, and a shared token library. The migration is re-runnable. Dev-grade, Docker only.
+
+**Start here: [Django system: run it](#django-system-run-it).** The sections below that cover the WordPress source (the migration input) come first in this file.
+
+---
+
+## The WordPress source
 
 Self-contained, reproducible WordPress site used as the source for a WP → Django migration challenge.
 
