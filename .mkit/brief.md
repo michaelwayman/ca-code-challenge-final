@@ -17,18 +17,24 @@ Build only what is listed. Out-of-scope items are decisions, not gaps. Anything 
 - S5 Dev tooling: Makefile lint and fmt targets, Ruff, Biome and Stylelint configs
 
 ## Build
-- **R3** [P0] (S1) Homepage with hero and recent reviews
-  - GET / returns 200 with a hero and the newest reviews in date order
-  - Visual: at 375px content is one column, at 1280px reviews are in a multi-column grid
-  - empty state shown when no reviews exist
-- **R4** [P0] (S1) Brand detail page at /brand/<slug>/
-  - every migrated brand slug returns 200 at /brand/<slug>/ showing name, industry, website, founded year, headquarters, derived rating and its reviews
-  - unknown slug returns 404
-  - Visual: single column at 375px, content plus sidebar at 1280px
-- **R5** [P0] (S1) Review detail page at /review/<slug>/
-  - every migrated review slug returns 200 at /review/<slug>/ showing title, body, rating, reviewer and a link to its brand
-  - unknown slug returns 404
-  - Visual: readable single column at 375px and 1280px
+- **R23** [P0] (S4) BrandList filter and sort with URL-synced state
+  - industry checkboxes in a fieldset with legend and a sort select drive ?industry= and ?ordering=
+  - changing industry or sort updates the URL with replaceState, so it adds no browser history entry (back after switching industries leaves the filtered view rather than stepping to the previous filter)
+  - loading a URL with params restores the controls and results
+  - back/forward (popstate) still restores controls and re-fetches, e.g. after a page change or an external URL
+  - changing filter resets to page 1
+  - Visual: controls stack at 375px and sit in a row at 1280px
+  - Visual: filters read as a designed component, not browser defaults
+  - industries are styled pill/chip toggles that are still real checkboxes with a clear selected state
+  - the sort is a custom-styled select
+  - controls sit in a card/panel with consistent spacing, type scale and radii from the shared SCSS tokens (T6)
+  - Visual: hover, focus-visible and selected states are distinct and the focus ring keeps WCAG AA contrast (R25 still holds)
+- **R26** [P0] (S4) BrandList mounted on a Django page
+  - Vite build outputs a JS bundle that a Django template at /brands/ mounts
+  - README gives the build and dev commands
+  - page works against the docker compose stack with no extra install
+  - component has unit tests that run in CI command npm test
+  - Visual: the hero at the top of /brands/ uses the same background colour as the WordPress site's hero, via the existing shared SCSS token (R21) rather than a hardcoded value, and matches the homepage hero from R3
 
 ## Do NOT build
 - O1 WP admin and editor experience

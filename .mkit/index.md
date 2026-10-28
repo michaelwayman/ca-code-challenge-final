@@ -38,10 +38,10 @@ R19 [P0 done] Library tests run standalone
 R20 [P1 done] Claims version compatibility
 R21 [P0 done] SCSS source tree compiling to equivalent CSS
 R22 [P0 done] BrandList fetches and renders brands
-R23 [P0 done] BrandList filter and sort with URL-synced state
+R23 [P0] BrandList filter and sort with URL-synced state
 R24 [P0 done] BrandList loading, empty and error states
 R25 [P0 done] BrandList accessibility
-R26 [P0 done] BrandList mounted on a Django page
+R26 [P0] BrandList mounted on a Django page
 R27 [P0 done] README covering run, token, migration and decisions
 R28 [P0 done] WordPress password hasher
 R29 [P0 done] Lint and format via Docker

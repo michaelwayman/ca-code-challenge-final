@@ -85,6 +85,20 @@ describe("BrandList", () => {
     });
   });
 
+  it("filter and sort changes replace the history entry instead of adding one", async () => {
+    setup(vi.fn(() => ok(page([brand()]))));
+    await screen.findByRole("link", { name: "Acme Insurance Co." });
+    const before = window.history.length;
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("checkbox", { name: "Insurance" }));
+    await user.click(screen.getByRole("checkbox", { name: "Telecom" }));
+    await user.selectOptions(screen.getByLabelText("Sort by"), "-avg_rating");
+    expect(window.location.search).toBe(
+      "?industry=insurance&industry=telecom&ordering=-avg_rating",
+    );
+    expect(window.history.length).toBe(before);
+  });
+
   it("restores controls from the URL and re-fetches on back/forward", async () => {
     const fetchImpl = vi.fn(() => ok(page([brand()])));
     setup(fetchImpl, "?industry=telecom&ordering=-review_count");

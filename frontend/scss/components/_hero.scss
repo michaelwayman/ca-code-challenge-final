@@ -1,7 +1,7 @@
 @use "../abstracts" as *;
 
 .hero {
-  background: linear-gradient(135deg, #0f766e 0%, #134e4a 100%);
+  background: linear-gradient(135deg, var(--color-hero-start) 0%, var(--color-hero-end) 100%);
   color: #fff;
   padding: 64px 0 56px;
 
@@ -17,6 +17,10 @@
     opacity: 0.92;
     margin: 0;
     max-width: 640px;
+  }
+
+  &.hero-compact {
+    padding: 48px 0;
   }
 
   @include mobile {

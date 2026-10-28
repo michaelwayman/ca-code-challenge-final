@@ -2,9 +2,14 @@
 {% load static %}
 {% block title %}Brands{% endblock %}
 {% block content %}
+<section class="hero hero-compact">
+  <div class="container">
+    <h1>Brands</h1>
+    <p>Browse all brands in our reviews directory.</p>
+  </div>
+</section>
 <section class="section">
   <div class="container">
-    <div class="section-header"><h1>All brands</h1></div>
     <div id="brand-list-root" data-api="/api/brands/"></div>
     <noscript><p class="meta">The brand list needs JavaScript.</p></noscript>
     {{ industries|json_script:"brand-list-industries" }}

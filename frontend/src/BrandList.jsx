@@ -57,7 +57,8 @@ function BrandCard({ brand }) {
 
 /**
  * Filterable, sortable brand list. `industries` is [{slug, name}] for the checkboxes.
- * State is URL-synced (history.pushState; popstate re-fetches).
+ * State is URL-synced: filter and sort changes replaceState (no history entry),
+ * page changes pushState; popstate re-fetches.
  */
 export default function BrandList({
   industries = [],
@@ -110,8 +111,8 @@ export default function BrandList({
     return () => controller.abort();
   }, [state, attempt, apiBase, fetchImpl]);
 
-  const update = useCallback((next) => {
-    window.history.pushState(
+  const update = useCallback((next, { replace = false } = {}) => {
+    window.history[replace ? "replaceState" : "pushState"](
       null,
       "",
       `${window.location.pathname}${toSearch(next)}`,
@@ -122,10 +123,11 @@ export default function BrandList({
   const toggleIndustry = (slug) => {
     const set = new Set(state.industries);
     set.has(slug) ? set.delete(slug) : set.add(slug);
-    update({ ...state, industries: [...set], page: 1 });
+    update({ ...state, industries: [...set], page: 1 }, { replace: true });
   };
 
-  const clearFilters = () => update({ ...state, industries: [], page: 1 });
+  const clearFilters = () =>
+    update({ ...state, industries: [], page: 1 }, { replace: true });
   const pages = data ? Math.max(1, Math.ceil(data.count / PAGE_SIZE)) : 1;
   const results = data?.results ?? [];
 
@@ -135,13 +137,13 @@ export default function BrandList({
         <fieldset>
           <legend>Industry</legend>
           {industries.map((ind) => (
-            <label key={ind.slug} className="check">
+            <label key={ind.slug} className="chip">
               <input
                 type="checkbox"
                 checked={state.industries.includes(ind.slug)}
                 onChange={() => toggleIndustry(ind.slug)}
               />
-              {ind.name}
+              <span>{ind.name}</span>
             </label>
           ))}
         </fieldset>
@@ -151,7 +153,10 @@ export default function BrandList({
             id="brand-sort"
             value={state.ordering}
             onChange={(e) =>
-              update({ ...state, ordering: e.target.value, page: 1 })
+              update(
+                { ...state, ordering: e.target.value, page: 1 },
+                { replace: true },
+              )
             }
           >
             {ORDERINGS.map((o) => (

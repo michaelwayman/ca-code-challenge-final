@@ -411,14 +411,19 @@
 - Status: active
 - Acceptance:
   - industry checkboxes in a fieldset with legend and a sort select drive ?industry= and ?ordering=
-  - changing them updates the URL via history
+  - changing industry or sort updates the URL with replaceState, so it adds no browser history entry (back after switching industries leaves the filtered view rather than stepping to the previous filter)
   - loading a URL with params restores the controls and results
-  - back/forward re-fetches
+  - back/forward (popstate) still restores controls and re-fetches, e.g. after a page change or an external URL
   - changing filter resets to page 1
   - Visual: controls stack at 375px and sit in a row at 1280px
+  - Visual: filters read as a designed component, not browser defaults
+  - industries are styled pill/chip toggles that are still real checkboxes with a clear selected state
+  - the sort is a custom-styled select
+  - controls sit in a card/panel with consistent spacing, type scale and radii from the shared SCSS tokens (T6)
+  - Visual: hover, focus-visible and selected states are distinct and the focus ring keeps WCAG AA contrast (R25 still holds)
 - Layer: S4
 - Source: brief
-- Built: 2026-10-27
+- Reopened: 2026-10-27
 
 ### R24. BrandList loading, empty and error states
 - Priority: P0
@@ -455,9 +460,10 @@
   - README gives the build and dev commands
   - page works against the docker compose stack with no extra install
   - component has unit tests that run in CI command npm test
+  - Visual: the hero at the top of /brands/ uses the same background colour as the WordPress site's hero, via the existing shared SCSS token (R21) rather than a hardcoded value, and matches the homepage hero from R3
 - Layer: S4
 - Source: brief
-- Built: 2026-10-27
+- Reopened: 2026-10-27
 
 ### R27. README covering run, token, migration and decisions
 - Priority: P0
@@ -808,3 +814,8 @@
 | 2026-10-27 | ALTER R10 | mkit |
 | 2026-10-27 | ALTER R10 | mkit |
 | 2026-10-27 | DONE R1 R2 R6 R8 R9 R10 R11 R12 R13 R14 R28 | mkit |
+| 2026-10-27 | REOPEN R23 (acceptance changed) | mkit |
+| 2026-10-27 | ALTER R23 | mkit |
+| 2026-10-27 | ALTER R23 | mkit |
+| 2026-10-27 | REOPEN R26 (acceptance changed) | mkit |
+| 2026-10-27 | ALTER R26 | mkit |
