@@ -103,6 +103,12 @@ class BrandListTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "application/json")
 
+    def test_listing_is_publicly_cacheable(self):
+        response = self.client.get(URL)
+        self.assertEqual(
+            response["Cache-Control"], "public, max-age=30, stale-while-revalidate=120"
+        )
+
     def test_industry_filter_is_repeatable(self):
         self.assertEqual(self.slugs(industry="telecom"), ["zephyr-mobile"])
         self.assertEqual(

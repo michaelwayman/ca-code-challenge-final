@@ -142,6 +142,12 @@ class BrandList(generics.ListAPIView):
     serializer_class = BrandListSerializer
     pagination_class = BrandPagination
 
+    def list(self, request, *args, **kwargs):
+        # The listing is public and read-only: let browsers reuse repeat filter/sort/page URLs.
+        response = super().list(request, *args, **kwargs)
+        response["Cache-Control"] = "public, max-age=30, stale-while-revalidate=120"
+        return response
+
     def get_queryset(self):
         qs = brands()
         # Blank values (a cleared filter form sends ?industry=) mean "no filter".

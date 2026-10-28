@@ -99,6 +99,65 @@ describe("BrandList", () => {
     expect(window.history.length).toBe(before);
   });
 
+  it("keeps the previous results dimmed and busy while a new filter loads", async () => {
+    let release;
+    const fetchImpl = vi
+      .fn()
+      .mockImplementationOnce(() => ok(page([brand()])))
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            release = () =>
+              resolve({
+                ok: true,
+                json: () =>
+                  Promise.resolve(
+                    page([brand({ name: "Telco", slug: "telco" })]),
+                  ),
+              });
+          }),
+      );
+    setup(fetchImpl);
+    await screen.findByRole("link", { name: "Acme Insurance Co." });
+    await userEvent
+      .setup()
+      .click(screen.getByRole("checkbox", { name: "Telecom" }));
+    const section = document.querySelector("section.results");
+    expect(section).toHaveAttribute("aria-busy", "true");
+    expect(section).toHaveClass("is-fetching");
+    expect(
+      screen.getByRole("link", { name: "Acme Insurance Co." }),
+    ).toBeInTheDocument();
+    expect(document.querySelector(".skeleton-card")).toBeNull();
+    act(() => release());
+    await screen.findByRole("link", { name: "Telco" });
+    expect(section).toHaveAttribute("aria-busy", "false");
+  });
+
+  it("shows skeleton cards on the first load only", () => {
+    setup(vi.fn(() => new Promise(() => {})));
+    expect(document.querySelectorAll(".skeleton-card")).toHaveLength(6);
+  });
+
+  it("shows an already-fetched URL immediately without a loading state", async () => {
+    const fetchImpl = vi.fn(() => ok(page([brand()])));
+    setup(fetchImpl);
+    await screen.findByRole("link", { name: "Acme Insurance Co." });
+    const user = userEvent.setup();
+    const telecom = screen.getByRole("checkbox", { name: "Telecom" });
+    await user.click(telecom);
+    await waitFor(() =>
+      expect(document.querySelector("section.results")).toHaveAttribute(
+        "aria-busy",
+        "false",
+      ),
+    );
+    await user.click(telecom); // back to the unfiltered URL, fetched before
+    const section = document.querySelector("section.results");
+    expect(section).toHaveAttribute("aria-busy", "false");
+    expect(section).not.toHaveClass("is-fetching");
+  });
+
   it("restores controls from the URL and re-fetches on back/forward", async () => {
     const fetchImpl = vi.fn(() => ok(page([brand()])));
     setup(fetchImpl, "?industry=telecom&ordering=-review_count");

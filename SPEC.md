@@ -183,10 +183,10 @@
   - top_review has title, slug, rating, reviewer, published_at and a 30-word snippet
   - JSON renderer only
   - reads need no authentication
+  - GET /api/brands/ sends Cache-Control: public, max-age=30, stale-while-revalidate=120 (covered by a test)
 - Layer: S1
 - Source: brief
 - Reopened: 2026-10-27
-- Built: 2026-10-27
 
 ### R7. Top review rule documented
 - Priority: P1
@@ -429,14 +429,18 @@
 - Priority: P0
 - Status: active
 - Acceptance:
-  - while fetching, skeleton or status text appears with aria-busy
+  - first load shows skeleton cards matching the card grid's size with aria-busy and status text for screen readers
+  - on later fetches (filter, sort, page) the previous results stay visible, dimmed with aria-busy and a small spinner, and are replaced when the new data arrives
+  - no layout jump while loading (results area keeps its height, heading and pagination stay mounted)
+  - a response already fetched for the same URL is shown without a loading state and revalidated in the background
+  - motion respects prefers-reduced-motion
   - zero results shows an empty message with a clear-filters button
   - a failed request (API stopped) shows an error message with a Retry button that refetches
   - stale responses from superseded requests are ignored
   - Visual: each state readable at 375px and 1280px
 - Layer: S4
 - Source: brief
-- Built: 2026-10-27
+- Reopened: 2026-10-27
 
 ### R25. BrandList accessibility
 - Priority: P0
@@ -819,3 +823,7 @@
 | 2026-10-27 | ALTER R23 | mkit |
 | 2026-10-27 | REOPEN R26 (acceptance changed) | mkit |
 | 2026-10-27 | ALTER R26 | mkit |
+| 2026-10-27 | REOPEN R24 (acceptance changed) | mkit |
+| 2026-10-27 | ALTER R24 | mkit |
+| 2026-10-27 | REOPEN R6 (acceptance changed) | mkit |
+| 2026-10-27 | ALTER R6 | mkit |

@@ -55,10 +55,25 @@ function BrandCard({ brand }) {
   );
 }
 
+const CACHE_LIMIT = 50;
+
+function SkeletonCard() {
+  return (
+    <li className="card skeleton-card" aria-hidden="true">
+      <span className="skeleton skeleton-title" />
+      <span className="skeleton skeleton-badge" />
+      <span className="skeleton skeleton-line" />
+      <span className="skeleton skeleton-line" />
+      <span className="skeleton skeleton-line skeleton-short" />
+    </li>
+  );
+}
+
 /**
  * Filterable, sortable brand list. `industries` is [{slug, name}] for the checkboxes.
  * State is URL-synced: filter and sort changes replaceState (no history entry),
- * page changes pushState; popstate re-fetches.
+ * page changes pushState; popstate re-fetches. Results are cached per URL for the life of
+ * the component; a refetch keeps the previous results on screen (dimmed) until the new ones land.
  */
 export default function BrandList({
   industries = [],
@@ -68,8 +83,10 @@ export default function BrandList({
   const [state, setState] = useState(() => parseState(window.location.search));
   const [status, setStatus] = useState("loading"); // loading | ready | error
   const [data, setData] = useState(null);
+  const [fetching, setFetching] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const latest = useRef(0);
+  const cache = useRef(new Map());
 
   useEffect(() => {
     const onPop = () => setState(parseState(window.location.search));
@@ -78,12 +95,23 @@ export default function BrandList({
   }, []);
 
   // Only the newest request may write state: a superseded response is ignored.
+  // A cached URL is shown at once and revalidated quietly; otherwise the previous results
+  // stay put (dimmed) until the response arrives. Skeletons only when there is nothing to show.
   // biome-ignore lint/correctness/useExhaustiveDependencies: `attempt` re-runs the fetch on Retry
   useEffect(() => {
     const id = ++latest.current;
     const controller = new AbortController();
-    setStatus("loading");
-    (fetchImpl ?? fetch)(apiUrl(state, apiBase), { signal: controller.signal })
+    const url = apiUrl(state, apiBase);
+    const cached = cache.current.get(url);
+    if (cached) {
+      setData(cached);
+      setStatus("ready");
+      setFetching(false);
+    } else {
+      setStatus((s) => (s === "error" ? "loading" : s));
+      setFetching(true);
+    }
+    (fetchImpl ?? fetch)(url, { signal: controller.signal })
       .then((r) => {
         if (id === latest.current && r.status === 404 && state.page > 1) {
           // A page past the end (stale URL, back/forward): fall back to page 1, not a dead error.
@@ -101,12 +129,20 @@ export default function BrandList({
       })
       .then((json) => {
         if (id !== latest.current || json === null) return;
+        const entries = cache.current;
+        entries.delete(url);
+        entries.set(url, json);
+        if (entries.size > CACHE_LIMIT) {
+          entries.delete(entries.keys().next().value);
+        }
         setData(json);
         setStatus("ready");
+        setFetching(false);
       })
       .catch(() => {
         if (id !== latest.current) return;
-        setStatus("error");
+        setFetching(false);
+        if (!cached) setStatus("error");
       });
     return () => controller.abort();
   }, [state, attempt, apiBase, fetchImpl]);
@@ -171,13 +207,29 @@ export default function BrandList({
       <section
         aria-labelledby="brand-results-heading"
         aria-live="polite"
-        aria-busy={status === "loading"}
+        aria-busy={status === "loading" || fetching}
+        className={
+          fetching && status === "ready" ? "results is-fetching" : "results"
+        }
       >
         <h2 id="brand-results-heading">
-          Brands{status === "ready" && data ? ` (${data.count})` : ""}
+          Brands{data && status !== "error" ? ` (${data.count})` : ""}
         </h2>
         {status === "loading" && (
-          <output className="state-message">Loading brands…</output>
+          <>
+            <output className="visually-hidden">Loading brands…</output>
+            <ul className="grid brand-grid" aria-hidden="true">
+              {[0, 1, 2, 3, 4, 5].map((i) => (
+                <SkeletonCard key={i} />
+              ))}
+            </ul>
+          </>
+        )}
+        {fetching && status === "ready" && (
+          <>
+            <output className="visually-hidden">Updating results…</output>
+            <span className="spinner" aria-hidden="true" />
+          </>
         )}
         {status === "error" && (
           <div className="state-message state-error" role="alert">
