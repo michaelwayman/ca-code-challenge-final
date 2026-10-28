@@ -14,16 +14,22 @@ help:
 	@echo "  bootstrap       One-shot: install WP core + plugins + seed all content"
 	@echo "  dump            Export current DB to db/dump.sql"
 	@echo "  status          Show running services"
+	@echo "  import          Import WP data into the main app and auth service (safe to re-run)"
+	@echo "  token           Print an access token (AUTH_USER, AUTH_PASS; default admin/admin)"
+	@echo "  patch-brand     Log in and PATCH a brand (SLUG=..., DESC=...)"
+	@echo "  lib-test        Run the shared library tests in Docker"
+	@echo "  lint / fmt      Lint or format everything in Docker"
+	@echo "  fe-build        Build the SCSS and React bundle"
 
 up:
-	$(COMPOSE) up -d db wordpress phpmyadmin auth-db auth app-db app
+	$(COMPOSE) up -d --build --wait db wordpress phpmyadmin auth-db auth app-db app
 
 down:
 	$(COMPOSE) down
 
 reset:
 	$(COMPOSE) down -v
-	@echo "Volume wiped. Run 'make up' to start fresh from db/dump.sql"
+	@echo "All volumes wiped. Run 'make up' then 'make import' to start fresh from db/dump.sql"
 
 logs:
 	$(COMPOSE) logs -f wordpress db
@@ -77,3 +83,46 @@ fe-dev:
 
 fe-test:
 	$(FE) 'npm ci --no-audit --no-fund --silent && npm test'
+
+# --- Run the system: import, token, edit, outage drill, library tests ---
+AUTH_USER ?= admin
+AUTH_PASS ?= admin
+SLUG ?= acme-insurance
+DESC ?= Fair prices, slow claims.
+
+.PHONY: import import-wp import-users token patch-brand admin-password operator rotate-key auth-stop auth-start app-restart lib-test
+
+import: import-wp import-users
+
+import-wp:
+	$(COMPOSE) exec -T app python manage.py import_wp
+
+import-users:
+	$(COMPOSE) exec -T auth python manage.py import_wp_users
+
+token:
+	@$(COMPOSE) exec -T -e AUTH_USER=$(AUTH_USER) -e AUTH_PASS=$(AUTH_PASS) auth python - < scripts/token.py
+
+patch-brand:
+	@$(COMPOSE) exec -T -e AUTH_USER=$(AUTH_USER) -e AUTH_PASS=$(AUTH_PASS) -e SLUG=$(SLUG) -e DESC="$(DESC)" app python - < scripts/patch_brand.py
+
+admin-password:
+	$(COMPOSE) exec auth python manage.py changepassword $(AUTH_USER)
+
+operator:
+	$(COMPOSE) exec auth python manage.py createsuperuser
+
+rotate-key:
+	$(COMPOSE) exec -T auth python manage.py add_signing_key
+
+auth-stop:
+	$(COMPOSE) stop auth
+
+auth-start:
+	$(COMPOSE) start auth
+
+app-restart:
+	$(COMPOSE) restart app
+
+lib-test:
+	docker run --rm -v "$(CURDIR)/libs":/work -w /work python:3.12-slim sh -c "pip install -q -e '.[test]' && pytest -q"
