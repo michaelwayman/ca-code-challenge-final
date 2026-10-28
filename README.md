@@ -155,11 +155,26 @@ make fmt    # apply the fixes
 
 ## Modeling decisions, what I'd do differently, and AI defaults
 
-**Modeling decisions.** The average rating is derived from reviews so it can never disagree with them. Reviewers are a small profile table keyed by the same deterministic id as the auth user, so the migration and the user import can run independently with no call between services. The migration is an upsert keyed on `wp_id` that mirrors WordPress, so it is safe to re-run.
+### Modeling decisions.
 
-**What I would do differently with more time.** A real `/api/industries/` endpoint instead of passing industry options through `json_script`; server-side rendering of the first list page; Playwright tests against the compose stack; a refresh-token rotation story beyond the bounded 7-day lifetime; sanitising WP body HTML on import instead of rendering it with `|safe`; and the chunked, batched migration described in the decisions table.
+ - The average rating is derived.
+ - Reviewers are a small profile table keyed by the same deterministic id as the auth user, so the migration and the user import can run independently with no call between services.
+ - The migration is an upsert keyed on `wp_id` that mirrors WordPress, so it is safe to re-run.
 
-**Where I chose the AI's default.** DRF generics and page-number pagination, `select_related` / `prefetch_related` for N+1, React hooks with plain `fetch` and no data library, and a Vite library-mode bundle. Defaults I replaced: unbounded pagination, hash-only passwords, and trusting token claims without a version check.
+
+### What I would do differently with more time.
+
+- Features that I left out were purposeful. Not due to a lack of time.
+- I would refine the `README.md`.
+
+But really, **with more time I would keep working on [mkit](https://github.com/michaelwayman/mkit)**
+
+`mkit` is the plugin I built alongside this project to solve the challenge.
+I have 3-5 different submissions to this challenge. All of them work. But each submission helped me to refine `mkit` and `mbuild`
+
+
+### Where I chose the AI's default.
+DRF generics and page-number pagination, `select_related` / `prefetch_related` for N+1, React hooks with plain `fetch` and no data library, and a Vite library-mode bundle. Defaults I replaced: unbounded pagination, hash-only passwords, and trusting token claims without a version check.
 
 ## What production would need
 
