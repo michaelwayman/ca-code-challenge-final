@@ -44,6 +44,12 @@ WP_DB = {
 }
 WP_TABLE_PREFIX = os.environ.get("WP_TABLE_PREFIX", "wp_")
 
+# Public keys for token verification (R8, R9); see config/auth.py.
+AUTH_JWKS_URL = os.environ.get("AUTH_JWKS_URL", "http://auth:8001/.well-known/jwks.json")
+JWKS_CACHE_SECONDS = 300  # matches the auth service's Cache-Control max-age
+JWKS_RETRY_SECONDS = 30  # wait after a failed fetch or a refetch for an unknown kid
+JWKS_TIMEOUT_SECONDS = 2
+
 # No django.contrib.auth here (C2): anonymous requests carry user None, JSON only.
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [],

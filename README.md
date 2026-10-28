@@ -106,7 +106,7 @@ Dropped: the ACF field-reference meta (`_website_url`, `_rating`, ...), ACF `rev
 
 ## Brand listing API (main app)
 
-`GET http://localhost:8000/api/brands/` is public (no token) and returns `{count, next, previous, results}`. Each row has `name`, `slug`, `industry` (`{name, slug}` or null), `average_rating` (mean of review ratings to one decimal, null with no reviews), `review_count`, `short_description` (the WP excerpt, else the body with tags stripped, 30 words) and `top_review` (`title`, `slug`, `rating`, `reviewer`, `published_at`, 30-word `snippet`, or null).
+`GET http://localhost:8000/api/brands/` is public (no token) and returns `{count, next, previous, results}`. Each row has `name`, `slug`, `industry` (`{name, slug}` or null), `average_rating` (mean of review ratings to one decimal, null with no reviews), `review_count`, `short_description` (an editor's value exactly as saved; otherwise the WP excerpt, else the body with tags stripped, 30 words) and `top_review` (`title`, `slug`, `rating`, `reviewer`, `published_at`, 30-word `snippet`, or null).
 
 | Parameter | Effect |
 |---|---|
@@ -115,6 +115,38 @@ Dropped: the ACF field-reference meta (`_website_url`, `_rating`, ...), ACF `rev
 | `page=`, `page_size=` | 20 per page by default, at most 100 |
 
 **Top review rule:** a brand's top review is the one with the highest rating; among equal ratings the newest (`published_at`) wins, and WP id breaks any remaining tie. A brand with no reviews has `top_review: null`. One windowed query (`ROW_NUMBER() OVER (PARTITION BY brand ORDER BY rating DESC, published_at DESC)`) picks it for every brand on the page, so a page costs three queries whatever its size (count, brands with stats, top reviews); a test asserts this.
+
+### Editing a brand
+
+`GET /api/brands/<slug>/` returns one row in the listing shape and is public: reads never look at the `Authorization` header, so a stale or broken token cannot fail them. `PATCH /api/brands/<slug>/` with `{"short_description": "..."}` needs an editor's access token from the auth service:
+
+```sh
+TOKEN=$(curl -s -X POST localhost:8001/auth/login -H 'Content-Type: application/json' \
+  -d '{"username": "<editor>", "password": "<password>"}' | python3 -c 'import sys, json; print(json.load(sys.stdin)["access_token"])')
+curl -X PATCH localhost:8000/api/brands/acme-insurance/ -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{"short_description": "Fair prices, slow claims."}'
+```
+
+| Request | Response |
+|---|---|
+| Editor token | 200 with the updated row |
+| Reader token | 403 |
+| No token, malformed, bad signature, expired, unknown key | 401 (`WWW-Authenticate: Bearer`) |
+| Any key besides `short_description`, or none | 400; nothing is written |
+| `PUT` | 405 |
+
+`short_description` (at most 1000 characters) is stored in its own nullable column, `Brand.short_description`, and every read returns it exactly as saved: an empty string stays empty and long values are not trimmed. Until a brand is edited the column is NULL and reads derive the value from the WP excerpt or body as in the listing. `import_wp` only rewrites the excerpt, so a re-run keeps editors' values.
+
+### When the auth service is down
+
+The main app never calls the auth service per request. It verifies tokens locally with the public keys from `http://auth:8001/.well-known/jwks.json`, cached in process (`config/auth.py`), and compose deliberately has no `depends_on: auth` for it.
+
+- **Reads** (`/api/brands/`, `/api/brands/<slug>/`, pages, `/healthz`) do not touch auth at all and keep returning 200.
+- **Writes with a still-valid token** keep working: the key set is refetched every 5 minutes (the JWKS `max-age`), and a failed refetch keeps the last good set. Revocation therefore rests on the 10 minute token lifetime, not on reaching the auth service.
+- **Cold cache** (main app restarted while auth is down): there is nothing to verify against, so writes fail closed with **503** `Signing keys unavailable`, never a 500 and never an unverified write.
+- A failed fetch is not retried for 30 seconds, so an outage costs one 2 second timeout per window rather than one per request. A token with an unknown `kid` (the auth service rotated keys) triggers an immediate refetch, limited to one per 30 seconds.
+
+Try it: `docker compose stop auth`, then repeat the `PATCH` above with a token obtained before stopping it; `docker compose restart app` and the same `PATCH` returns 503; `docker compose start auth` and it succeeds again within 30 seconds.
 
 ## Theme
 

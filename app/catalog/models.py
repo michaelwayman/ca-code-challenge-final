@@ -41,6 +41,11 @@ class Brand(models.Model):
     slug = models.SlugField(max_length=200, unique=True)
     description = models.TextField(blank=True, help_text="HTML from post_content")
     excerpt = models.TextField(blank=True)
+    short_description = models.TextField(
+        null=True,
+        blank=True,
+        help_text="Editor-set (R8), shown as is; NULL derives it from excerpt/description",
+    )
     industry = models.ForeignKey(
         Industry, null=True, blank=True, on_delete=models.SET_NULL, related_name="brands"
     )

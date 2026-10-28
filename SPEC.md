@@ -187,6 +187,7 @@
   - GET stays public
 - Layer: S1
 - Source: brief
+- Built: 2026-10-27
 
 ### R9. Main app survives auth outage
 - Priority: P1
@@ -197,6 +198,7 @@
   - documented in README
 - Layer: S1
 - Source: brief
+- Built: 2026-10-27
 
 ### R10. Re-runnable wp_users import
 - Priority: P0
@@ -705,3 +707,4 @@
 | 2026-10-27 | DONE R1 R2 R16 | mkit |
 | 2026-10-27 | DONE R1 R2 R16 | mkit |
 | 2026-10-27 | DONE R6 R7 | mkit |
+| 2026-10-27 | DONE R8 R9 | mkit |
