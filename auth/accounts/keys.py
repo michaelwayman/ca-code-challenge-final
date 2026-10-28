@@ -1,13 +1,12 @@
-"""Signing key ring: one PEM file per key in AUTH_KEYS_DIR, named <kid>.pem.
+"""The one RSA signing key (R14): AUTH_KEYS_DIR/signing.pem, created on first start.
 
-Kids are UTC timestamps, so the lexically last file is the newest and signs new tokens.
-Every key in the directory is published in the JWKS, which keeps tokens signed by an older
-key verifiable until they expire (R14). Retire a key by deleting its file once its last
-token is older than ACCESS_TOKEN_TTL.
+The kid is a SHA-256 thumbprint of the public key, so replacing the file changes the kid.
+A verifier that sees an unknown kid refetches the JWKS (R9) and picks the new key up.
+There is no key ring or rotation tooling; key rotation is listed as production work.
 """
 
+import hashlib
 from dataclasses import dataclass
-from datetime import UTC, datetime
 from pathlib import Path
 
 from cryptography.hazmat.primitives import serialization
@@ -22,46 +21,44 @@ class SigningKey:
     private_key: rsa.RSAPrivateKey
 
 
-def _keys_dir() -> Path:
-    return Path(settings.AUTH_KEYS_DIR)
+def _path() -> Path:
+    return Path(settings.AUTH_KEYS_DIR) / "signing.pem"
 
 
-def load_keys() -> list[SigningKey]:
-    """All keys, oldest first."""
-    keys = []
-    for path in sorted(_keys_dir().glob("*.pem")):
-        private_key = serialization.load_pem_private_key(path.read_bytes(), password=None)
-        keys.append(SigningKey(kid=path.stem, private_key=private_key))
-    return keys
-
-
-def active_key() -> SigningKey:
-    keys = load_keys()
-    if not keys:
-        raise RuntimeError(f"no signing key in {_keys_dir()}; run manage.py add_signing_key")
-    return keys[-1]
-
-
-def add_key() -> str:
-    """Generate a new RSA key; it becomes the active signer. Returns its kid."""
-    directory = _keys_dir()
-    directory.mkdir(parents=True, exist_ok=True)
-    kid = datetime.now(UTC).strftime("%Y%m%dT%H%M%S%fZ")
-    private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    pem = private_key.private_bytes(
-        serialization.Encoding.PEM,
-        serialization.PrivateFormat.PKCS8,
-        serialization.NoEncryption(),
+def _kid(private_key: rsa.RSAPrivateKey) -> str:
+    der = private_key.public_key().public_bytes(
+        serialization.Encoding.DER, serialization.PublicFormat.SubjectPublicKeyInfo
     )
-    path = directory / f"{kid}.pem"
-    path.write_bytes(pem)
+    return hashlib.sha256(der).hexdigest()[:16]
+
+
+def ensure_key() -> bool:
+    """Generate signing.pem if it does not exist. Returns True when a key was created."""
+    path = _path()
+    if path.exists():
+        return False
+    path.parent.mkdir(parents=True, exist_ok=True)
+    private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    path.write_bytes(
+        private_key.private_bytes(
+            serialization.Encoding.PEM,
+            serialization.PrivateFormat.PKCS8,
+            serialization.NoEncryption(),
+        )
+    )
     path.chmod(0o600)
-    return kid
+    return True
+
+
+def signing_key() -> SigningKey:
+    path = _path()
+    if not path.exists():
+        raise RuntimeError(f"no signing key at {path}; run manage.py ensure_signing_key")
+    private_key = serialization.load_pem_private_key(path.read_bytes(), password=None)
+    return SigningKey(kid=_kid(private_key), private_key=private_key)
 
 
 def jwks() -> dict:
-    keys = []
-    for key in load_keys():
-        jwk = RSAAlgorithm.to_jwk(key.private_key.public_key(), as_dict=True)
-        keys.append({**jwk, "kid": key.kid, "alg": "RS256", "use": "sig"})
-    return {"keys": keys}
+    key = signing_key()
+    jwk = RSAAlgorithm.to_jwk(key.private_key.public_key(), as_dict=True)
+    return {"keys": [{**jwk, "kid": key.kid, "alg": "RS256", "use": "sig"}]}

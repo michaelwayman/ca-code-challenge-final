@@ -25,7 +25,7 @@ class KeysDirMixin:
         override = override_settings(AUTH_KEYS_DIR=tmp.name)
         override.enable()
         self.addCleanup(override.disable)
-        keys.add_key()
+        keys.ensure_key()
 
     def login(self, username="ed", password="pw-correct"):
         return self.client.post(
@@ -49,7 +49,7 @@ class LoginTests(KeysDirMixin, TestCase):
         body = response.json()
         header = jwt.get_unverified_header(body["access_token"])
         self.assertEqual(header["alg"], "RS256")
-        self.assertEqual(header["kid"], keys.active_key().kid)
+        self.assertEqual(header["kid"], keys.signing_key().kid)
         self.assertEqual(body["token_type"], "Bearer")
         self.assertEqual(body["expires_in"], 600)
         self.assertTrue(body["refresh_token"])
@@ -190,23 +190,23 @@ class JWKSTests(KeysDirMixin, TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("max-age=", response["Cache-Control"])
         [jwk] = response.json()["keys"]
-        self.assertEqual(jwk["kid"], keys.active_key().kid)
+        self.assertEqual(jwk["kid"], keys.signing_key().kid)
         self.assertEqual(jwk["kty"], "RSA")
         self.assertFalse({"d", "p", "q", "dp", "dq", "qi"} & jwk.keys())
 
-    def test_second_key_keeps_old_tokens_verifiable(self):
+    def test_ensure_key_is_idempotent_and_kid_follows_the_key(self):
+        kid = keys.signing_key().kid
+        self.assertFalse(keys.ensure_key())
+        self.assertEqual(keys.signing_key().kid, kid)
+        keys._path().unlink()
+        self.assertTrue(keys.ensure_key())
+        self.assertNotEqual(keys.signing_key().kid, kid)
+
+    def test_token_verifies_against_the_published_key(self):
         User.objects.create_user("ed", password="pw-correct")
-        old_token = self.login().json()["access_token"]
-        old_kid = jwt.get_unverified_header(old_token)["kid"]
-
-        new_kid = keys.add_key()
-        new_token = self.login().json()["access_token"]
-
-        self.assertEqual(jwt.get_unverified_header(new_token)["kid"], new_kid)
-        jwks = self.jwks()
-        self.assertEqual({k["kid"] for k in jwks["keys"]}, {old_kid, new_kid})
-        verify(old_token, jwks)
-        verify(new_token, jwks)
+        token = self.login().json()["access_token"]
+        self.assertEqual(jwt.get_unverified_header(token)["kid"], keys.signing_key().kid)
+        verify(token, self.jwks())
 
 
 # Generated with WordPress 6.9's own code (class-phpass.php, wp_hash_password) for "hunter2".

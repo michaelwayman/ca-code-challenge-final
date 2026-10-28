@@ -306,14 +306,13 @@
 - Priority: P0
 - Status: active
 - Acceptance:
-  - GET /.well-known/jwks.json returns the public key set with kid, publicly and without authentication
-  - adding a second key keeps old tokens verifiable until they expire
-  - signing keys are PEM files in the auth_keys volume, kid is a UTC timestamp, newest signs and all are published
-  - rotate with manage.py add_signing_key, retire by deleting the file
+  - GET /.well-known/jwks.json returns the public key with kid, publicly and without authentication
+  - the signing key is one PEM file (signing.pem) in the auth_keys volume, created by manage.py ensure_signing_key if missing
+  - kid is a SHA-256 thumbprint of the public key, so replacing the key changes the kid and the main app's unknown-kid refetch (R9) picks it up
+  - no key ring, no rotation tooling (key rotation is listed as production work in the README)
 - Layer: S2
 - Source: brief
-- Reopened: 2026-10-27
-- Built: 2026-10-27
+- Reopened: 2026-10-28
 
 ### R15. Auth service runs as its own container
 - Priority: P0
@@ -581,8 +580,9 @@
 
 ### Q6. Token lifetime and key distribution
 - Context: Architecture
-- Answer: 10 min access token, RS256, public key via cached JWKS with kid rotation
+- Answer: 10 min access token, RS256, public key via cached JWKS; one signing key with a thumbprint kid, no rotation tooling
 - Decided by: you
+- Why: simpler auth service; rotation is production work and replacement still works through the kid refetch
 
 ### Q7. WP source: SQL dump, live DB or CSV, and how it is mounted into the containers (C1)
 - Answer: Data is read directly from the live MariaDB, not a dump or CSV
@@ -834,3 +834,6 @@
 | 2026-10-28 | ALTER R22 | mkit |
 | 2026-10-28 | ALTER R22 | mkit |
 | 2026-10-28 | ALTER R24 | mkit |
+| 2026-10-28 | REOPEN R14 (acceptance changed) | mkit |
+| 2026-10-28 | ALTER R14 | mkit |
+| 2026-10-28 | ANSWER Q6 | mkit |

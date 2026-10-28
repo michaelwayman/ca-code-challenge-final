@@ -29,7 +29,7 @@ R10 [P0 done] Re-runnable wp_users import
 R11 [P0 done] Login issues access and refresh tokens
 R12 [P0 done] Refresh and revoke
 R13 [P0 done] Roles owned by auth service
-R14 [P0 done] JWKS endpoint
+R14 [P0] JWKS endpoint
 R15 [P0 done] Auth service runs as its own container
 R16 [P0 done] Installable versioned package
 R17 [P0 done] Token verification
