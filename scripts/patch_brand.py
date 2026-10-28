@@ -1,4 +1,4 @@
-"""Log in, then PATCH a brand's short_description. Run via `make patch-brand` (inside the app container)."""
+"""Log in, then PATCH a brand's short_description (`make patch-brand`, in the app container)."""
 
 import json
 import os

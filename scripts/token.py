@@ -13,6 +13,7 @@ request = urllib.request.Request(
 try:
     print(json.load(urllib.request.urlopen(request))["access_token"])
 except urllib.error.HTTPError as error:
+    detail = error.read().decode()
     raise SystemExit(
-        f"login failed: {error.code} {error.read().decode()} (see README: make admin-password)"
-    )
+        f"login failed: {error.code} {detail} (see README: make admin-password)"
+    ) from None
