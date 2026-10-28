@@ -102,6 +102,7 @@
   - Yoast and unused meta are either typed fields, a JSON field, or listed as dropped in the README
 - Layer: S1
 - Source: brief
+- Built: 2026-10-27
 
 ### R2. Re-runnable WP migration command
 - Priority: P0
@@ -117,6 +118,7 @@
   - reviewer key is deterministic_uuid('wp_user', wp_user_id) from the shared library, with no call to auth and no wp_user_id column
 - Layer: S1
 - Source: brief
+- Built: 2026-10-27
 
 ### R3. Homepage with hero and recent reviews
 - Priority: P0
@@ -274,6 +276,7 @@
   - a test pins known inputs to expected UUIDs and shows different audiences give different UUIDs for the same id
 - Layer: S3
 - Source: brief
+- Built: 2026-10-27
 
 ### R17. Token verification
 - Priority: P0
@@ -697,3 +700,4 @@
 | 2026-10-27 | DONE R28 R10 | mkit |
 | 2026-10-27 | DONE R12 R13 | mkit |
 | 2026-10-27 | DONE R12 R13 | mkit |
+| 2026-10-27 | DONE R1 R2 R16 | mkit |

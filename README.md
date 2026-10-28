@@ -89,6 +89,21 @@ git commit -m "Refresh seed data"
 
 Seeded volume: 5 brands (one per industry), 60 reviews (12 per brand) authored by 8 reviewer users, 3 static pages (Home/About/Contact), 1 admin user.
 
+## Django schema and migration (main app)
+
+`docker compose exec app python manage.py import_wp` copies WP into the main app's Postgres. It reads MariaDB inside a `READ ONLY` transaction (connection from `WP_DB_HOST`, `WP_DB_PORT`, `WP_DB_NAME`, `WP_DB_USER`, `WP_DB_PASSWORD`), keys every row on its WP id (`wp_id`, slug is an ordinary column), and prints created/updated/unchanged/skipped per table. Re-running it is safe: unchanged rows are not written, edited rows (including renamed slugs) are updated in place. Drafts, reviews pointing at a missing brand, and ratings outside 1-5 are skipped. Rows deleted in WP are not deleted.
+
+| WP source | Django |
+|---|---|
+| `industry` term | `Industry` (`wp_id` = term_id) |
+| `brand` post + ACF | `Brand`: `website_url`, `founded_year`, `headquarters` as typed columns; `industry` FK (lowest term id if WP has several) |
+| ACF `average_rating` | `Brand.legacy_average_rating`, audit only. The displayed rating is derived from reviews (`Brand.objects.with_stats()`), never stored |
+| `_yoast_wpseo_title`, `_yoast_wpseo_metadesc` | `Brand.seo_title`, `Brand.seo_description` |
+| `review` post + ACF | `Review`: `rating` (1-5 check constraint), `reviewer_location`, `brand` FK |
+| `post_author` (wp_users) | `Reviewer`, pk = `deterministic_uuid('wp_user', ID)` = the auth service user id. Only `display_name` is kept; no WP id, password or role |
+
+Dropped: the ACF field-reference meta (`_website_url`, `_rating`, ...), ACF `reviewer_name` (identical to the author's display name in every row; the reviewer FK carries it), `_wp_page_template`, and WP pages and posts (out of scope).
+
 ## Theme
 
 The active theme is a custom one at `wp-content/themes/consumer-reviews/` (committed to the repo). It renders:

@@ -12,6 +12,7 @@ ALLOWED_HOSTS = ["*"]
 INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "rest_framework",
+    "catalog",
 ]
 
 MIDDLEWARE = [
@@ -32,6 +33,16 @@ DATABASES = {
         "PASSWORD": os.environ.get("APP_DB_PASSWORD", "app"),
     }
 }
+
+# Read-only source for import_wp (R2): the WP MariaDB.
+WP_DB = {
+    "host": os.environ.get("WP_DB_HOST", "db"),
+    "port": int(os.environ.get("WP_DB_PORT", "3306")),
+    "database": os.environ.get("WP_DB_NAME", "wp"),
+    "user": os.environ.get("WP_DB_USER", "wp"),
+    "password": os.environ.get("WP_DB_PASSWORD", "wp"),
+}
+WP_TABLE_PREFIX = os.environ.get("WP_TABLE_PREFIX", "wp_")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 USE_TZ = True
