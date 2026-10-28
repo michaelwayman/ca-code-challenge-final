@@ -93,6 +93,8 @@ Seeded volume: 5 brands (one per industry), 60 reviews (12 per brand) authored b
 
 Dev-grade by design. This is a challenge submission, not a deployable service. Docker is the only prerequisite.
 
+### Main app
+
 ```bash
 cp .env.example .env
 docker compose up -d --build        # WordPress + MariaDB, auth + auth-db, app + app-db
@@ -107,7 +109,9 @@ make fe-build                        # compile SCSS and bundle the React compone
 | Auth service (`POST /auth/login`, JWKS) | <http://localhost:8001> |
 | WordPress source | <http://localhost:8080> |
 
-**Auth service.** Own Django project, container and Postgres. `import_wp_users` creates one user per `wp_users` row (id = `deterministic_uuid('wp_user', ID)`); WP `administrator` and `editor` become `editor`, everything else `reader`. WP password hashes are carried over verbatim and upgraded to Django's default hasher on the user's first successful login. The main app stores no passwords or roles and verifies tokens locally against the auth service's JWKS.
+### Auth service
+
+Own Django project, container and Postgres. `import_wp_users` creates one user per `wp_users` row (id = `deterministic_uuid('wp_user', ID)`); WP `administrator` and `editor` become `editor`, everything else `reader`. WP password hashes are carried over verbatim and upgraded to Django's default hasher on the user's first successful login. The main app stores no passwords or roles and verifies tokens locally against the auth service's JWKS.
 
 **Get a token and edit a brand:** see [Editing a brand](#editing-a-brand) below for the `curl` login and `PATCH`.
 

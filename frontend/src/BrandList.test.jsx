@@ -130,6 +130,18 @@ describe("BrandList", () => {
     expect(fetchImpl).toHaveBeenCalledTimes(2);
   });
 
+  it("a page past the end falls back to page 1 instead of a dead error", async () => {
+    const fetchImpl = vi.fn((url) =>
+      url.includes("page=99")
+        ? Promise.resolve({ ok: false, status: 404 })
+        : ok(page([brand()])),
+    );
+    setup(fetchImpl, "?page=99");
+    await screen.findByRole("link", { name: "Acme Insurance Co." });
+    expect(window.location.search).toBe("");
+    expect(screen.queryByRole("button", { name: "Retry" })).toBeNull();
+  });
+
   it("ignores a stale response from a superseded request", async () => {
     let resolveFirst;
     const first = new Promise((res) => {

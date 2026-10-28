@@ -129,6 +129,7 @@
   - empty state shown when no reviews exist
 - Layer: S1
 - Source: brief
+- Built: 2026-10-27
 
 ### R4. Brand detail page at /brand/<slug>/
 - Priority: P0
@@ -139,6 +140,7 @@
   - Visual: single column at 375px, content plus sidebar at 1280px
 - Layer: S1
 - Source: brief
+- Built: 2026-10-27
 
 ### R5. Review detail page at /review/<slug>/
 - Priority: P0
@@ -149,6 +151,7 @@
   - Visual: readable single column at 375px and 1280px
 - Layer: S1
 - Source: brief
+- Built: 2026-10-27
 
 ### R6. Brand listing API with filter, sort, pagination
 - Priority: P0
@@ -334,6 +337,7 @@
   - README gives the compile command and states where to add a new component partial
 - Layer: S4
 - Source: brief
+- Built: 2026-10-27
 
 ### R22. BrandList fetches and renders brands
 - Priority: P0
@@ -345,6 +349,7 @@
   - cards use theme classes
 - Layer: S4
 - Source: brief
+- Built: 2026-10-27
 
 ### R23. BrandList filter and sort with URL-synced state
 - Priority: P0
@@ -358,6 +363,7 @@
   - Visual: controls stack at 375px and sit in a row at 1280px
 - Layer: S4
 - Source: brief
+- Built: 2026-10-27
 
 ### R24. BrandList loading, empty and error states
 - Priority: P0
@@ -370,6 +376,7 @@
   - Visual: each state readable at 375px and 1280px
 - Layer: S4
 - Source: brief
+- Built: 2026-10-27
 
 ### R25. BrandList accessibility
 - Priority: P0
@@ -383,6 +390,7 @@
   - Visual: focus ring visible at both widths
 - Layer: S4
 - Source: brief
+- Built: 2026-10-27
 
 ### R26. BrandList mounted on a Django page
 - Priority: P0
@@ -394,6 +402,7 @@
   - component has unit tests that run in CI command npm test
 - Layer: S4
 - Source: brief
+- Built: 2026-10-27
 
 ### R27. README covering run, token, migration and decisions
 - Priority: P0
@@ -410,6 +419,7 @@
   - README documents make lint and make fmt
 - Layer: S1
 - Source: brief
+- Built: 2026-10-27
 
 ### R28. WordPress password hasher
 - Priority: P0
@@ -708,3 +718,4 @@
 | 2026-10-27 | DONE R1 R2 R16 | mkit |
 | 2026-10-27 | DONE R6 R7 | mkit |
 | 2026-10-27 | DONE R8 R9 | mkit |
+| 2026-10-27 | DONE R3 R4 R5 R21 R22 R23 R24 R25 R26 R27 | mkit |

@@ -84,11 +84,22 @@ export default function BrandList({
     setStatus("loading");
     (fetchImpl ?? fetch)(apiUrl(state, apiBase), { signal: controller.signal })
       .then((r) => {
+        if (id === latest.current && r.status === 404 && state.page > 1) {
+          // A page past the end (stale URL, back/forward): fall back to page 1, not a dead error.
+          const first = { ...state, page: 1 };
+          window.history.replaceState(
+            null,
+            "",
+            `${window.location.pathname}${toSearch(first)}`,
+          );
+          setState(first);
+          return null;
+        }
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
       .then((json) => {
-        if (id !== latest.current) return;
+        if (id !== latest.current || json === null) return;
         setData(json);
         setStatus("ready");
       })
