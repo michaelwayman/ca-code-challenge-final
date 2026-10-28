@@ -205,6 +205,7 @@
   - WP password hashes are copied verbatim into the auth user password field (stored in the auth DB only) and are unchanged by a re-run
 - Layer: S2
 - Source: brief
+- Built: 2026-10-27
 
 ### R11. Login issues access and refresh tokens
 - Priority: P0
@@ -412,6 +413,7 @@
   - a test covers each hash format
 - Layer: S2
 - Source: change
+- Built: 2026-10-27
 
 ### R29. Lint and format via Docker
 - Priority: P0
@@ -690,3 +692,4 @@
 | 2026-10-27 | DONE R17 R29 | mkit |
 | 2026-10-27 | DONE R18 R19 R20 | mkit |
 | 2026-10-27 | DONE R11 R14 R15 | mkit |
+| 2026-10-27 | DONE R28 R10 | mkit |

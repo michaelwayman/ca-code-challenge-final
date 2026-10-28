@@ -36,6 +36,22 @@ DATABASES = {
 }
 
 AUTH_USER_MODEL = "accounts.User"
+
+# Django's default first (new and rehashed passwords), WP last for imported hashes (R28).
+PASSWORD_HASHERS = [
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+    "accounts.hashers.WordPressPasswordHasher",
+]
+
+# Read-only source for import_wp_users (R10); MariaDB from the WP compose stack (A8).
+WP_DB = {
+    "host": os.environ.get("WP_DB_HOST", "db"),
+    "port": int(os.environ.get("WP_DB_PORT", "3306")),
+    "database": os.environ.get("WP_DB_NAME", "wp"),
+    "user": os.environ.get("WP_DB_USER", "wp"),
+    "password": os.environ.get("WP_DB_PASSWORD", "wp"),
+}
+WP_TABLE_PREFIX = os.environ.get("WP_TABLE_PREFIX", "wp_")
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 USE_TZ = True
 TIME_ZONE = "UTC"
