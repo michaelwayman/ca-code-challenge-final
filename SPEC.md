@@ -215,6 +215,7 @@
   - wrong password returns 401 without revealing which field was wrong
 - Layer: S2
 - Source: brief
+- Built: 2026-10-27
 
 ### R12. Refresh and revoke
 - Priority: P0
@@ -245,6 +246,7 @@
   - adding a second key keeps old tokens verifiable until they expire
 - Layer: S2
 - Source: brief
+- Built: 2026-10-27
 
 ### R15. Auth service runs as its own container
 - Priority: P0
@@ -256,6 +258,7 @@
   - auth container starts with manage.py runserver 0.0.0.0:<port>
 - Layer: S2
 - Source: brief
+- Built: 2026-10-27
 
 ### R16. Installable versioned package
 - Priority: P0
@@ -288,6 +291,7 @@
   - missing or invalid token yields 401 not 403
 - Layer: S3
 - Source: brief
+- Built: 2026-10-27
 
 ### R19. Library tests run standalone
 - Priority: P0
@@ -297,6 +301,7 @@
   - coverage includes expired, tampered and wrong-role cases
 - Layer: S3
 - Source: brief
+- Built: 2026-10-27
 
 ### R20. Claims version compatibility
 - Priority: P1
@@ -307,6 +312,7 @@
   - README documents the expand-then-contract release steps for a breaking change, and which module each service imports
 - Layer: S3
 - Source: brief
+- Built: 2026-10-27
 
 ### R21. SCSS source tree compiling to equivalent CSS
 - Priority: P0
@@ -682,3 +688,5 @@
 | 2026-10-27 | ADD C5: Each slice gets a fresh-context review (/mbuild:review) against its R acceptance before it is marked done | mkit |
 | 2026-10-27 | ALTER R27 | mkit |
 | 2026-10-27 | DONE R17 R29 | mkit |
+| 2026-10-27 | DONE R18 R19 R20 | mkit |
+| 2026-10-27 | DONE R11 R14 R15 | mkit |

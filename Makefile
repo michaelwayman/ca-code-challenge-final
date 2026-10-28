@@ -6,7 +6,7 @@ WPCLI := $(COMPOSE) run --rm wpcli
 
 help:
 	@echo "Targets:"
-	@echo "  up              Start db + wordpress + phpmyadmin"
+	@echo "  up              Start db + wordpress + phpmyadmin + auth + app (each with own Postgres)"
 	@echo "  down            Stop containers (preserve data)"
 	@echo "  reset           Stop containers AND wipe DB volume (full cold start on next 'up')"
 	@echo "  logs            Tail wordpress + db logs"
@@ -16,7 +16,7 @@ help:
 	@echo "  status          Show running services"
 
 up:
-	$(COMPOSE) up -d db wordpress phpmyadmin
+	$(COMPOSE) up -d db wordpress phpmyadmin auth-db auth app-db app
 
 down:
 	$(COMPOSE) down

@@ -1,0 +1,3 @@
+cauth==0.1.0
+Django==5.2.7
+psycopg[binary]==3.2.10
