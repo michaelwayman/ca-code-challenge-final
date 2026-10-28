@@ -4,6 +4,20 @@ A small consumer-reviews site (brands, reviews, industries) rebuilt from WordPre
 
 **This is dev-grade by design.** It's a challenge submission, not a deployable service; see [What production would need](#what-production-would-need).
 
+## Changing requirements and scope (always through mkit)
+
+Everything in scope, out of scope, and decided lives in [`SPEC.md`](SPEC.md): requirements (R), out-of-scope items (O), constraints (C), assumptions (A), services (S), technology choices (T) and open questions (Q). **Nobody edits `SPEC.md` by hand.** It changes only through [mkit](https://github.com/michaelwayman/mkit), so every change is approved, recorded with its reason, and visible in the spec's history. `CLAUDE.md` tells the AI the same rules.
+
+| I want to... | Do this |
+|---|---|
+| Report a bug, idea or tweak | `mkit add "<one line>" --bug`, `--feature` or `--adjust`. It goes to the inbox; `/mkit:triage` sorts the inbox in one pass. |
+| Change a requirement, move something in or out of scope, or change a constraint, assumption, service or technology choice | `/mkit:change <what you want>`. It shows a short plan (what is added, modified or removed) and writes nothing until you say yes. |
+| Ask for something that touches an out-of-scope item or goes past a requirement's acceptance | Stop and go through `/mkit:change` first. The builder does not build it. |
+| See what is in the spec | `mkit show` for the index, `mkit show R3 O1` for specific items. Never read `SPEC.md` whole. |
+| Build or rebuild | `/mbuild:build` builds one slice from a short brief, checks every acceptance bullet and marks it done; `/mbuild:review` checks the result against the spec. |
+
+Changing the acceptance of a requirement that is already built marks it `reopened` (see `mkit status`), so nothing stays "done" after its definition changed.
+
 ## Quick start
 
 ```bash

@@ -6,7 +6,7 @@ description: Use to build or rebuild README.md and questions.md from CHALLENGE.m
 # README from CHALLENGE.md
 
 Builds two files so they answer what `CHALLENGE.md` asks for, and nothing else:
-- `README.md`: short. Run instructions, token and protected call, library tests, migration, lint, and the author's own sections.
+- `README.md`: short. Overview, how requirements and scope change (through mkit), run instructions, token and protected call, library tests, migration, lint, and the author's own sections.
 - `questions.md`: the "Decisions you will defend live" questions as a table (question, answer, where it lives).
 
 Mechanical content comes from the repo. The question answers are drafted from the repo and confirmed by the user before anything is written. The author's own writing is never regenerated.
@@ -45,12 +45,13 @@ Show the `questions.md` table and the list of TODO/proposed items. Ask the user 
 
 ## 6. Write the files
 - `questions.md`: a short intro, then the table.
-- `README.md`: overview and quick start, run instructions, token and protected call, library tests and upgrades, migration, lint and format, a short pointer to `questions.md`, the author's sections (verbatim from `author-answers.md`), what production would need. Keep it short: link to `questions.md` instead of repeating the table.
+- `README.md`: overview, the "Changing requirements and scope (always through mkit)" section (near the top, right after the overview; keep its content in line with `CLAUDE.md`'s mkit rules and `mkit help`), quick start, run instructions, token and protected call, library tests and upgrades, migration, lint and format, a short pointer to `questions.md`, the author's sections (verbatim from `author-answers.md`), what production would need. Keep it short: link to `questions.md` instead of repeating the table.
 
 ## 7. Check
 - Every README bullet in CHALLENGE.md has a heading, and every spec-mandated bullet from step 1 is covered.
 - All questions appear verbatim in `questions.md`.
 - The README's author sections are byte-identical to `author-answers.md` (diff them).
+- The "Changing requirements and scope" section exists near the top and matches `CLAUDE.md`'s mkit rules (SPEC.md changes only via `mkit apply` or `/mkit:change`, `mkit add` for bugs and ideas, out-of-scope requests go through `/mkit:change`).
 - The README contains no raw `docker`, `curl` or `python manage.py` commands.
 - The main `make` targets run on a clean clone: `make up`, `make import` (twice), `make token`, `make patch-brand`, `make lib-test`, `make lint`.
 Say what you could not verify. Do not push; the user does.
