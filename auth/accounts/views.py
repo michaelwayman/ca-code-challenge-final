@@ -3,33 +3,64 @@ import json
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.db import connection
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
 from . import keys
-from .tokens import token_pair
+from .tokens import access_token_response, find_live_refresh_token, revoke, token_pair
 
 
 def _error(status: int, message: str) -> JsonResponse:
     return JsonResponse({"detail": message}, status=status)
 
 
+def _string_fields(request, *names):
+    """The named string fields of a JSON body, or None if any is missing or not a string."""
+    try:
+        body = json.loads(request.body)
+        values = [body[name] for name in names]
+    except (ValueError, KeyError, TypeError):
+        return None
+    return values if all(isinstance(v, str) for v in values) else None
+
+
 @csrf_exempt  # bearer-token API, no cookies involved
 @require_POST
 def login(request):
-    try:
-        body = json.loads(request.body)
-        username, password = body["username"], body["password"]
-    except (ValueError, KeyError, TypeError):
+    fields = _string_fields(request, "username", "password")
+    if fields is None:
         return _error(400, "Send JSON with username and password.")
-    if not isinstance(username, str) or not isinstance(password, str):
-        return _error(400, "Send JSON with username and password.")
+    username, password = fields
     # One message for unknown user, wrong password and inactive user alike.
     user = authenticate(request, username=username, password=password)
     if user is None:
         return _error(401, "Invalid credentials.")
     return JsonResponse(token_pair(user))
+
+
+@csrf_exempt
+@require_POST
+def refresh(request):
+    fields = _string_fields(request, "refresh_token")
+    if fields is None:
+        return _error(400, "Send JSON with refresh_token.")
+    # Unknown, expired, revoked and inactive-user tokens share one answer.
+    token = find_live_refresh_token(fields[0])
+    if token is None:
+        return _error(401, "Invalid refresh token.")
+    return JsonResponse(access_token_response(token.user))
+
+
+@csrf_exempt
+@require_POST
+def logout(request):
+    fields = _string_fields(request, "refresh_token")
+    if fields is None:
+        return _error(400, "Send JSON with refresh_token.")
+    # 204 whether or not the token existed, so logout is not a token oracle.
+    revoke(fields[0])
+    return HttpResponse(status=204)
 
 
 @require_GET

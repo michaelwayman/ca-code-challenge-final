@@ -87,6 +87,103 @@ class LoginTests(KeysDirMixin, TestCase):
         self.assertEqual(self.client.get("/auth/login").status_code, 405)
 
 
+class RefreshTests(KeysDirMixin, TestCase):
+    def setUp(self):
+        super().setUp()
+        self.user = User.objects.create_user("ed", password="pw-correct", role=EDITOR)
+        self.refresh_token = self.login().json()["refresh_token"]
+
+    def post(self, path, body):
+        return self.client.post(path, data=json.dumps(body), content_type="application/json")
+
+    def refresh(self, token=None):
+        return self.post("/auth/refresh", {"refresh_token": token or self.refresh_token})
+
+    def logout(self, token=None):
+        return self.post("/auth/logout", {"refresh_token": token or self.refresh_token})
+
+    def test_refresh_returns_new_access_token(self):
+        response = self.refresh()
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertEqual(body["token_type"], "Bearer")
+        self.assertEqual(body["expires_in"], 600)
+        claims = verify(body["access_token"], self.jwks())
+        self.assertEqual(claims["sub"], str(self.user.pk))
+        self.assertEqual(claims["role"], EDITOR)
+
+    def test_demoted_user_gets_reader_role_on_next_refresh(self):
+        self.user.role = READER
+        self.user.save()
+        claims = verify(self.refresh().json()["access_token"], self.jwks())
+        self.assertEqual(claims["role"], READER)
+
+    def test_logged_out_token_is_401(self):
+        self.assertEqual(self.logout().status_code, 204)
+        self.assertEqual(self.refresh().status_code, 401)
+
+    def test_logout_is_idempotent_and_does_not_reveal_unknown_tokens(self):
+        self.logout()
+        self.assertEqual(self.logout().status_code, 204)
+        self.assertEqual(self.logout("nope").status_code, 204)
+
+    def test_revoked_token_is_401(self):
+        RefreshToken.objects.update(revoked_at=datetime.now(UTC))
+        self.assertEqual(self.refresh().status_code, 401)
+
+    def test_expired_token_is_401(self):
+        RefreshToken.objects.update(expires_at=datetime.now(UTC))
+        self.assertEqual(self.refresh().status_code, 401)
+
+    def test_unknown_token_is_401(self):
+        self.assertEqual(self.refresh("not-a-token").status_code, 401)
+
+    def test_inactive_user_is_401(self):
+        self.user.is_active = False
+        self.user.save()
+        self.assertEqual(self.refresh().status_code, 401)
+
+    def test_malformed_body_is_400(self):
+        self.assertEqual(self.post("/auth/refresh", {"token": "x"}).status_code, 400)
+        self.assertEqual(self.post("/auth/logout", {"refresh_token": 1}).status_code, 400)
+
+
+class AdminTests(TestCase):
+    def setUp(self):
+        self.operator = User.objects.create_superuser("op", password="pw-op")
+        self.user = User.objects.create_user("ed", password="pw-correct", role=EDITOR)
+        self.client.force_login(self.operator)
+
+    def test_operator_changes_role_in_admin(self):
+        url = f"/admin/accounts/user/{self.user.pk}/change/"
+        page = self.client.get(url)
+        self.assertContains(page, 'name="role"')
+        response = self.client.post(
+            url,
+            {
+                "username": "ed",
+                "is_active": "on",
+                "date_joined_0": "2026-01-01",
+                "date_joined_1": "00:00:00",
+                "role": READER,
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.role, READER)
+
+    def test_operator_revokes_refresh_tokens_in_admin(self):
+        token = RefreshToken.objects.create(
+            user=self.user, token_hash="x" * 64, expires_at=datetime.now(UTC)
+        )
+        self.client.post(
+            "/admin/accounts/refreshtoken/",
+            {"action": "revoke", "_selected_action": [token.pk]},
+        )
+        token.refresh_from_db()
+        self.assertIsNotNone(token.revoked_at)
+
+
 class JWKSTests(KeysDirMixin, TestCase):
     def test_public_key_set_with_kid_and_no_private_material(self):
         response = self.client.get("/.well-known/jwks.json")

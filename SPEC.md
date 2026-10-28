@@ -228,6 +228,7 @@
   - refresh tokens are stored hashed
 - Layer: S2
 - Source: brief
+- Built: 2026-10-27
 
 ### R13. Roles owned by auth service
 - Priority: P0
@@ -238,6 +239,7 @@
   - the main app database contains no role or password column (checked by a schema query)
 - Layer: S2
 - Source: brief
+- Built: 2026-10-27
 
 ### R14. JWKS endpoint
 - Priority: P0
@@ -693,3 +695,4 @@
 | 2026-10-27 | DONE R18 R19 R20 | mkit |
 | 2026-10-27 | DONE R11 R14 R15 | mkit |
 | 2026-10-27 | DONE R28 R10 | mkit |
+| 2026-10-27 | DONE R12 R13 | mkit |
