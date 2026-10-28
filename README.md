@@ -63,6 +63,12 @@ curl -X PATCH localhost:8000/api/brands/acme-insurance/ -H "Authorization: Beare
 | Any key besides `short_description`, or none | 400; nothing is written |
 | `PUT` | 405 |
 
+**If login says `Invalid credentials`:** the `admin` password only matches on a fresh import. The auth service sets a user's password when it creates the account and never overwrites it afterwards, so an account whose password was changed (or that you reset) keeps the new one. Set it back for local development with:
+
+```bash
+docker compose exec auth python manage.py changepassword admin
+```
+
 Login also returns a refresh token. `POST /auth/refresh` returns a new access token with the user's current role, and `POST /auth/logout` revokes the refresh token.
 
 ### When the auth service is down
