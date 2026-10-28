@@ -89,7 +89,7 @@ Login also returns a refresh token. `POST /auth/refresh` returns a new access to
 
 ### When the auth service is down
 
-The main app never calls the auth service per request. It verifies tokens locally with the public keys from `http://auth:8001/.well-known/jwks.json`, cached in process (`app/config/auth.py`), and compose deliberately has no `depends_on: auth` for it.
+The main app never calls the auth service per request. It verifies tokens locally with the public keys from `http://auth:8001/.well-known/jwks.json`, cached in process (`app/catalog/auth.py`), and compose deliberately has no `depends_on: auth` for it.
 
 - **Reads** (`/api/brands/`, `/api/brands/<slug>/`, pages, `/healthz`) never touch auth and keep returning 200.
 - **Writes with a still-valid token** keep working: the key set is refetched every 5 minutes, and a failed refetch keeps the last good set. Revocation therefore rests on the 10-minute token lifetime.
@@ -114,17 +114,17 @@ The response sends `Cache-Control: public, max-age=30, stale-while-revalidate=12
 
 ## Shared library (`libs/`)
 
-`cauth` (JWT verification, DRF `JWTAuthentication` and `IsEditor`, roles, `deterministic_uuid`) is a versioned package. Its tests run standalone, with no Django project or service:
+`shared_auth` (distribution `shared-auth`) holds the access-token contract both services share: `issue`, `verify` and the `Claims` it returns, the JWKS entry shape (`public_jwk`), the claims versions, the `Role` enum and `deterministic_uuid`. The optional `drf` extra adds DRF's `JWTAuthentication` and `IsEditor`. It is a versioned package whose tests run standalone, with no Django project or service:
 
 ```bash
 make lib-test
 ```
 
-**How a new version reaches each service:** bump `version` in `libs/pyproject.toml`, build the wheel, change the exact pin (`cauth==X.Y.Z`) in `auth/requirements.txt` and `app/requirements.txt`, then `make up`.
+**How a new version reaches each service:** bump `version` in `libs/pyproject.toml`, build the wheel, change the exact pin (`shared-auth==X.Y.Z`, `shared-auth[drf]==X.Y.Z` in the app) in `auth/requirements.txt` and `app/requirements.txt`, then `make up`.
 
-**Which module each service imports:** the auth service imports `cauth.roles` and `cauth.ids.deterministic_uuid` (and `cauth.tokens` in tests); the main app imports `cauth.drf` (`JWTAuthentication`, `IsEditor`), which uses `cauth.tokens.verify`, and `deterministic_uuid` for reviewer links.
+**What each service imports:** the auth service uses `issue` and `public_jwk` to sign tokens and publish its keys, plus `Role` and `deterministic_uuid` for the user import; the main app uses `shared_auth.drf` (`JWTAuthentication`, `IsEditor`), which calls `verify`, and `deterministic_uuid` for reviewer links.
 
-**Releasing a breaking claims change (expand-then-contract).** Tokens carry a `version` claim and `verify` accepts the current version N and N-1. (1) Release the library accepting N and N+1 and deploy it to the main app first. (2) Deploy the auth service with it; it starts issuing N+1 while N tokens still verify. (3) Once the N tokens have expired (10 minutes), release the library with N dropped. Never deploy the issuer before every consumer accepts the new version.
+**Releasing a breaking claims change (expand-then-contract).** Tokens carry a `version` claim; `shared_auth/tokens.py` sets `ISSUED_VERSION` (what the auth service signs) and `ACCEPTED_VERSIONS` (what `verify` takes). Each step is a one-line edit and its own release: (1) add N+1 to `ACCEPTED_VERSIONS` and deploy the main app; (2) set `ISSUED_VERSION` to N+1 and deploy the auth service, while N tokens still verify; (3) once the N tokens have expired (10 minutes), remove N from `ACCEPTED_VERSIONS`. Never deploy the issuer before every consumer accepts the new version.
 
 ## Run the migration and re-run it safely
 

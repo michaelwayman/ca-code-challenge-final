@@ -2,12 +2,13 @@ from dataclasses import replace
 from datetime import datetime
 from decimal import Decimal
 
-from cauth import deterministic_uuid
 from django.db import connection
 from django.test import TestCase
+from shared_auth import deterministic_uuid
 
 from .models import Brand, Industry, Review, Reviewer
-from .wp_import import WPPost, WPSource, WPTerm, WPUser, import_source
+from .wp_import import import_source
+from .wp_source import WPPost, WPSource, WPTerm, WPUser
 
 T0 = datetime(2026, 5, 19, 20, 29, 2)
 

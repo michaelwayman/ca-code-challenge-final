@@ -2,7 +2,7 @@
 
 Kids are UTC timestamps, so the lexically last file is the newest and signs new tokens.
 Every key in the directory is published in the JWKS, which keeps tokens signed by an older
-key verifiable until they expire (R14). Retire a key by deleting its file once its last
+key verifiable until they expire. Retire a key by deleting its file once its last
 token is older than ACCESS_TOKEN_TTL.
 """
 
@@ -13,7 +13,7 @@ from pathlib import Path
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from django.conf import settings
-from jwt.algorithms import RSAAlgorithm
+from shared_auth import public_jwk
 
 
 @dataclass(frozen=True)
@@ -60,8 +60,4 @@ def add_key() -> str:
 
 
 def jwks() -> dict:
-    keys = []
-    for key in load_keys():
-        jwk = RSAAlgorithm.to_jwk(key.private_key.public_key(), as_dict=True)
-        keys.append({**jwk, "kid": key.kid, "alg": "RS256", "use": "sig"})
-    return {"keys": keys}
+    return {"keys": [public_jwk(key.private_key.public_key(), key.kid) for key in load_keys()]}

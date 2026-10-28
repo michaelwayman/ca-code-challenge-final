@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import axe from "axe-core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import BrandList from "./BrandList.jsx";
-import { pageItems, pagerItems } from "./url.js";
+import { desktopPages, pagerItems } from "./pager.js";
 
 const INDUSTRIES = [
   { slug: "insurance", name: "Insurance" },
@@ -43,9 +43,9 @@ function setup(fetchImpl, search = "") {
 beforeEach(() => window.history.replaceState(null, "", "/brands/"));
 
 const shape = (cur, total) =>
-  pageItems(cur, total).map((i) => (i.type === "gap" ? "…" : i.n));
+  desktopPages(cur, total).map((i) => (i.type === "gap" ? "…" : i.n));
 
-describe("pageItems", () => {
+describe("desktopPages", () => {
   it("windows the page list with gaps", () => {
     expect(shape(8, 18)).toEqual([1, "…", 7, 8, 9, "…", 18]);
     expect(shape(1, 18)).toEqual([1, 2, 3, 4, 5, "…", 18]);

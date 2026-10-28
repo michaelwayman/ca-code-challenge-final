@@ -1,7 +1,7 @@
 line-length = 100
 target-version = "py312"
 extend-exclude = ["wp-content", "reference"]
-src = ["auth", "app"]  # service roots; cauth stays third-party (installed, pinned)
+src = ["auth", "app"]  # service roots; shared_auth stays third-party (installed, pinned)
 
 [lint]
 select = ["E", "F", "I", "B", "UP"]

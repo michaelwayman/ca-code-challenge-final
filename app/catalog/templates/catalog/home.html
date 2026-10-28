@@ -9,7 +9,7 @@
 </section>
 <section class="section">
   <div class="container">
-    <div class="section-header"><h2>Recent reviews</h2><a href="/brands/">All brands</a></div>
+    <div class="section-header"><h2>Recent reviews</h2><a href="{% url 'brand-list' %}">All brands</a></div>
     {% if reviews %}
     <div class="grid">{% for review in reviews %}{% include "catalog/_review_card.html" %}{% endfor %}</div>
     {% else %}

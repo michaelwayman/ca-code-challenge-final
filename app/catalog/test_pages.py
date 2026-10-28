@@ -66,3 +66,30 @@ class PageTests(TestCase):
     def test_unknown_slugs_404(self):
         self.assertEqual(self.client.get("/brand/nope/").status_code, 404)
         self.assertEqual(self.client.get("/review/nope/").status_code, 404)
+
+
+class SharedFormattingTests(TestCase):
+    """Pages and the API must show the same stars and excerpts for the same data."""
+
+    def test_half_stars_round_up_like_the_react_list(self):
+        brand = make_brand()
+        for n, rating in enumerate([2, 3], start=1):
+            make_review(brand, n, rating=rating)
+        html = self.client.get("/brand/brand-1/").content.decode()
+        hero = html.split('class="brand-hero"')[1].split("</section>")[0]
+        self.assertEqual(hero.count("star-full"), 3)
+        self.assertIn('aria-label="Rated 2.5 out of 5"', hero)
+        self.assertIn('<span class="rating-value" aria-hidden="true">2.5</span>', hero)
+
+    def test_api_rounds_average_half_up(self):
+        brand = make_brand()
+        for n, rating in enumerate([2, 2, 2, 3], start=1):
+            make_review(brand, n, rating=rating)
+        row = self.client.get("/api/brands/").json()["results"][0]
+        self.assertEqual(row["average_rating"], 2.3)
+
+    def test_review_card_excerpt_keeps_bare_ampersands(self):
+        review = make_review(make_brand(), 1)
+        review.body = "<p>Tom &amp; Jerry at AT&T</p>"
+        review.save()
+        self.assertContains(self.client.get("/"), "Tom &amp; Jerry at AT&amp;T")

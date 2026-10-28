@@ -1,4 +1,4 @@
-"""Verify WordPress password hashes copied verbatim from wp_users (R10, R28).
+"""Verify WordPress password hashes copied verbatim from wp_users.
 
 Why this file exists
     The import keeps each user's WordPress hash untouched, so people keep their password

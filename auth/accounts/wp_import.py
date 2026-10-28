@@ -1,13 +1,13 @@
-"""Import wp_users into auth users (R10). The WP database is only read."""
+"""Import wp_users into auth users. The WP database is only read."""
 
 import re
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
 import pymysql
-from cauth import EDITOR, READER, deterministic_uuid
 from django.conf import settings
 from django.db import transaction
+from shared_auth import Role, deterministic_uuid
 
 from .models import User
 
@@ -28,7 +28,7 @@ class WPUser:
 def map_role(capabilities: str) -> str:
     """administrator/editor become editor, every other WP role becomes reader."""
     wp_roles = set(_CAPABILITY.findall(capabilities or ""))
-    return EDITOR if wp_roles & EDITOR_WP_ROLES else READER
+    return Role.EDITOR if wp_roles & EDITOR_WP_ROLES else Role.READER
 
 
 def fetch_wp_users() -> list[WPUser]:
@@ -53,7 +53,7 @@ def fetch_wp_users() -> list[WPUser]:
 @transaction.atomic
 def import_users(wp_users: list[WPUser]) -> dict[str, int]:
     """Upsert by deterministic pk. Password and role are set on create only: after
-    that the auth service owns them (R13), so a re-run never reverts a rehash."""
+    that the auth service owns them, so a re-run never reverts a rehash."""
     counts = {"created": 0, "updated": 0}
     by_pk = {deterministic_uuid("wp_user", wp.id): wp for wp in wp_users}
     # Park every username that is about to change, so a WP rename into a login another

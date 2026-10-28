@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand
 
-from catalog.wp_import import fetch_source, import_source
+from catalog.wp_import import import_source
+from catalog.wp_source import fetch_source
 
 COLUMNS = ("created", "updated", "unchanged", "deleted", "skipped")
 

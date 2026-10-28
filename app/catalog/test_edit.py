@@ -4,13 +4,11 @@ import time
 from unittest import mock
 
 import jwt
-from cauth import EDITOR, READER
 from cryptography.hazmat.primitives.asymmetric import rsa
 from django.test import TestCase
-from jwt.algorithms import RSAAlgorithm
+from shared_auth import Role, public_jwk
 
-from config.auth import jwks_cache
-
+from .auth import jwks_cache
 from .models import Brand
 from .test_api import make_brand, make_review
 
@@ -19,15 +17,14 @@ URL = "/api/brands/acme-insurance/"
 
 def keypair(kid):
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
-    jwk = {**RSAAlgorithm.to_jwk(key.public_key(), as_dict=True), "kid": kid, "alg": "RS256"}
-    return key, jwk
+    return key, public_jwk(key.public_key(), kid)
 
 
 KEY, JWK = keypair("k1")
 NEW_KEY, NEW_JWK = keypair("k2")
 
 
-def token(role=EDITOR, key=KEY, kid="k1", exp=600):
+def token(role=Role.EDITOR, key=KEY, kid="k1", exp=600):
     claims = {"sub": "u1", "role": role, "version": 2, "exp": int(time.time()) + exp}
     return jwt.encode(claims, key, algorithm="RS256", headers={"kid": kid})
 
@@ -52,7 +49,7 @@ class EditTestCase(TestCase):
         self.urlopen = self.patch_urlopen(side_effect=lambda *a, **k: jwks_response(JWK))
 
     def patch_urlopen(self, **kwargs):
-        patcher = mock.patch("config.auth.urllib.request.urlopen", **kwargs)
+        patcher = mock.patch("catalog.auth.urllib.request.urlopen", **kwargs)
         self.addCleanup(patcher.stop)
         return patcher.start()
 
@@ -89,7 +86,7 @@ class BrandEditTests(EditTestCase):
         self.assertEqual(Brand.objects.get(slug="acme-insurance").excerpt, "Cheap cover.")
 
     def test_reader_is_forbidden(self):
-        response = self.patch({"short_description": "x"}, token(role=READER))
+        response = self.patch({"short_description": "x"}, token(role=Role.READER))
         self.assertEqual(response.status_code, 403)
         self.assertIsNone(self.stored())
 
@@ -147,7 +144,7 @@ class AuthOutageTests(EditTestCase):
     def test_cached_keys_survive_auth_outage(self):
         self.assertEqual(self.patch({"short_description": "one"}, token()).status_code, 200)
         self.urlopen.side_effect = auth_down
-        with mock.patch("config.auth.time.monotonic", return_value=time.monotonic() + 3600):
+        with mock.patch("catalog.auth.time.monotonic", return_value=time.monotonic() + 3600):
             # Cache is past max_age and the refetch fails: the stale keys still verify.
             response = self.patch({"short_description": "two"}, token())
         self.assertEqual(response.status_code, 200, response.content)
@@ -177,7 +174,7 @@ class AuthOutageTests(EditTestCase):
         self.urlopen.side_effect = lambda *a, **k: jwks_response(JWK)
         self.assertEqual(self.patch({"short_description": "one"}, token()).status_code, 200)
         self.urlopen.side_effect = lambda *a, **k: io.BytesIO(b"[]")
-        with mock.patch("config.auth.time.monotonic", return_value=time.monotonic() + 3600):
+        with mock.patch("catalog.auth.time.monotonic", return_value=time.monotonic() + 3600):
             response = self.patch({"short_description": "two"}, token())
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(self.stored(), "two")
