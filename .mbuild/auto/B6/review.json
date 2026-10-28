@@ -1,0 +1,4 @@
+{"findings":[
+{"kind":"drift","text":"import_wp deletes Postgres brands/reviews/industries (and orphaned reviewers) whose WP row is no longer in the import set; R2 only asks to load and update, and adds deleted/unchanged counts","evidence":"app/catalog/wp_import.py:135-140 (_sync excludes keys not in rows and .delete()s, cascading); README.md:94 documents it"},
+{"kind":"drift","text":"import_wp applies unlisted validation rules: drafts, reviews with missing brand and ratings outside 1-5 are skipped; ACF average_rating outside 0-5 is stored as null","evidence":"app/catalog/wp_import.py:177-179 (status != PUBLISHED -> skipped) and review skip rules; README.md:94"}
+]}

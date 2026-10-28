@@ -1,0 +1,5 @@
+{"findings":[
+{"kind":"bug","text":"README and BrandList.ordering docstring say brands without reviews sort last for every ordering, but ?ordering=review_count (ascending) sorts zero-review brands first: review_count is Count('reviews') = 0, not NULL, so nulls_last has no effect.","evidence":"app/catalog/models.py:35 annotates review_count=Count(\"reviews\"); app/catalog/api.py:132 relies on expr.asc(nulls_last=True); README.md:114 'Brands without reviews sort last'. No test covers ascending review_count."},
+{"kind":"drift","text":"Ordering accepts more than the spec lists (-avg_rating, -review_count, name): ascending avg_rating/review_count and -name are also supported.","evidence":"app/catalog/api.py:126-133 applies any '-' prefix to any ORDERINGS key; README.md:114 documents it."},
+{"kind":"drift","text":"Unknown ?ordering= values silently fall back to name rather than returning 400; behavior not specified by R6.","evidence":"app/catalog/api.py:128-130; pinned by test in app/catalog/test_api.py (ordering=\"bogus\")."}
+]}

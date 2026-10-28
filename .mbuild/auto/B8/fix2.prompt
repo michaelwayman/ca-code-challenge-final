@@ -1,0 +1,3 @@
+Fix only these findings for R8 R9, in the working tree. Do not run `mkit done`, do not commit, do not edit SPEC.md. Rerun every acceptance bullet and rewrite /Users/michaelwayman/Projects/A/ca-code-challenge/.mbuild/auto/B8/verify.md (one line per bullet: `R1.1 | pass|fail | evidence`). If unsure, write `NEEDS: <question>` to /Users/michaelwayman/Projects/A/ca-code-challenge/.mbuild/auto/B8/NEEDS.
+
+- bug: PATCH short_description does not round-trip: a blank value makes reads fall back to the body description, and values over 30 words come back truncated in the 200 response and later GETs
