@@ -49,4 +49,4 @@
 - [x] I47 2026-10-28 bug: Phone pagination hides neighbours with no gap marker near the ends (page 4 of 18 shows 1 [4] … 18, pages 2-3 vanish) -> R22
 - [x] I48 2026-10-28 bug: Clicking the current page number pushState's an identical URL, adding a duplicate history entry (BrandList.jsx page button, no guard) -> R22
 - [x] I49 2026-10-28 adjust: R26 says hero uses the existing shared token, but color-hero-start/end were added; colour matches WP exactly. Reword R26 or accept -> R26
-- [ ] I50 2026-10-28 bug: README quick start fails from a wiped state; README should only reference make targets (no raw docker compose exec lines)
+- [x] I50 2026-10-28 bug: README quick start fails from a wiped state; README should only reference make targets (no raw docker compose exec lines) -> R27
