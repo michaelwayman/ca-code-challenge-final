@@ -125,7 +125,7 @@ Own Django project, container and Postgres. `import_wp_users` creates one user p
 
 ### React BrandList
 
-`frontend/src/BrandList.jsx` is mounted on `/brands/` by `main.jsx`; Django passes the industry options through `json_script`. State (`industry`, `ordering`, `page`) lives in the URL.
+`frontend/src/BrandList.jsx` is mounted on `/brands/` by `main.jsx`; Django passes the industry options through `json_script`. State (`industry`, `ordering`, `page`) lives in the URL. Filter and sort changes use `replaceState` (so Back leaves the list instead of stepping through earlier filters); page changes use `pushState`. Pagination is a numbered, windowed list (`1 … 7 8 9 … 18`, first/last always shown). Results are cached per URL in the component for 30s (no request inside that window, then shown and revalidated), and a refetch keeps the old results dimmed with a spinner instead of blanking the list.
 
 ```bash
 make fe-build   # npm ci + sass + vite build -> frontend/dist/css/main.css, frontend/dist/js/brand-list.js
@@ -191,6 +191,8 @@ A WSGI server (gunicorn) instead of `runserver`, TLS, secrets management instead
 Dropped: the ACF field-reference meta (`_website_url`, `_rating`, ...), ACF `reviewer_name` (identical to the author's display name in every row; the reviewer FK carries it), `_wp_page_template`, and WP pages and posts (out of scope).
 
 ## Brand listing API (main app)
+
+The listing sends `Cache-Control: public, max-age=30, stale-while-revalidate=120`, so browsers reuse repeat filter/sort/page URLs for 30s (an editor's PATCH can take that long to show).
 
 `GET http://localhost:8000/api/brands/` is public (no token) and returns `{count, next, previous, results}`. Each row has `name`, `slug`, `industry` (`{name, slug}` or null), `average_rating` (mean of review ratings to one decimal, null with no reviews), `review_count`, `short_description` (an editor's value exactly as saved; otherwise the WP excerpt, else the body with tags stripped, 30 words) and `top_review` (`title`, `slug`, `rating`, `reviewer`, `published_at`, 30-word `snippet`, or null).
 
