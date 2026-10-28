@@ -187,6 +187,7 @@
 - Layer: S1
 - Source: brief
 - Reopened: 2026-10-27
+- Built: 2026-10-28
 
 ### R7. Top review rule documented
 - Priority: P1
@@ -313,6 +314,7 @@
 - Layer: S2
 - Source: brief
 - Reopened: 2026-10-28
+- Built: 2026-10-28
 
 ### R15. Auth service runs as its own container
 - Priority: P0
@@ -407,6 +409,7 @@
 - Layer: S4
 - Source: brief
 - Reopened: 2026-10-28
+- Built: 2026-10-28
 
 ### R23. BrandList filter and sort with URL-synced state
 - Priority: P0
@@ -426,6 +429,7 @@
 - Layer: S4
 - Source: brief
 - Reopened: 2026-10-27
+- Built: 2026-10-28
 
 ### R24. BrandList loading, empty and error states
 - Priority: P0
@@ -443,6 +447,7 @@
 - Layer: S4
 - Source: brief
 - Reopened: 2026-10-27
+- Built: 2026-10-28
 
 ### R25. BrandList accessibility
 - Priority: P0
@@ -470,6 +475,7 @@
 - Layer: S4
 - Source: brief
 - Reopened: 2026-10-27
+- Built: 2026-10-28
 
 ### R27. README covering run, token, migration and decisions
 - Priority: P0
@@ -839,3 +845,4 @@
 | 2026-10-28 | ANSWER Q6 | mkit |
 | 2026-10-28 | ALTER R14 | mkit |
 | 2026-10-28 | ANSWER Q6 | mkit |
+| 2026-10-28 | DONE R6 R14 R22 R23 R24 R26 | mkit |
