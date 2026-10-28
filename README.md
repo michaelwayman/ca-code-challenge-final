@@ -91,7 +91,7 @@ Seeded volume: 5 brands (one per industry), 60 reviews (12 per brand) authored b
 
 ## Django schema and migration (main app)
 
-`docker compose exec app python manage.py import_wp` copies WP into the main app's Postgres. It reads MariaDB inside a `READ ONLY` transaction (connection from `WP_DB_HOST`, `WP_DB_PORT`, `WP_DB_NAME`, `WP_DB_USER`, `WP_DB_PASSWORD`), keys every row on its WP id (`wp_id`, slug is an ordinary column), and prints created/updated/unchanged/skipped per table. Re-running it is safe: unchanged rows are not written, edited rows (including renamed slugs) are updated in place. Drafts, reviews pointing at a missing brand, and ratings outside 1-5 are skipped. Rows deleted in WP are not deleted.
+`docker compose exec app python manage.py import_wp` copies WP into the main app's Postgres. It reads MariaDB inside a `READ ONLY` transaction (connection from `WP_DB_HOST`, `WP_DB_PORT`, `WP_DB_NAME`, `WP_DB_USER`, `WP_DB_PASSWORD`), keys every row on its WP id (`wp_id`, slug is an ordinary column), and prints created/updated/unchanged/deleted/skipped per table. Re-running it is safe: unchanged rows are not written, edited rows (including renamed slugs) are updated in place. Drafts, reviews pointing at a missing brand, and ratings outside 1-5 are skipped. Postgres mirrors what was imported: a row imported earlier that is now unpublished, trashed, deleted or skipped in WP is deleted (with its reviews, and reviewers left without reviews), which also frees its slug for a new post. An ACF `average_rating` outside 0-5 is stored as null.
 
 | WP source | Django |
 |---|---|

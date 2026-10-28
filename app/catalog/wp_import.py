@@ -2,7 +2,8 @@
 
 Every row is keyed on its WP id (term_id, post ID, or the deterministic reviewer uuid), so a
 re-run updates in place: changed rows are written, unchanged rows are left alone, and a slug
-is just another attribute. Rows deleted in WP are not deleted here.
+is just another attribute. Postgres mirrors the import set: a row that was imported before but
+is now unpublished, trashed, deleted or invalid in WP is deleted here.
 """
 
 from collections import Counter, defaultdict
@@ -18,6 +19,7 @@ from django.db import transaction
 from .models import Brand, Industry, Review, Reviewer
 
 PUBLISHED = "publish"
+TABLES = {Industry: "industries", Reviewer: "reviewers", Brand: "brands", Review: "reviews"}
 
 
 @dataclass(frozen=True)
@@ -121,14 +123,22 @@ def _int(value: str | None) -> int | None:
 
 
 def _rating(value: str | None) -> Decimal | None:
+    """An ACF average on the 0-5 review scale, or None (it must fit numeric(2,1))."""
     try:
-        return Decimal(str(value).strip()).quantize(Decimal("0.1"))
-    except (InvalidOperation, ValueError):
+        rating = Decimal(str(value).strip()).quantize(Decimal("0.1"))
+        return rating if 0 <= rating <= 5 else None
+    except (InvalidOperation, ValueError):  # comparing NaN raises InvalidOperation
         return None
 
 
-def _sync(model, key_field: str, rows: dict, counts: Counter) -> None:
-    """Upsert rows ({key: field values}) and count created/updated/unchanged."""
+def _sync(model, key_field: str, rows: dict, all_counts: dict[str, Counter]) -> None:
+    """Upsert rows ({key: field values}), delete rows not among them, and count
+    created/updated/unchanged/deleted (cascaded deletes count against their own table)."""
+    # Deleting first also frees the slugs of rows that left the import set.
+    _, deleted = model.objects.exclude(**{f"{key_field}__in": list(rows)}).delete()
+    for other, name in TABLES.items():
+        all_counts[name]["deleted"] += deleted.get(other._meta.label, 0)
+    counts = all_counts[TABLES[model]]
     existing = model.objects.in_bulk(list(rows), field_name=key_field)
     # Park slugs that are about to change, so a rename into a slug another row only
     # gives up later in the loop (or a swap) cannot hit the unique index.
@@ -155,13 +165,13 @@ def _sync(model, key_field: str, rows: dict, counts: Counter) -> None:
 
 @transaction.atomic
 def import_source(src: WPSource) -> dict[str, Counter]:
-    counts = {name: Counter() for name in ("industries", "reviewers", "brands", "reviews")}
+    counts = {name: Counter() for name in TABLES.values()}
 
     _sync(
         Industry,
         "wp_id",
         {t.id: {"name": t.name, "slug": t.slug} for t in src.industries},
-        counts["industries"],
+        counts,
     )
     industry_pk = dict(Industry.objects.values_list("wp_id", "pk"))
 
@@ -187,7 +197,7 @@ def import_source(src: WPSource) -> dict[str, Counter]:
             "published_at": _aware(post.date),
             "modified_at": _aware(post.modified),
         }
-    _sync(Brand, "wp_id", brand_rows, counts["brands"])
+    _sync(Brand, "wp_id", brand_rows, counts)
     brand_pk = dict(Brand.objects.values_list("wp_id", "pk"))
 
     users = {u.id: u for u in src.users}
@@ -213,6 +223,6 @@ def import_source(src: WPSource) -> dict[str, Counter]:
             "published_at": _aware(post.date),
             "modified_at": _aware(post.modified),
         }
-    _sync(Reviewer, "id", reviewer_rows, counts["reviewers"])
-    _sync(Review, "wp_id", review_rows, counts["reviews"])
+    _sync(Reviewer, "id", reviewer_rows, counts)
+    _sync(Review, "wp_id", review_rows, counts)
     return counts

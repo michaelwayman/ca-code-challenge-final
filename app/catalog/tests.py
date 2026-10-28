@@ -126,6 +126,53 @@ class ImportTests(TestCase):
         self.assertEqual(counts["reviews"]["skipped"], 3)
         self.assertEqual(list(Review.objects.values_list("wp_id", flat=True)), [12])
 
+    def test_rows_leaving_the_import_set_are_deleted_on_rerun(self):
+        import_source(source())
+        src = source(
+            users=[WPUser(1, "admin"), WPUser(2, "Sarah K."), WPUser(3, "Lee")],
+            brands=[brand(7, "acme-insurance"), brand(8, "primepath-bank", status="trash")],
+            reviews=[
+                review(12, "smooth-claim", 7, status="draft"),
+                review(13, "pricey", 7, rating="9"),
+                review(17, "fresh", 7, author=3),
+            ],
+        )
+        counts = import_source(src)
+        self.assertEqual(counts["brands"]["deleted"], 1)
+        self.assertEqual(counts["reviews"]["deleted"], 2)
+        self.assertEqual(counts["reviewers"]["deleted"], 1)
+        self.assertEqual(list(Brand.objects.values_list("wp_id", flat=True)), [7])
+        self.assertEqual(list(Review.objects.values_list("wp_id", flat=True)), [17])
+        self.assertEqual(
+            list(Reviewer.objects.values_list("pk", flat=True)), [deterministic_uuid("wp_user", 3)]
+        )
+        # Publishing again brings the rows back.
+        counts = import_source(source())
+        self.assertEqual(counts["brands"]["created"], 1)
+        self.assertEqual(Review.objects.filter(wp_id__in=[12, 13]).count(), 2)
+
+    def test_new_post_can_take_the_slug_of_a_row_that_left_the_import_set(self):
+        import_source(source())
+        src = source(
+            brands=[brand(7, "acme-insurance", status="trash"), brand(11, "acme-insurance")],
+            reviews=[review(12, "smooth-claim", 11)],
+        )
+        counts = import_source(src)
+        # Trashing brand 7 cascades to both its reviews; 12 comes back under brand 11.
+        self.assertEqual(counts["reviews"]["deleted"], 2)
+        self.assertEqual(counts["reviews"]["created"], 1)
+        self.assertEqual(Brand.objects.get(slug="acme-insurance").wp_id, 11)
+        self.assertFalse(Brand.objects.filter(wp_id=7).exists())
+        self.assertEqual(Review.objects.get(wp_id=12).brand.wp_id, 11)
+
+    def test_out_of_range_legacy_average_rating_becomes_null(self):
+        for value in ("10", "99.5", "-1", "5.1", "NaN", "Infinity"):
+            meta = {"average_rating": value}
+            import_source(source(brands=[brand(7, "acme-insurance", meta=meta)], reviews=[]))
+            self.assertIsNone(Brand.objects.get(wp_id=7).legacy_average_rating, value)
+        import_source(source(brands=[brand(7, "acme-insurance", meta={"average_rating": "5"})]))
+        self.assertEqual(Brand.objects.get(wp_id=7).legacy_average_rating, Decimal("5.0"))
+
     def test_reviewer_keyed_by_deterministic_uuid_without_wp_id(self):
         import_source(source())
         reviewer = Review.objects.get(wp_id=12).reviewer
