@@ -6,8 +6,7 @@ from django.db import connection
 from django.test import TestCase
 
 from .models import Brand, Industry, Review, Reviewer
-from .wp_ids import wp_user_uuid
-from .wp_import import WPPost, WPSource, WPTerm, WPUser, import_source
+from .wp_import import WPPost, WPSource, WPTerm, WPUser, import_source, wp_user_uuid
 
 T0 = datetime(2026, 5, 19, 20, 29, 2)
 

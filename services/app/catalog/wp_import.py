@@ -6,6 +6,7 @@ is just another attribute. Postgres mirrors the import set: a row that was impor
 is now unpublished, trashed, deleted or invalid in WP is deleted here.
 """
 
+import uuid
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -16,9 +17,18 @@ from django.conf import settings
 from django.db import transaction
 
 from .models import Brand, Industry, Review, Reviewer
-from .wp_ids import wp_user_uuid
 
 PUBLISHED = "publish"
+# WP user id -> UUID. The auth service uses it as the user's pk and the main app as the reviewer's
+# pk, so the two link with no runtime call (A3). The rule is the contract
+# docs/contracts/auth/reviewer-ids.json; a test in each service checks it.
+WP_USER_NAMESPACE = uuid.UUID("b88cc69f-2c32-5407-a15f-e0e254c8057a")
+
+
+def wp_user_uuid(wp_user_id: int) -> uuid.UUID:
+    return uuid.uuid5(WP_USER_NAMESPACE, str(wp_user_id))
+
+
 TABLES = {Industry: "industries", Reviewer: "reviewers", Brand: "brands", Review: "reviews"}
 
 

@@ -14,8 +14,7 @@ from django.test import TestCase, override_settings
 from . import keys
 from .hashers import WordPressPasswordHasher
 from .models import RefreshToken, User
-from .wp_ids import wp_user_uuid
-from .wp_import import WPUser, import_users
+from .wp_import import WPUser, import_users, wp_user_uuid
 
 
 class KeysDirMixin:

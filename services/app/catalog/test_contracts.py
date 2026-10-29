@@ -13,7 +13,7 @@ from jsonschema import Draft202012Validator
 from . import api
 from .test_api import make_brand
 from .test_edit import JWK, EditTestCase, jwks_response, token
-from .wp_ids import WP_USER_NAMESPACE, wp_user_uuid
+from .wp_import import WP_USER_NAMESPACE, wp_user_uuid
 
 ROOT = Path(settings.BASE_DIR).parent  # /srv in the container, not run on a host
 SPEC = json.loads((ROOT / "docs" / "contracts" / "app" / "brands-api.openapi.json").read_text())

@@ -14,7 +14,7 @@ from . import keys
 from .models import User
 from .tests import KeysDirMixin
 from .tokens import issue_access_token
-from .wp_ids import WP_USER_NAMESPACE, wp_user_uuid
+from .wp_import import WP_USER_NAMESPACE, wp_user_uuid
 
 ROOT = Path(settings.BASE_DIR).parent  # /srv in the container, not run on a host
 SCHEMA = json.loads((ROOT / "docs" / "contracts" / "auth" / "token-claims.schema.json").read_text())
