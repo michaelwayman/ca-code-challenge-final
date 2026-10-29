@@ -15,6 +15,7 @@ help:
 	@echo "  dump            Export current DB to db/dump.sql"
 	@echo "  status          Show running services"
 	@echo "  import          Import WP data into the main app and auth service (safe to re-run)"
+	@echo "  seed-demo       Add ~100 demo brands so /brands/ paginates (unseed-demo removes; import wipes them)"
 	@echo "  token           Print an access token (AUTH_USER, AUTH_PASS; default admin/admin)"
 	@echo "  patch-brand     Log in and PATCH a brand (SLUG=..., DESC=...)"
 	@echo "  lib-test        Run the shared library tests in Docker"
@@ -90,7 +91,7 @@ AUTH_PASS ?= admin
 SLUG ?= acme-insurance
 DESC ?= Fair prices, slow claims.
 
-.PHONY: import import-wp import-users token patch-brand admin-password operator rotate-key auth-stop auth-start app-restart lib-test
+.PHONY: import import-wp import-users token patch-brand admin-password operator rotate-key auth-stop auth-start app-restart lib-test seed-demo unseed-demo
 
 import: import-wp import-users
 
@@ -99,6 +100,12 @@ import-wp:
 
 import-users:
 	$(COMPOSE) exec -T auth python manage.py import_wp_users
+
+seed-demo:
+	$(COMPOSE) exec -T app python manage.py shell < scripts/seed-demo-brands.py
+
+unseed-demo:
+	$(COMPOSE) exec -T -e DEMO_CLEAR=1 app python manage.py shell < scripts/seed-demo-brands.py
 
 token:
 	@$(COMPOSE) exec -T -e AUTH_USER=$(AUTH_USER) -e AUTH_PASS=$(AUTH_PASS) auth python - < scripts/token.py
