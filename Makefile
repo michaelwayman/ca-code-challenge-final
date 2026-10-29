@@ -138,7 +138,7 @@ BASE ?= main
 lib-check:
 	docker run --rm -e BASE=$(BASE) -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0=/work -v "$(CURDIR)":/work -w /work --entrypoint sh alpine/git:v2.47.2 scripts/check-lib-version.sh
 
-# Contract tests need the rebuilt images (jsonschema) and the contracts/ mount.
+# Contract tests need the rebuilt images (jsonschema) and the docs/contracts mount.
 contract-test:
 	$(COMPOSE) exec -T auth python manage.py test accounts.test_contracts
 	$(COMPOSE) exec -T app python manage.py test catalog.test_contracts

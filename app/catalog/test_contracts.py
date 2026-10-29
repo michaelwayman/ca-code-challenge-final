@@ -1,4 +1,4 @@
-"""Service contracts (R30): the brands API schema in contracts/ against the real responses,
+"""Service contracts (R30): the brands API schema in docs/contracts/ against the real responses,
 the frontend fixture, and the constants api.py and frontend/src/url.js each define."""
 
 import json
@@ -14,7 +14,7 @@ from .test_api import make_brand
 from .test_edit import JWK, EditTestCase, jwks_response, token
 
 ROOT = Path(settings.BASE_DIR).parent  # /srv in the container, the repo root on a host
-SPEC = json.loads((ROOT / "contracts" / "brands-api.openapi.json").read_text())
+SPEC = json.loads((ROOT / "docs" / "contracts" / "app" / "brands-api.openapi.json").read_text())
 URL_JS = (ROOT / "frontend" / "src" / "url.js").read_text()
 FIXTURE = json.loads((ROOT / "frontend" / "src" / "fixtures" / "brands-page.json").read_text())
 

@@ -1,5 +1,5 @@
 """Service contracts (R30): claims built by the real issuer pass through the cauth verifier
-and validate against contracts/token-claims.schema.json."""
+and validate against docs/contracts/auth/token-claims.schema.json."""
 
 import json
 from pathlib import Path
@@ -15,7 +15,7 @@ from .tests import KeysDirMixin
 from .tokens import issue_access_token
 
 ROOT = Path(settings.BASE_DIR).parent  # /srv in the container, the repo root on a host
-SCHEMA = json.loads((ROOT / "contracts" / "token-claims.schema.json").read_text())
+SCHEMA = json.loads((ROOT / "docs" / "contracts" / "auth" / "token-claims.schema.json").read_text())
 
 
 class TokenClaimsContractTests(KeysDirMixin, TestCase):

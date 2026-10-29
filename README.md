@@ -112,7 +112,7 @@ make lib-test
 3. `make lib-test`, then `make lib-check` (fails if `libs/` changed against `main` without a bump, or a pin lags the version).
 4. `make up`. Each Dockerfile builds the wheel from `libs/` and installs only that wheel, with `--no-index`; the build fails if its version is not the pinned one, so a service can never run an unpinned local copy.
 
-Service contracts (token claims, brands API) live in `contracts/` with an owner and a version each; `make contract-test` checks the code against them.
+Service contracts (token claims, brands API) live in `docs/contracts/<service>/` with an owner and a version each; `make contract-test` checks the code against them.
 
 **Which module each service imports:** the auth service imports `cauth.roles` and `cauth.ids.deterministic_uuid` (and `cauth.tokens` in tests); the main app imports `cauth.drf` (`JWTAuthentication`, `IsEditor`), which uses `cauth.tokens.verify`, and `deterministic_uuid` for reviewer links.
 
