@@ -26,13 +26,25 @@ def _keys_dir() -> Path:
     return Path(settings.AUTH_KEYS_DIR)
 
 
+_loaded: tuple[tuple, list[SigningKey]] | None = None
+
+
 def load_keys() -> list[SigningKey]:
-    """All keys, oldest first."""
-    keys = []
-    for path in sorted(_keys_dir().glob("*.pem")):
-        private_key = serialization.load_pem_private_key(path.read_bytes(), password=None)
-        keys.append(SigningKey(kid=path.stem, private_key=private_key))
-    return keys
+    """All keys, oldest first. Parsed keys are reused until a key file is added, removed or
+    changed, so rotation takes effect on the next call without re-reading the disk each time."""
+    global _loaded
+    paths = sorted(_keys_dir().glob("*.pem"))
+    stamp = (str(_keys_dir()), *((p.name, p.stat().st_mtime_ns) for p in paths))
+    if _loaded is None or _loaded[0] != stamp:
+        keys = [
+            SigningKey(
+                kid=p.stem,
+                private_key=serialization.load_pem_private_key(p.read_bytes(), password=None),
+            )
+            for p in paths
+        ]
+        _loaded = (stamp, keys)
+    return list(_loaded[1])
 
 
 def active_key() -> SigningKey:

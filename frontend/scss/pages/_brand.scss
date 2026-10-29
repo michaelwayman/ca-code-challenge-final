@@ -1,13 +1,13 @@
 @use "../abstracts" as *;
 
 .brand-hero {
-  background: #fff;
+  background: var(--color-card);
   border-bottom: 1px solid var(--color-border);
   padding: 40px 0;
 
   h1 {
     font-size: 2rem;
-    margin: 0 0 12px;
+    margin: 0 0 var(--space-3);
     letter-spacing: -0.02em;
   }
 
@@ -26,10 +26,10 @@
 }
 
 .brand-body {
-  padding: 32px 0 48px;
+  padding: var(--space-6) 0 var(--space-7);
 
   .content {
-    background: #fff;
+    background: var(--color-card);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
     padding: 28px;
@@ -41,7 +41,7 @@
 .brand-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 260px;
-  gap: 24px;
+  gap: var(--space-5);
   align-items: start;
 
   @include mobile {
@@ -50,7 +50,7 @@
 }
 
 .brand-sidebar {
-  background: #fff;
+  background: var(--color-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
   padding: 22px;
@@ -69,7 +69,7 @@
 }
 
 .reviews-section {
-  padding: 24px 0 64px;
+  padding: var(--space-5) 0 var(--space-8);
 
   h2 {
     font-size: 1.4rem;

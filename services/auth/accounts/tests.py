@@ -208,6 +208,20 @@ class JWKSTests(KeysDirMixin, TestCase):
         verify(old_token, jwks)
         verify(new_token, jwks)
 
+    def test_key_files_are_parsed_once_until_the_ring_changes(self):
+        keys.load_keys()
+        with mock.patch.object(
+            keys.serialization,
+            "load_pem_private_key",
+            wraps=keys.serialization.load_pem_private_key,
+        ) as parse:
+            keys.load_keys()
+            keys.load_keys()
+            self.assertEqual(parse.call_count, 0)
+            keys.add_key()
+            self.assertEqual(len(keys.load_keys()), 2)
+            self.assertEqual(parse.call_count, 2)
+
 
 # Generated with WordPress 6.9's own code (class-phpass.php, wp_hash_password) for "hunter2".
 WP_PHPASS = "$P$BVRYel7YxFGYlqMhNxO4gy9IIcajYw1"

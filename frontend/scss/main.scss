@@ -1,4 +1,4 @@
-// Order: tokens -> base -> layout -> components -> pages. Add a component as
+// Order: tokens -> base -> layout -> components -> pages -> utilities. Add a component as
 // components/_name.scss and an @use line below.
 @use "abstracts";
 @use "base/reset";
@@ -15,7 +15,10 @@
 @use "components/badge";
 @use "components/pagination";
 @use "components/review-item";
+@use "components/brand-filters";
 @use "components/brand-list";
+@use "components/states";
 @use "pages/brand";
 @use "pages/review";
 @use "pages/page";
+@use "utilities/visually-hidden";

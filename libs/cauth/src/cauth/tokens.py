@@ -4,6 +4,9 @@ from jwt.algorithms import RSAAlgorithm
 from .errors import BadSignature, ExpiredToken, MalformedToken, UnknownKid, UnsupportedVersion
 
 CLAIMS_VERSION = 2
+# PyJWT only checks a claim that is present, so these must be demanded or a token without
+# `exp` would never expire and one without `role` would reach the permission check.
+REQUIRED_CLAIMS = ["exp", "sub", "role"]
 SUPPORTED_VERSIONS = frozenset({CLAIMS_VERSION - 1, CLAIMS_VERSION})  # N and N-1
 
 
@@ -24,7 +27,7 @@ def verify(token: str, jwks: dict) -> dict:
             token,
             RSAAlgorithm.from_jwk(jwk),
             algorithms=["RS256"],
-            options={"verify_aud": False},
+            options={"verify_aud": False, "require": REQUIRED_CLAIMS},
         )
     except jwt.ExpiredSignatureError as exc:
         raise ExpiredToken(str(exc)) from exc

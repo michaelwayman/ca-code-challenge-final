@@ -1,7 +1,7 @@
 .review-hero {
-  background: #fff;
+  background: var(--color-card);
   border-bottom: 1px solid var(--color-border);
-  padding: 32px 0 24px;
+  padding: var(--space-6) 0 var(--space-5);
 
   .brand-link {
     font-size: 0.9rem;
@@ -13,7 +13,7 @@
 
   h1 {
     font-size: 1.75rem;
-    margin: 8px 0 12px;
+    margin: var(--space-2) 0 var(--space-3);
     letter-spacing: -0.01em;
   }
 }

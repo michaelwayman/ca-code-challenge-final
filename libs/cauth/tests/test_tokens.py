@@ -74,3 +74,24 @@ def test_other_versions_rejected(v):
 
     with pytest.raises(UnsupportedVersion):
         verify(sign(KEY, version=v), JWKS)
+
+
+@pytest.mark.parametrize("missing", ["exp", "sub", "role"])
+def test_required_claims_must_be_present(missing):
+    token = jwt.encode(
+        {
+            k: v
+            for k, v in {
+                "exp": int(time.time()) + 600,
+                "sub": "u1",
+                "role": "editor",
+                "version": 1,
+            }.items()
+            if k != missing
+        },
+        KEY,
+        algorithm="RS256",
+        headers={"kid": "k1"},
+    )
+    with pytest.raises(MalformedToken):
+        verify(token, JWKS)

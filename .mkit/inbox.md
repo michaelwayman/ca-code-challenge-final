@@ -51,3 +51,9 @@
 - [x] I49 2026-10-28 adjust: R26 says hero uses the existing shared token, but color-hero-start/end were added; colour matches WP exactly. Reword R26 or accept -> R26
 - [x] I50 2026-10-28 bug: README quick start fails from a wiped state; README should only reference make targets (no raw docker compose exec lines) -> R27
 - [ ] I51 2026-10-28 adjust: restructure BrandList.jsx into components, hooks and lib modules (CHALLENGE frontend craft)
+- [ ] I52 2026-10-28 adjust: wp_import.py: split WP fetch (MariaDB reads) from transform/sync; easier to explain 100x scaling
+- [ ] I53 2026-10-28 adjust: BrandDetail.partial_update fetches the brand twice (get_object before and after the edit)
+- [ ] I54 2026-10-28 adjust: SCSS: second breakpoint hardcoded at 900px in _brand-list; add a tablet mixin/token
+- [ ] I55 2026-10-28 adjust: SCSS: no declared class naming convention (flat names plus descendant chains); pick BEM or document
+- [ ] I56 2026-10-28 adjust: SCSS: no type-scale tokens; font sizes (0.75-2.25rem) and odd spacing values remain literals
+- [ ] I57 2026-10-28 adjust: cauth: READER/ROLES used only by auth service; be ready to justify keeping role constants in the shared lib

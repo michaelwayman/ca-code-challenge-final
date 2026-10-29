@@ -2,12 +2,12 @@
 
 .hero {
   background: linear-gradient(135deg, var(--color-hero-start) 0%, var(--color-hero-end) 100%);
-  color: #fff;
-  padding: 64px 0 56px;
+  color: var(--color-on-primary);
+  padding: var(--space-8) 0 56px;
 
   h1 {
     font-size: 2.25rem;
-    margin: 0 0 12px;
+    margin: 0 0 var(--space-3);
     letter-spacing: -0.02em;
     font-weight: 700;
   }
@@ -20,7 +20,7 @@
   }
 
   &.hero-compact {
-    padding: 48px 0;
+    padding: var(--space-7) 0;
   }
 
   @include mobile {
