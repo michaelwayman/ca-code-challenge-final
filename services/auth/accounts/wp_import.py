@@ -12,14 +12,11 @@ from django.db import transaction
 
 from .models import User
 
-# WP user id -> UUID. The auth service uses it as the user's pk and the main app as the reviewer's
-# pk, so the two link with no runtime call (A3). The rule is the contract
-# docs/contracts/auth/reviewer-ids.json; a test in each service checks it.
-WP_USER_NAMESPACE = uuid.UUID("b88cc69f-2c32-5407-a15f-e0e254c8057a")
 
-
+# WP user id -> UUID, so the auth service's user pk and the main app's reviewer pk match with no
+# runtime call (A3). Both services define this same formula; each pins example values in its tests.
 def wp_user_uuid(wp_user_id: int) -> uuid.UUID:
-    return uuid.uuid5(WP_USER_NAMESPACE, str(wp_user_id))
+    return uuid.uuid5(uuid.NAMESPACE_URL, f"brand-reviews:wp_user:{wp_user_id}")
 
 
 EDITOR_WP_ROLES = {"administrator", "editor"}

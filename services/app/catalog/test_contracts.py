@@ -7,13 +7,11 @@ from pathlib import Path
 
 from cauth import Role
 from django.conf import settings
-from django.test import TestCase
 from jsonschema import Draft202012Validator
 
 from . import api
 from .test_api import make_brand
 from .test_edit import JWK, EditTestCase, jwks_response, token
-from .wp_import import WP_USER_NAMESPACE, wp_user_uuid
 
 ROOT = Path(settings.BASE_DIR).parent  # /srv in the container, not run on a host
 SPEC = json.loads((ROOT / "docs" / "contracts" / "app" / "brands-api.openapi.json").read_text())
@@ -113,13 +111,3 @@ class FrontendContractTests(EditTestCase):
         self.assertEqual(default, api.DEFAULT_ORDERING)
         self.assertLessEqual(page_size, api.BrandPagination.max_page_size)
         self.assertEqual(offered, {s + k for k in api.ORDERINGS for s in ("", "-")})
-
-
-class ReviewerIdContractTests(TestCase):
-    def test_wp_user_uuid_follows_the_contract(self):
-        contract = json.loads(
-            (ROOT / "docs" / "contracts" / "auth" / "reviewer-ids.json").read_text()
-        )
-        self.assertEqual(str(WP_USER_NAMESPACE), contract["namespace"])
-        for example in contract["examples"]:
-            self.assertEqual(str(wp_user_uuid(example["wp_user_id"])), example["uuid"])

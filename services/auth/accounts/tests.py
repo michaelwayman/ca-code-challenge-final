@@ -354,6 +354,13 @@ class ImportWPUsersTests(KeysDirMixin, TestCase):
         self.assertIn("created 4, updated 0", out.getvalue())
 
 
+class WPUserUuidTests(TestCase):
+    def test_wp_user_uuid_is_pinned(self):
+        # The same two values are pinned in the main app's tests: the rule must not drift.
+        self.assertEqual(str(wp_user_uuid(1)), "6b9b9787-70dc-5a6d-82ce-13817d92b721")
+        self.assertEqual(str(wp_user_uuid(2)), "2723c39b-b3ba-5ff4-886d-340042c07697")
+
+
 class HealthTests(TestCase):
     def test_healthz(self):
         self.assertEqual(self.client.get("/healthz").status_code, 200)

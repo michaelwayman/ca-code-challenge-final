@@ -119,15 +119,15 @@
   - rows are keyed on the WP post ID, slug is an attribute
   - a test changes a slug in the source and re-runs: row updated, not duplicated
   - import_wp reads WP data read-only from MariaDB over a connection configured by env vars (host, port, db, user, password)
-  - reviewer key is deterministic_uuid('wp_user', wp_user_id) from the shared library, with no call to auth and no wp_user_id column
+  - reviewer key is wp_user_uuid(wp_user_id) (uuid5 of brand-reviews:wp_user:<wp_user_id>), defined in the main app, with no call to auth and no wp_user_id column
   - import mirrors the import set: rows now unpublished, trashed, deleted or invalid are deleted with cascades
   - output has a deleted count
   - drafts, reviews with a missing brand and ratings outside 1-5 are skipped
   - ACF average_rating outside 0-5 is stored as null
 - Layer: S1
 - Source: brief
-- Reopened: 2026-10-27
-- Built: 2026-10-27
+- Reopened: 2026-10-28
+- Built: 2026-10-28
 
 ### R3. Homepage with hero and recent reviews
 - Priority: P0
@@ -246,7 +246,8 @@
 - Acceptance:
   - `manage.py import_wp_users` creates one auth user per wp_users row with role mapped from WP role (administrator/editor to editor, others to reader)
   - running twice leaves user count unchanged
-  - auth user pk is deterministic_uuid('wp_user', wp_user_id) from the shared library
+  - auth user pk is wp_user_uuid(wp_user_id) (uuid5 of brand-reviews:wp_user:<wp_user_id>), defined in the auth service
+  - each service pins the same example values in its tests
   - no wp_user_id column
   - WP password hashes are copied verbatim into the auth user password field (stored in the auth DB only) and are unchanged by a re-run
   - password and role are set on create only
@@ -255,8 +256,8 @@
   - a re-run first renames users to wp-import-<pk hex> so username swaps cannot collide on the unique index
 - Layer: S2
 - Source: brief
-- Reopened: 2026-10-27
-- Built: 2026-10-27
+- Reopened: 2026-10-28
+- Built: 2026-10-28
 
 ### R11. Login issues access and refresh tokens
 - Priority: P0
@@ -335,21 +336,24 @@
   - libs/ directory has its own pyproject.toml with a version
   - `pip install` of the built wheel succeeds in a clean venv
   - both service Dockerfiles install it and pin the exact version in requirements
-  - library exposes deterministic_uuid(audience, source_id) returning a UUIDv5 of source_id within a namespace derived from audience
-  - a test pins known inputs to expected UUIDs and shows different audiences give different UUIDs for the same id
+  - the shared library holds only token code (claims, verification, DRF classes)
+  - the WP user id rule is defined in each service, not in the library
 - Layer: S3
 - Source: brief
-- Built: 2026-10-27
+- Reopened: 2026-10-28
+- Built: 2026-10-28
 
 ### R17. Token verification
 - Priority: P0
 - Status: active
 - Acceptance:
-  - verify(token, jwks) returns claims for a valid RS256 token and raises distinct errors for expired, bad signature, unknown kid and malformed tokens
+  - verify(token, jwks) returns typed Claims (user_id, role, issued_at, expires_at, version) for a valid RS256 token and raises distinct errors for expired, bad signature, unknown kid and malformed tokens
   - claims include a version field
+  - a token missing exp, iat, sub or role, or with an unknown role, is rejected as malformed
 - Layer: S3
 - Source: brief
-- Built: 2026-10-27
+- Reopened: 2026-10-28
+- Built: 2026-10-28
 
 ### R18. DRF authentication and permission classes
 - Priority: P0
@@ -529,8 +533,9 @@
   - test passes claims built by the auth service issuer through the cauth verifier
   - test validates /api/brands/ and PATCH responses against the API schema in the main app
   - test validates the frontend fixtures against the API schema
-  - page-size and ordering values are defined once or tied by a test across api.py and url.js
+  - page-size and ordering values are defined once or tied by a test across api.py and frontend/src/lib/constants.js
 - Layer: S3
+- Reopened: 2026-10-28
 - Built: 2026-10-28
 
 ### R31. Library release discipline
@@ -644,7 +649,7 @@
 - Alternative: opaque tokens with introspection
 
 ### T3. Reviewer model
-- Choice: Reviewer profile table in main app keyed by auth user id, which is deterministic_uuid('wp_user', wp_user_id)
+- Choice: Reviewer profile table in main app keyed by auth user id, which is wp_user_uuid(wp_user_id) (uuid5 of brand-reviews:wp_user:<wp_user_id>)
 - Why: no passwords/roles in main app, review attribution preserved
 - Alternative: denormalized name strings
 
@@ -889,3 +894,15 @@
 | 2026-10-28 | DONE R30 R31 | mkit |
 | 2026-10-28 | ADD R32: Repository layout | mkit |
 | 2026-10-28 | DONE R32 | mkit |
+| 2026-10-28 | REOPEN R2 (acceptance changed) | mkit |
+| 2026-10-28 | ALTER R2 | mkit |
+| 2026-10-28 | REOPEN R10 (acceptance changed) | mkit |
+| 2026-10-28 | ALTER R10 | mkit |
+| 2026-10-28 | REOPEN R16 (acceptance changed) | mkit |
+| 2026-10-28 | ALTER R16 | mkit |
+| 2026-10-28 | REOPEN R17 (acceptance changed) | mkit |
+| 2026-10-28 | ALTER R17 | mkit |
+| 2026-10-28 | REOPEN R30 (acceptance changed) | mkit |
+| 2026-10-28 | ALTER R30 | mkit |
+| 2026-10-28 | ALTER T3 | mkit |
+| 2026-10-28 | DONE R2 R10 R16 R17 R30 | mkit |

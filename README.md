@@ -85,7 +85,7 @@ The WordPress database is seeded from `db/dump.sql` on first boot, and both impo
 
 ### Auth service
 
-Its own Django project, container and Postgres. `import_wp_users` creates one user per `wp_users` row (id = `wp_user_uuid(ID)`, a rule fixed in `docs/contracts/auth/reviewer-ids.json`); WP `administrator` and `editor` become `editor`, everything else `reader`. **WP password hashes are carried over verbatim and upgraded to Django's default hasher on the user's first successful login** (see `services/auth/accounts/hashers.py`). Roles are edited in the Django admin; create an operator with `make operator`. The main app stores no passwords or roles.
+Its own Django project, container and Postgres. `import_wp_users` creates one user per `wp_users` row (id = `wp_user_uuid(ID)`, defined in its `wp_import.py`); WP `administrator` and `editor` become `editor`, everything else `reader`. **WP password hashes are carried over verbatim and upgraded to Django's default hasher on the user's first successful login** (see `services/auth/accounts/hashers.py`). Roles are edited in the Django admin; create an operator with `make operator`. The main app stores no passwords or roles.
 
 ### React component and SCSS
 
@@ -175,7 +175,7 @@ make lib-test
 
 Service contracts (token claims, brands API) live in `docs/contracts/<service>/` with an owner and a version each; `make contract-test` checks the code against them.
 
-**Which module each service imports:** the auth service imports `Claims` and `Role` from `cauth.tokens` to build and check the tokens it issues; the main app imports `cauth.drf` (`JWTAuthentication`, `IsEditor`), which uses `cauth.tokens.verify`. The WP user id to UUID rule is not in the library: each service defines it in its `wp_import.py` (a 3-line function), and a contract test in each checks it against `docs/contracts/auth/reviewer-ids.json`.
+**Which module each service imports:** the auth service imports `Claims` and `Role` from `cauth.tokens` to build and check the tokens it issues; the main app imports `cauth.drf` (`JWTAuthentication`, `IsEditor`), which uses `cauth.tokens.verify`. The WP user id to UUID rule is not in the library: each service defines it in its `wp_import.py` (`uuid5` of `brand-reviews:wp_user:<id>`) and pins the same examples in its tests.
 
 **Releasing a breaking claims change (expand-then-contract).** Tokens carry a `version` claim and `verify` accepts the current version N and N-1. (1) Release the library accepting N and N+1 and deploy it to the main app first. (2) Deploy the auth service with it; it starts issuing N+1 while N tokens still verify. (3) Once the N tokens have expired (10 minutes), release the library with N dropped. Never deploy the issuer before every consumer accepts the new version.
 

@@ -14,7 +14,6 @@ from . import keys
 from .models import User
 from .tests import KeysDirMixin
 from .tokens import issue_access_token
-from .wp_import import WP_USER_NAMESPACE, wp_user_uuid
 
 ROOT = Path(settings.BASE_DIR).parent  # /srv in the container, not run on a host
 SCHEMA = json.loads((ROOT / "docs" / "contracts" / "auth" / "token-claims.schema.json").read_text())
@@ -38,13 +37,3 @@ class TokenClaimsContractTests(KeysDirMixin, TestCase):
     def test_schema_versions_are_the_ones_cauth_accepts(self):
         self.assertEqual(set(SCHEMA["properties"]["version"]["enum"]), set(SUPPORTED_VERSIONS))
         self.assertIn(CLAIMS_VERSION, SCHEMA["properties"]["version"]["enum"])
-
-
-class ReviewerIdContractTests(TestCase):
-    def test_wp_user_uuid_follows_the_contract(self):
-        contract = json.loads(
-            (ROOT / "docs" / "contracts" / "auth" / "reviewer-ids.json").read_text()
-        )
-        self.assertEqual(str(WP_USER_NAMESPACE), contract["namespace"])
-        for example in contract["examples"]:
-            self.assertEqual(str(wp_user_uuid(example["wp_user_id"])), example["uuid"])

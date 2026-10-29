@@ -170,6 +170,11 @@ class ImportTests(TestCase):
         import_source(source(brands=[brand(7, "acme-insurance", meta={"average_rating": "5"})]))
         self.assertEqual(Brand.objects.get(wp_id=7).legacy_average_rating, Decimal("5.0"))
 
+    def test_wp_user_uuid_is_pinned(self):
+        # The same two values are pinned in the other service's tests: the rule must not drift.
+        self.assertEqual(str(wp_user_uuid(1)), "6b9b9787-70dc-5a6d-82ce-13817d92b721")
+        self.assertEqual(str(wp_user_uuid(2)), "2723c39b-b3ba-5ff4-886d-340042c07697")
+
     def test_reviewer_keyed_by_wp_user_uuid_without_wp_id(self):
         import_source(source())
         reviewer = Review.objects.get(wp_id=12).reviewer
