@@ -17,22 +17,23 @@ Build only what is listed. Out-of-scope items are decisions, not gaps. Anything 
 - S5 Dev tooling: Makefile lint and fmt targets, Ruff, Biome and Stylelint configs
 
 ## Build
-- **R8** [P0] (S1) Protected brand edit endpoint
-  - PATCH /api/brands/<slug>/ with an editor token updates short_description and returns 200
-  - reader token returns 403
-  - no or invalid or expired token returns 401
-  - only short_description is writable
-  - GET stays public
-  - PATCH takes only short_description, stored in its own nullable column with a 1000-character cap (400 above)
-  - any other key gives 400 and writes nothing
-  - PUT gives 405
-  - response is the updated row
-  - public GET /api/brands/<slug>/ returns the listing row
-  - short_description is nullable
-  - NULL derives from excerpt or body
-  - an edited value round-trips exactly
-  - the 1000-character cap is enforced by the API and the response is 400 above it
-  - a PATCH loads the brand once
+- **R21** [P0] (S4) SCSS source tree compiling to equivalent CSS
+  - `sass frontend/scss/main.scss` succeeds with no warnings
+  - every selector group in reference/theme.css (.site-header, .hero, .card, .grid, .badge, .stars, .pagination, .review-item and the rest) has a home partial
+  - the 37 var(--) tokens are defined once in abstracts
+  - README gives the compile command and states where to add a new component partial
+  - font sizes and spacing come from shared tokens
+  - the class naming convention (flat component names, descendant selectors scoped under the component root) is documented in frontend/scss
+- **R22** [P0] (S4) BrandList fetches and renders brands
+  - component renders a card per row from GET /api/brands/ showing name, slug link to /brand/<slug>/, industry, rating, review count, short description and top review snippet
+  - pagination uses page and page_size and is a numbered list with Previous/Next: first and last page always shown, the current page and one neighbour each side, and an ellipsis for gaps (e.g. 1 … 7 [8] 9 … 18
+  - near either end it shows 5 consecutive pages so there is never a lone gap)
+  - each number is a button or link, the current one has aria-current=page, and Previous/Next are disabled at the ends
+  - Visual: at 375px the neighbours and the Previous/Next text are dropped (e.g. ‹ 1 … [8] … 18 ›) so it fits one row
+  - Visual: 1 column at 375px, 3 columns at 1280px
+  - cards use theme classes
+  - at 900px and below the grid shows two columns
+  - the breakpoint is a shared token
 
 ## Do NOT build
 - O1 WP admin and editor experience

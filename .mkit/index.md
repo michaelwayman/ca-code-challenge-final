@@ -36,8 +36,8 @@ R17 [P0 done] Token verification
 R18 [P0 done] DRF authentication and permission classes
 R19 [P0 done] Library tests run standalone
 R20 [P1 done] Claims version compatibility
-R21 [P0] SCSS source tree compiling to equivalent CSS
-R22 [P0] BrandList fetches and renders brands
+R21 [P0 done] SCSS source tree compiling to equivalent CSS
+R22 [P0 done] BrandList fetches and renders brands
 R23 [P0 done] BrandList filter and sort with URL-synced state
 R24 [P0 done] BrandList loading, empty and error states
 R25 [P0 done] BrandList accessibility

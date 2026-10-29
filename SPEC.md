@@ -402,6 +402,7 @@
 - Layer: S4
 - Source: brief
 - Reopened: 2026-10-29
+- Built: 2026-10-29
 
 ### R22. BrandList fetches and renders brands
 - Priority: P0
@@ -419,6 +420,7 @@
 - Layer: S4
 - Source: brief
 - Reopened: 2026-10-29
+- Built: 2026-10-29
 
 ### R23. BrandList filter and sort with URL-synced state
 - Priority: P0
@@ -921,3 +923,4 @@
 | 2026-10-29 | ALTER R21 | mkit |
 | 2026-10-29 | DONE R2 | mkit |
 | 2026-10-29 | DONE R8 | mkit |
+| 2026-10-29 | DONE R21 R22 | mkit |

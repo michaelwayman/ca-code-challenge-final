@@ -8,6 +8,6 @@ I built this with Claude Code and two small plugins I wrote: **mkit** and **mbui
 
 **Changing my mind.** I changed things a lot after the first build: no history entries on filter changes, better-looking filters, no flashing while loading, caching, numbered pagination. Each time I said it in plain words, `/mkit:change` turned it into a small spec edit, and I approved it before anything was written. Editing a built requirement marks it `reopened`, so nothing stays "done" by accident.
 
-**What mkit is good at.** Getting requirements pinned down cheaply. The AI reads a short index and pulls only the items it needs, never the whole spec, so it uses few tokens. It also catches scope creep against the out-of-scope list and leaves a written trail of what was decided and why. I'd use it again on any project where the requirements matter.
+**What mkit is good at.** Getting requirements pinned down cheaply. The AI reads a short index and pulls only the items it needs, never the whole spec, so it uses few tokens. It also catches scope creep against the out-of-scope list and leaves a written trail of what was decided and why.
 
 I made the decisions and approved every change. The AI did the typing and the checking.
