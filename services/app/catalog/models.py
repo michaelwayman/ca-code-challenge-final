@@ -14,7 +14,7 @@ class Industry(models.Model):
         ordering = ["name"]
         verbose_name_plural = "industries"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
@@ -25,14 +25,17 @@ class Reviewer(models.Model):
     id = models.UUIDField(primary_key=True)
     display_name = models.CharField(max_length=250)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.display_name
 
 
-class BrandQuerySet(models.QuerySet):
-    def with_stats(self):
+class BrandQuerySet(models.QuerySet["Brand"]):
+    def with_stats(self) -> models.QuerySet["Brand"]:
         """average_rating is derived from reviews, never stored (R1)."""
-        return self.annotate(average_rating=Avg("reviews__rating"), review_count=Count("reviews"))
+        # The stubs plugin would add these attributes to Brand a second time (declared below).
+        return self.annotate(  # type: ignore[no-redef]
+            average_rating=Avg("reviews__rating"), review_count=Count("reviews")
+        )
 
 
 class Brand(models.Model):
@@ -66,10 +69,15 @@ class Brand(models.Model):
 
     objects = BrandQuerySet.as_manager()
 
+    # Not columns: set on instances by with_stats() and the top-review prefetch (api.py).
+    average_rating: float | None
+    review_count: int
+    top_reviews: list["Review"]
+
     class Meta:
         ordering = ["name"]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
@@ -95,5 +103,5 @@ class Review(models.Model):
             ),
         ]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.title

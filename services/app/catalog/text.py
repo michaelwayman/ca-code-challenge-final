@@ -11,15 +11,15 @@ class _TextExtractor(HTMLParser):
     """Collects text outside tags with entities decoded. Unlike strip_tags + unescape,
     a bare ampersand ("AT&T") stays as written instead of becoming "AT&T;"."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
-        self.parts = []
+        self.parts: list[str] = []
 
-    def handle_data(self, data):
+    def handle_data(self, data: str) -> None:
         self.parts.append(data)
 
 
-def snippet(html):
+def snippet(html: str) -> str:
     parser = _TextExtractor()
     parser.feed(html)
     parser.close()

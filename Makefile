@@ -20,6 +20,7 @@ help:
 	@echo "  lib-test        Run the shared library tests in Docker"
 	@echo "  contract-test   Run the service contract tests (needs make up)"
 	@echo "  lint / fmt      Lint or format everything in Docker"
+	@echo "  typecheck       Run mypy on cauth and both services in Docker"
 	@echo "  fe-build        Build the SCSS and React bundle"
 
 up:
@@ -57,7 +58,7 @@ BIOME := $(RUN_NODE) @biomejs/biome@1.9.4
 STYLELINT := docker run --rm -e NPM_CONFIG_UPDATE_NOTIFIER=false -v "$(CURDIR)":/work -w /work $(NODE_IMG) sh -c 'npm i -g --silent stylelint@16.12.0 stylelint-config-standard-scss@14.0.0 >/dev/null && stylelint --config-basedir /usr/local/lib --allow-empty-input "$$0" "$$@"'
 RUFF := docker run --rm -v "$(CURDIR)":/work -w /work $(RUFF_IMG)
 
-.PHONY: lint fmt
+.PHONY: lint fmt typecheck
 
 lint:
 	$(RUFF) check .
@@ -70,6 +71,10 @@ fmt:
 	-$(RUFF) format .
 	-$(BIOME) check --write --no-errors-on-unmatched frontend
 	-$(STYLELINT) --fix "frontend/scss/**/*.scss"
+
+# mypy + django-stubs + djangorestframework-stubs, versions pinned in scripts/typecheck.sh.
+typecheck:
+	docker run --rm -v "$(CURDIR)":/work python:3.12-slim sh /work/scripts/typecheck.sh
 
 # --- Frontend (Docker only): SCSS -> dist/css/main.css, Vite -> dist/js/brand-list.js ---
 FE := docker run --rm -v "$(CURDIR)/frontend":/work -w /work -e NPM_CONFIG_UPDATE_NOTIFIER=false $(NODE_IMG) sh -c

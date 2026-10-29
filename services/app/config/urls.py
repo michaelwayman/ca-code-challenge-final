@@ -1,5 +1,5 @@
 from django.db import connection
-from django.http import JsonResponse
+from django.http import HttpRequest, JsonResponse
 from django.urls import path
 from django.views.decorators.http import require_GET
 
@@ -8,7 +8,7 @@ from catalog.api import BrandDetail, BrandList
 
 
 @require_GET
-def healthz(request):
+def healthz(request: HttpRequest) -> JsonResponse:
     try:
         connection.ensure_connection()
     except Exception:

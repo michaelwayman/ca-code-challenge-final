@@ -1,7 +1,14 @@
+from typing import TYPE_CHECKING
+
 from rest_framework import authentication, exceptions, permissions
+from rest_framework.request import Request
 
 from .errors import TokenError
-from .tokens import Claims, Role, verify
+from .tokens import JWKS, Claims, Role, verify
+
+if TYPE_CHECKING:
+    # Importing views at module load reads Django settings, which the library must not need.
+    from rest_framework.views import APIView
 
 
 class TokenUser:
@@ -10,21 +17,21 @@ class TokenUser:
     is_authenticated = True
     is_anonymous = False
 
-    def __init__(self, claims: Claims):
+    def __init__(self, claims: Claims) -> None:
         self.claims = claims
         self.id = self.pk = claims.user_id
         self.role = claims.role
 
 
 class JWTAuthentication(authentication.BaseAuthentication):
-    """Verify a Bearer token. Subclass and set `get_jwks` (callable returning a JWKS dict)."""
+    """Verify a Bearer token. Subclass and set `get_jwks` (callable returning a JWKS)."""
 
     keyword = "Bearer"
 
-    def get_jwks(self) -> dict:
+    def get_jwks(self) -> JWKS:
         raise NotImplementedError("subclass JWTAuthentication and provide get_jwks()")
 
-    def authenticate(self, request):
+    def authenticate(self, request: Request) -> tuple[TokenUser, Claims] | None:
         header = authentication.get_authorization_header(request).split()
         if not header or header[0].lower() != self.keyword.lower().encode():
             return None
@@ -36,14 +43,14 @@ class JWTAuthentication(authentication.BaseAuthentication):
             raise exceptions.AuthenticationFailed(str(exc)) from exc
         return TokenUser(claims), claims
 
-    def authenticate_header(self, request):
+    def authenticate_header(self, request: Request) -> str:
         return self.keyword  # makes DRF answer 401 rather than 403
 
 
 class IsEditor(permissions.BasePermission):
     """Editor role only. Unauthenticated requests are a 401 when JWTAuthentication is first."""
 
-    def has_permission(self, request, view):
+    def has_permission(self, request: Request, view: "APIView") -> bool:
         user = request.user
         return bool(
             getattr(user, "is_authenticated", False) and getattr(user, "role", None) == Role.EDITOR

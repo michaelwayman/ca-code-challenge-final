@@ -1,5 +1,6 @@
 import secrets
 from datetime import UTC, datetime
+from typing import TypedDict
 
 import jwt
 from cauth import Claims, Role
@@ -7,6 +8,16 @@ from django.conf import settings
 
 from .keys import active_key
 from .models import RefreshToken, User
+
+
+class AccessTokenResponse(TypedDict):
+    access_token: str
+    token_type: str
+    expires_in: int
+
+
+class TokenPairResponse(AccessTokenResponse):
+    refresh_token: str
 
 
 def issue_access_token(user: User) -> str:
@@ -19,7 +30,7 @@ def issue_access_token(user: User) -> str:
         expires_at=now + settings.ACCESS_TOKEN_TTL,
     )
     return jwt.encode(
-        claims.to_payload(), key.private_key, algorithm="RS256", headers={"kid": key.kid}
+        dict(claims.to_payload()), key.private_key, algorithm="RS256", headers={"kid": key.kid}
     )
 
 
@@ -53,7 +64,7 @@ def revoke(raw: str) -> None:
     )
 
 
-def access_token_response(user: User) -> dict:
+def access_token_response(user: User) -> AccessTokenResponse:
     # Role is read from the user row at issue time, so admin changes land on next refresh (R12).
     return {
         "access_token": issue_access_token(user),
@@ -62,5 +73,5 @@ def access_token_response(user: User) -> dict:
     }
 
 
-def token_pair(user: User) -> dict:
+def token_pair(user: User) -> TokenPairResponse:
     return {**access_token_response(user), "refresh_token": issue_refresh_token(user)}

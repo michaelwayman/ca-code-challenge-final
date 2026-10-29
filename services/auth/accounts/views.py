@@ -3,7 +3,7 @@ import json
 from django.conf import settings
 from django.contrib.auth import authenticate
 from django.db import connection
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_POST
 
@@ -15,7 +15,7 @@ def _error(status: int, message: str) -> JsonResponse:
     return JsonResponse({"detail": message}, status=status)
 
 
-def _string_fields(request, *names):
+def _string_fields(request: HttpRequest, *names: str) -> list[str] | None:
     """The named string fields of a JSON body, or None if any is missing or not a string."""
     try:
         body = json.loads(request.body)
@@ -27,7 +27,7 @@ def _string_fields(request, *names):
 
 @csrf_exempt  # bearer-token API, no cookies involved
 @require_POST
-def login(request):
+def login(request: HttpRequest) -> JsonResponse:
     fields = _string_fields(request, "username", "password")
     if fields is None:
         return _error(400, "Send JSON with username and password.")
@@ -41,7 +41,7 @@ def login(request):
 
 @csrf_exempt
 @require_POST
-def refresh(request):
+def refresh(request: HttpRequest) -> JsonResponse:
     fields = _string_fields(request, "refresh_token")
     if fields is None:
         return _error(400, "Send JSON with refresh_token.")
@@ -54,7 +54,7 @@ def refresh(request):
 
 @csrf_exempt
 @require_POST
-def logout(request):
+def logout(request: HttpRequest) -> HttpResponse:
     fields = _string_fields(request, "refresh_token")
     if fields is None:
         return _error(400, "Send JSON with refresh_token.")
@@ -64,14 +64,14 @@ def logout(request):
 
 
 @require_GET
-def jwks(request):
+def jwks(request: HttpRequest) -> JsonResponse:
     response = JsonResponse(keys.jwks())
     response["Cache-Control"] = f"public, max-age={settings.JWKS_MAX_AGE}"
     return response
 
 
 @require_GET
-def healthz(request):
+def healthz(request: HttpRequest) -> JsonResponse:
     try:
         connection.ensure_connection()
     except Exception:

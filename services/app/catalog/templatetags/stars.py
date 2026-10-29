@@ -1,11 +1,14 @@
+from decimal import Decimal
+
 from django import template
 from django.utils.html import format_html, format_html_join
+from django.utils.safestring import SafeString
 
 register = template.Library()
 
 
 @register.simple_tag
-def stars(rating):
+def stars(rating: Decimal | float | None) -> SafeString:
     """Five stars filled to the rounded rating plus the value; 'No ratings yet' for None."""
     if rating is None:
         return format_html(

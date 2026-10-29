@@ -6,12 +6,23 @@ from .errors import (
     UnknownKid,
     UnsupportedVersion,
 )
-from .tokens import CLAIMS_VERSION, SUPPORTED_VERSIONS, Claims, Role, verify
+from .tokens import (
+    CLAIMS_VERSION,
+    JWK,
+    JWKS,
+    SUPPORTED_VERSIONS,
+    Claims,
+    Role,
+    TokenPayload,
+    verify,
+)
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 __all__ = [
     "CLAIMS_VERSION",
+    "JWK",
+    "JWKS",
     "SUPPORTED_VERSIONS",
     "BadSignature",
     "Claims",
@@ -19,6 +30,7 @@ __all__ = [
     "MalformedToken",
     "Role",
     "TokenError",
+    "TokenPayload",
     "UnknownKid",
     "UnsupportedVersion",
     "verify",

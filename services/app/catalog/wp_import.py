@@ -11,6 +11,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
+from typing import Any
 
 import pymysql
 from django.conf import settings
@@ -19,6 +20,9 @@ from django.db import transaction
 from .models import Brand, Industry, Review, Reviewer
 
 PUBLISHED = "publish"
+
+# Row values per WP key (or reviewer uuid): {key: {field: value}}.
+Rows = dict[Any, dict[str, Any]]
 
 
 # WP user id -> UUID, so the auth service's user pk and the main app's reviewer pk match with no
@@ -96,7 +100,7 @@ def fetch_source() -> WPSource:
                 f" JOIN {p}posts po ON po.ID = m.post_id"
                 f" WHERE po.post_type IN ('brand', 'review')"
             )
-            meta = defaultdict(dict)
+            meta: defaultdict[int, dict[str, str]] = defaultdict(dict)
             for post_id, key, value in cur.fetchall():
                 meta[post_id][key] = value or ""
             cur.execute(
@@ -104,17 +108,29 @@ def fetch_source() -> WPSource:
                 f" JOIN {p}term_taxonomy tt ON tt.term_taxonomy_id = tr.term_taxonomy_id"
                 f" WHERE tt.taxonomy = 'industry' ORDER BY tt.term_id"
             )
-            terms = defaultdict(list)
+            terms: defaultdict[int, list[int]] = defaultdict(list)
             for object_id, term_id in cur.fetchall():
                 terms[object_id].append(term_id)
             cur.execute("COMMIT")
     finally:
         conn.close()
 
-    by_type = defaultdict(list)
-    for post_id, post_type, *rest in posts:
+    by_type: defaultdict[str, list[WPPost]] = defaultdict(list)
+    for post_id, post_type, slug, title, content, excerpt, status, date, modified, author in posts:
         by_type[post_type].append(
-            WPPost(post_id, *rest, meta=meta[post_id], term_ids=tuple(terms[post_id]))
+            WPPost(
+                post_id,
+                slug,
+                title,
+                content,
+                excerpt,
+                status,
+                date,
+                modified,
+                author,
+                meta=meta[post_id],
+                term_ids=tuple(terms[post_id]),
+            )
         )
     return WPSource(industries, users, by_type["brand"], by_type["review"])
 
@@ -139,7 +155,9 @@ def _rating(value: str | None) -> Decimal | None:
         return None
 
 
-def _sync(model, key_field: str, rows: dict, all_counts: dict[str, Counter]) -> None:
+def _sync(
+    model: type[Any], key_field: str, rows: Rows, all_counts: dict[str, Counter[str]]
+) -> None:
     """Upsert rows ({key: field values}), delete rows not among them, and count
     created/updated/unchanged/deleted (cascaded deletes count against their own table)."""
     # Deleting first also frees the slugs of rows that left the import set.
@@ -176,11 +194,11 @@ class Mapped:
     """Row values per table, keyed by WP id. Foreign keys are still WP ids (industry_wp_id,
     brand_wp_id); sync swaps them for primary keys. Built with no database."""
 
-    industries: dict = field(default_factory=dict)
-    brands: dict = field(default_factory=dict)
-    reviewers: dict = field(default_factory=dict)
-    reviews: dict = field(default_factory=dict)
-    skipped: Counter = field(default_factory=Counter)  # table name -> rows skipped
+    industries: Rows = field(default_factory=dict)
+    brands: Rows = field(default_factory=dict)
+    reviewers: Rows = field(default_factory=dict)
+    reviews: Rows = field(default_factory=dict)
+    skipped: Counter[str] = field(default_factory=Counter)  # table name -> rows skipped
 
 
 def map_source(src: WPSource) -> Mapped:
@@ -235,7 +253,7 @@ def map_source(src: WPSource) -> Mapped:
     return out
 
 
-def _with_pk(rows: dict, wp_key: str, pk_key: str, pks: dict) -> dict:
+def _with_pk(rows: Rows, wp_key: str, pk_key: str, pks: dict[Any, Any]) -> Rows:
     """Replace a WP-id reference in each row with the referenced row's primary key."""
     return {
         k: {**{n: v for n, v in row.items() if n != wp_key}, pk_key: pks.get(row[wp_key])}
@@ -244,10 +262,10 @@ def _with_pk(rows: dict, wp_key: str, pk_key: str, pks: dict) -> dict:
 
 
 @transaction.atomic
-def import_source(src: WPSource) -> dict[str, Counter]:
+def import_source(src: WPSource) -> dict[str, Counter[str]]:
     """Sync step: write the mapped rows to Postgres and mirror the import set."""
     mapped = map_source(src)
-    counts = {name: Counter() for name in TABLES.values()}
+    counts: dict[str, Counter[str]] = {name: Counter() for name in TABLES.values()}
     for name, n in mapped.skipped.items():
         counts[name]["skipped"] += n
 

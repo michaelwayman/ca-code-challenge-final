@@ -17,31 +17,13 @@ Build only what is listed. Out-of-scope items are decisions, not gaps. Anything 
 - S5 Dev tooling: Makefile lint and fmt targets, Ruff, Biome and Stylelint configs
 
 ## Build
-- **R27** [P0] (S1) README covering run, token, migration and decisions
-  - README has sections to run the main app, auth service and React component
-  - README shows getting a token and calling PATCH with plain curl and points to make auth-flow
-  - run the library tests and how a new version reaches each service
-  - run and safely re-run the migration
-  - modeling decisions, what to do differently, and where AI defaults were kept
-  - following it on a clean clone with docker compose up works
-  - README states the project is dev-grade and lists what production would need
-  - README notes WP password hashes are carried over and upgraded to Django's default on first login
-  - README documents make lint and make fmt
-- **R31** [P0] (S3) Library release discipline
-  - the version lives in one place (pyproject.toml and __version__ cannot drift)
-  - both services install the pinned built wheel of that version rather than an unversioned local path
-  - README states the bump-and-pin release steps
-- **R32** [P0] (S5) Repository layout
-  - README has a "Repository layout" tree covering services/{wordpress,auth,app}, frontend/, libs/, docs/{research,contracts/<service>}, scripts/ and db/
-  - compose, Makefile, Dockerfiles and tests work after the move to services/ (make up, make lint and all test suites pass)
-- **R33** [P1] (S5) Auth and brand-edit workflow script
-  - make auth-flow runs scripts/auth-flow.sh with curl against the compose stack and prints numbered human-readable steps (Step 1, Step 2, ...) saying what is being tried and what came back
-  - happy path: editor login returns a token, PATCH /api/brands/<slug>/ with it returns 200 and the new short_description, public GET shows the same value
-  - failure cases: no token returns 401, wrong password returns 401, garbage token returns 401, reader token returns 403, unknown slug returns 404, extra key returns 400, description over 1000 characters returns 400, PUT returns 405
-  - with auth stopped, GET /api/brands/ returns 200 and a still-valid token still PATCHes, and after make app-restart a PATCH returns 503
-  - each outcome is asserted and the script exits non-zero on the first mismatch
-  - auth is started again at the end even on failure
-  - replaces make token and make patch-brand
+- **R34** [P1] (S5) Backend type annotations and checker
+  - make typecheck runs mypy with django-stubs and djangorestframework-stubs in Docker with pinned versions, exits 0 on the clean tree and non-zero when a type error is added
+  - every function in non-test code of services/app, services/auth and libs/cauth has parameter and return annotations, and Ruff ANN rules enforce that in make lint with tests exempt
+  - cauth ships a py.typed marker with a version bump and both service pins updated per the R31 release steps
+  - the JWKS cache and token payloads in config/auth.py and the dicts returned by auth views use TypedDict or a dataclass instead of bare dict
+  - README documents make typecheck
+  - no behaviour change: all test suites and make auth-flow still pass
 
 ## Do NOT build
 - O1 WP admin and editor experience

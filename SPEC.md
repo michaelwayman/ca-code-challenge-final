@@ -586,6 +586,20 @@
 - Source: change
 - Built: 2026-10-29
 
+### R34. Backend type annotations and checker
+- Priority: P1
+- Status: active
+- Acceptance:
+  - make typecheck runs mypy with django-stubs and djangorestframework-stubs in Docker with pinned versions, exits 0 on the clean tree and non-zero when a type error is added
+  - every function in non-test code of services/app, services/auth and libs/cauth has parameter and return annotations, and Ruff ANN rules enforce that in make lint with tests exempt
+  - cauth ships a py.typed marker with a version bump and both service pins updated per the R31 release steps
+  - the JWKS cache and token payloads in config/auth.py and the dicts returned by auth views use TypedDict or a dataclass instead of bare dict
+  - README documents make typecheck
+  - no behaviour change: all test suites and make auth-flow still pass
+- Layer: S5
+- Source: change
+- Built: 2026-10-29
+
 ## Out of scope
 
 <!-- O: decided against, with Why and Revisit (what would change our mind). Dropped, not deferred. -->
@@ -718,6 +732,11 @@
 - Choice: Stylelint for the SCSS tree, since Biome has no SCSS support
 - Why: guards the 7-1 layout and token rules Biome cannot see
 - Alternative: sass compile only
+
+### T12. mypy with django-stubs
+- Choice: mypy with django-stubs and djangorestframework-stubs, run in Docker, non-strict at first
+- Why: the Django plugin understands models, querysets and settings; annotations nobody checks drift
+- Alternative: pyright (no Django plugin), Ruff ANN rules only (checks nothing)
 
 ## Deliverables trace
 
@@ -953,3 +972,6 @@
 | 2026-10-29 | ADD R33: Auth and brand-edit workflow script | mkit |
 | 2026-10-29 | Removed scripts/check-layout.sh, check-lib-version.sh, token.py, patch_brand.py and the layout-check, lib-check, token and patch-brand targets as too strict | mkit |
 | 2026-10-29 | DONE R27 R31 R32 R33 | mkit |
+| 2026-10-29 | ADD T12: mypy with django-stubs | mkit |
+| 2026-10-29 | ADD R34: Backend type annotations and checker | mkit |
+| 2026-10-29 | DONE R34 | mkit |
