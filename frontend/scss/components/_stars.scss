@@ -1,8 +1,8 @@
 .stars {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
-  font-size: 0.95rem;
+  gap: var(--space-1);
+  font-size: var(--font-md);
   letter-spacing: 1px;
 
   .star-full {
@@ -17,6 +17,6 @@
     margin-left: var(--space-2);
     color: var(--color-text);
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: var(--font-md);
   }
 }

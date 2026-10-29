@@ -3,17 +3,17 @@
 .hero {
   background: linear-gradient(135deg, var(--color-hero-start) 0%, var(--color-hero-end) 100%);
   color: var(--color-on-primary);
-  padding: var(--space-8) 0 56px;
+  padding: var(--space-8) 0 var(--space-7);
 
   h1 {
-    font-size: 2.25rem;
+    font-size: var(--font-4xl);
     margin: 0 0 var(--space-3);
     letter-spacing: -0.02em;
     font-weight: 700;
   }
 
   p {
-    font-size: 1.1rem;
+    font-size: var(--font-lg);
     opacity: 0.92;
     margin: 0;
     max-width: 640px;
@@ -24,10 +24,10 @@
   }
 
   @include mobile {
-    padding: 40px 0;
+    padding: var(--space-7) 0;
 
     h1 {
-      font-size: 1.75rem;
+      font-size: var(--font-3xl);
     }
   }
 }

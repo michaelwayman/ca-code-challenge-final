@@ -3,10 +3,10 @@
 .brand-hero {
   background: var(--color-card);
   border-bottom: 1px solid var(--color-border);
-  padding: 40px 0;
+  padding: var(--space-7) 0;
 
   h1 {
-    font-size: 2rem;
+    font-size: var(--font-3xl);
     margin: 0 0 var(--space-3);
     letter-spacing: -0.02em;
   }
@@ -14,10 +14,10 @@
   .brand-meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 18px;
+    gap: var(--space-4);
     color: var(--color-muted);
-    font-size: 0.95rem;
-    margin-top: 14px;
+    font-size: var(--font-md);
+    margin-top: var(--space-4);
 
     strong {
       color: var(--color-text);
@@ -32,8 +32,8 @@
     background: var(--color-card);
     border: 1px solid var(--color-border);
     border-radius: var(--radius);
-    padding: 28px;
-    font-size: 1.02rem;
+    padding: var(--space-6);
+    font-size: var(--font-md);
   }
 }
 
@@ -53,18 +53,18 @@
   background: var(--color-card);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  padding: 22px;
-  font-size: 0.92rem;
+  padding: var(--space-5);
+  font-size: var(--font-md);
 
   dt {
     color: var(--color-muted);
-    font-size: 0.8rem;
+    font-size: var(--font-xs);
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }
 
   dd {
-    margin: 0 0 14px;
+    margin: 0 0 var(--space-4);
   }
 }
 
@@ -72,7 +72,7 @@
   padding: var(--space-5) 0 var(--space-8);
 
   h2 {
-    font-size: 1.4rem;
-    margin: 0 0 18px;
+    font-size: var(--font-2xl);
+    margin: 0 0 var(--space-4);
   }
 }

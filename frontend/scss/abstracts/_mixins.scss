@@ -1,7 +1,13 @@
-$bp-mobile: 640px;
+@use "tokens";
 
 @mixin mobile {
-  @media (max-width: $bp-mobile) {
+  @media (max-width: tokens.$bp-mobile) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (max-width: tokens.$bp-tablet) {
     @content;
   }
 }

@@ -4,9 +4,9 @@
   background: var(--color-badge-bg);
   color: var(--color-primary-dark);
   border: 1px solid var(--color-badge-border);
-  padding: 3px 10px;
+  padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-pill);
-  font-size: 0.78rem;
+  font-size: var(--font-xs);
   font-weight: 600;
   letter-spacing: 0.01em;
 }
