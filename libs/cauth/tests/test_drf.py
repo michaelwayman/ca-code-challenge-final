@@ -3,7 +3,7 @@ import time
 import django
 import jwt
 import pytest
-from cauth import EDITOR, READER
+from cauth import Role
 from cauth.drf import IsEditor, JWTAuthentication, TokenUser
 from cryptography.hazmat.primitives.asymmetric import rsa
 from django.conf import settings
@@ -38,8 +38,9 @@ class EditorView(APIView):
         return Response({"sub": request.user.id})
 
 
-def token(role=EDITOR, key=KEY, exp=600, **extra):
-    claims = {"sub": "u1", "role": role, "version": 2, "exp": int(time.time()) + exp, **extra}
+def token(role=Role.EDITOR, key=KEY, exp=600, **extra):
+    now = int(time.time())
+    claims = {"sub": "u1", "role": role, "version": 2, "iat": now, "exp": now + exp, **extra}
     return jwt.encode(claims, key, algorithm="RS256", headers={"kid": "k1"})
 
 
@@ -56,11 +57,11 @@ def test_editor_allowed_and_user_from_claims():
 def test_user_is_token_user_without_db():
     req = APIRequestFactory().get("/", HTTP_AUTHORIZATION=f"Bearer {token()}")
     user, claims = Auth().authenticate(req)
-    assert isinstance(user, TokenUser) and user.role == EDITOR and claims["sub"] == "u1"
+    assert isinstance(user, TokenUser) and user.role is Role.EDITOR and claims.user_id == "u1"
 
 
 def test_reader_denied_403():
-    assert call(f"Bearer {token(READER)}").status_code == 403
+    assert call(f"Bearer {token(Role.READER)}").status_code == 403
 
 
 def test_missing_token_401():
@@ -76,8 +77,8 @@ def test_invalid_token_401(auth):
 
 
 def test_tampered_token_401():
-    head, payload, sig = token(READER).split(".")
-    forged = jwt.encode({"sub": "u1", "role": EDITOR, "version": 2}, KEY, algorithm="RS256")
+    head, payload, sig = token(Role.READER).split(".")
+    forged = jwt.encode({"sub": "u1", "role": Role.EDITOR, "version": 2}, KEY, algorithm="RS256")
     fp = forged.split(".")[1]
     assert call(f"Bearer {head}.{fp}.{sig}").status_code == 401
 

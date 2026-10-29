@@ -1,10 +1,11 @@
 import io
 import json
 import time
+from datetime import UTC, datetime, timedelta
 from unittest import mock
 
 import jwt
-from cauth import EDITOR, READER
+from cauth import Claims, Role
 from cryptography.hazmat.primitives.asymmetric import rsa
 from django.test import TestCase
 from jwt.algorithms import RSAAlgorithm
@@ -27,9 +28,10 @@ KEY, JWK = keypair("k1")
 NEW_KEY, NEW_JWK = keypair("k2")
 
 
-def token(role=EDITOR, key=KEY, kid="k1", exp=600):
-    claims = {"sub": "u1", "role": role, "version": 2, "exp": int(time.time()) + exp}
-    return jwt.encode(claims, key, algorithm="RS256", headers={"kid": kid})
+def token(role=Role.EDITOR, key=KEY, kid="k1", exp=600):
+    now = datetime.now(UTC)
+    claims = Claims("u1", role, issued_at=now, expires_at=now + timedelta(seconds=exp))
+    return jwt.encode(claims.to_payload(), key, algorithm="RS256", headers={"kid": kid})
 
 
 def jwks_response(*jwks):
@@ -89,7 +91,7 @@ class BrandEditTests(EditTestCase):
         self.assertEqual(Brand.objects.get(slug="acme-insurance").excerpt, "Cheap cover.")
 
     def test_reader_is_forbidden(self):
-        response = self.patch({"short_description": "x"}, token(role=READER))
+        response = self.patch({"short_description": "x"}, token(role=Role.READER))
         self.assertEqual(response.status_code, 403)
         self.assertIsNone(self.stored())
 

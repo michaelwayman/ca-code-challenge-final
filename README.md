@@ -85,7 +85,7 @@ The WordPress database is seeded from `db/dump.sql` on first boot, and both impo
 
 ### Auth service
 
-Its own Django project, container and Postgres. `import_wp_users` creates one user per `wp_users` row (id = `deterministic_uuid('wp_user', ID)`); WP `administrator` and `editor` become `editor`, everything else `reader`. **WP password hashes are carried over verbatim and upgraded to Django's default hasher on the user's first successful login** (see `auth/accounts/hashers.py`). Roles are edited in the Django admin; create an operator with `make operator`. The main app stores no passwords or roles.
+Its own Django project, container and Postgres. `import_wp_users` creates one user per `wp_users` row (id = `wp_user_uuid(ID)`, a rule fixed in `docs/contracts/auth/reviewer-ids.json`); WP `administrator` and `editor` become `editor`, everything else `reader`. **WP password hashes are carried over verbatim and upgraded to Django's default hasher on the user's first successful login** (see `services/auth/accounts/hashers.py`). Roles are edited in the Django admin; create an operator with `make operator`. The main app stores no passwords or roles.
 
 ### React component and SCSS
 
@@ -161,7 +161,7 @@ The response sends `Cache-Control: public, max-age=30, stale-while-revalidate=12
 
 ## Shared library (`libs/`)
 
-`cauth` (JWT verification, DRF `JWTAuthentication` and `IsEditor`, roles, `deterministic_uuid`) is a versioned package. Its tests run standalone, with no Django project or service:
+`cauth` (the typed `Claims` and `Role`, JWT verification, DRF `JWTAuthentication` and `IsEditor`) is a versioned package. Its tests run standalone, with no Django project or service:
 
 ```bash
 make lib-test
@@ -175,7 +175,7 @@ make lib-test
 
 Service contracts (token claims, brands API) live in `docs/contracts/<service>/` with an owner and a version each; `make contract-test` checks the code against them.
 
-**Which module each service imports:** the auth service imports `cauth.roles` and `cauth.ids.deterministic_uuid` (and `cauth.tokens` in tests); the main app imports `cauth.drf` (`JWTAuthentication`, `IsEditor`), which uses `cauth.tokens.verify`, and `deterministic_uuid` for reviewer links.
+**Which module each service imports:** the auth service imports `Claims` and `Role` from `cauth.tokens` to build and check the tokens it issues; the main app imports `cauth.drf` (`JWTAuthentication`, `IsEditor`), which uses `cauth.tokens.verify`. The WP user id to UUID rule is not in the library: each service has a 3-line `wp_ids.py`, and a contract test in each checks it against `docs/contracts/auth/reviewer-ids.json`.
 
 **Releasing a breaking claims change (expand-then-contract).** Tokens carry a `version` claim and `verify` accepts the current version N and N-1. (1) Release the library accepting N and N+1 and deploy it to the main app first. (2) Deploy the auth service with it; it starts issuing N+1 while N tokens still verify. (3) Once the N tokens have expired (10 minutes), release the library with N dropped. Never deploy the issuer before every consumer accepts the new version.
 
@@ -196,7 +196,7 @@ make import-users   # wp_users -> auth users
 | ACF `average_rating` | `Brand.legacy_average_rating`, audit only. The displayed rating is derived from reviews, never stored |
 | `_yoast_wpseo_title`, `_yoast_wpseo_metadesc` | `Brand.seo_title`, `Brand.seo_description` |
 | `review` post + ACF | `Review`: `rating` (1 to 5 check constraint), `reviewer_location`, `brand` FK |
-| `post_author` (wp_users) | `Reviewer`, pk = `deterministic_uuid('wp_user', ID)` = the auth user id; only `display_name` is kept |
+| `post_author` (wp_users) | `Reviewer`, pk = `wp_user_uuid(ID)` = the auth user id; only `display_name` is kept |
 
 **Dropped:** the ACF field-reference meta (`_website_url`, `_rating`, ...), ACF `reviewer_name` (identical to the author's display name in every row), `_wp_page_template`, and WP pages and posts (out of scope).
 

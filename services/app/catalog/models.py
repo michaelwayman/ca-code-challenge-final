@@ -20,7 +20,7 @@ class Industry(models.Model):
 
 class Reviewer(models.Model):
     """Public profile of a review author. The pk is the auth service user id,
-    deterministic_uuid('wp_user', wp_user_id), so no WP id or credentials live here (C2)."""
+    wp_user_uuid(wp_user_id), so no WP id or credentials live here (C2)."""
 
     id = models.UUIDField(primary_key=True)
     display_name = models.CharField(max_length=250)

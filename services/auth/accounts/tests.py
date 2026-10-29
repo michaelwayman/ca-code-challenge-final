@@ -6,7 +6,7 @@ from io import StringIO
 from unittest import mock
 
 import jwt
-from cauth import CLAIMS_VERSION, EDITOR, READER, deterministic_uuid, verify
+from cauth import CLAIMS_VERSION, Role, verify
 from django.contrib.auth.hashers import get_hasher
 from django.core.management import call_command
 from django.test import TestCase, override_settings
@@ -14,6 +14,7 @@ from django.test import TestCase, override_settings
 from . import keys
 from .hashers import WordPressPasswordHasher
 from .models import RefreshToken, User
+from .wp_ids import wp_user_uuid
 from .wp_import import WPUser, import_users
 
 
@@ -41,7 +42,7 @@ class KeysDirMixin:
 class LoginTests(KeysDirMixin, TestCase):
     def setUp(self):
         super().setUp()
-        self.user = User.objects.create_user("ed", password="pw-correct", role=EDITOR)
+        self.user = User.objects.create_user("ed", password="pw-correct", role=Role.EDITOR)
 
     def test_valid_credentials_return_rs256_access_and_refresh_token(self):
         response = self.login()
@@ -56,10 +57,10 @@ class LoginTests(KeysDirMixin, TestCase):
 
     def test_access_token_claims_verify_with_shared_library(self):
         claims = verify(self.login().json()["access_token"], self.jwks())
-        self.assertEqual(claims["sub"], str(self.user.pk))
-        self.assertEqual(claims["role"], EDITOR)
-        self.assertEqual(claims["version"], CLAIMS_VERSION)
-        self.assertAlmostEqual(claims["exp"] - time.time(), 600, delta=5)
+        self.assertEqual(claims.user_id, str(self.user.pk))
+        self.assertEqual(claims.role, Role.EDITOR)
+        self.assertEqual(claims.version, CLAIMS_VERSION)
+        self.assertAlmostEqual(claims.expires_at.timestamp() - time.time(), 600, delta=5)
 
     def test_refresh_token_stored_hashed(self):
         raw = self.login().json()["refresh_token"]
@@ -90,7 +91,7 @@ class LoginTests(KeysDirMixin, TestCase):
 class RefreshTests(KeysDirMixin, TestCase):
     def setUp(self):
         super().setUp()
-        self.user = User.objects.create_user("ed", password="pw-correct", role=EDITOR)
+        self.user = User.objects.create_user("ed", password="pw-correct", role=Role.EDITOR)
         self.refresh_token = self.login().json()["refresh_token"]
 
     def post(self, path, body):
@@ -109,14 +110,14 @@ class RefreshTests(KeysDirMixin, TestCase):
         self.assertEqual(body["token_type"], "Bearer")
         self.assertEqual(body["expires_in"], 600)
         claims = verify(body["access_token"], self.jwks())
-        self.assertEqual(claims["sub"], str(self.user.pk))
-        self.assertEqual(claims["role"], EDITOR)
+        self.assertEqual(claims.user_id, str(self.user.pk))
+        self.assertEqual(claims.role, Role.EDITOR)
 
     def test_demoted_user_gets_reader_role_on_next_refresh(self):
-        self.user.role = READER
+        self.user.role = Role.READER
         self.user.save()
         claims = verify(self.refresh().json()["access_token"], self.jwks())
-        self.assertEqual(claims["role"], READER)
+        self.assertEqual(claims.role, Role.READER)
 
     def test_logged_out_token_is_401(self):
         self.assertEqual(self.logout().status_code, 204)
@@ -151,7 +152,7 @@ class RefreshTests(KeysDirMixin, TestCase):
 class AdminTests(TestCase):
     def setUp(self):
         self.operator = User.objects.create_superuser("op", password="pw-op")
-        self.user = User.objects.create_user("ed", password="pw-correct", role=EDITOR)
+        self.user = User.objects.create_user("ed", password="pw-correct", role=Role.EDITOR)
         self.client.force_login(self.operator)
 
     def test_operator_changes_role_in_admin(self):
@@ -165,12 +166,12 @@ class AdminTests(TestCase):
                 "is_active": "on",
                 "date_joined_0": "2026-01-01",
                 "date_joined_1": "00:00:00",
-                "role": READER,
+                "role": Role.READER,
             },
         )
         self.assertEqual(response.status_code, 302)
         self.user.refresh_from_db()
-        self.assertEqual(self.user.role, READER)
+        self.assertEqual(self.user.role, Role.READER)
 
     def test_operator_revokes_refresh_tokens_in_admin(self):
         token = RefreshToken.objects.create(
@@ -292,10 +293,16 @@ class ImportWPUsersTests(KeysDirMixin, TestCase):
         self.assertEqual(import_users(self.rows), {"created": 4, "updated": 0})
         roles = {u.username: u.role for u in User.objects.all()}
         self.assertEqual(
-            roles, {"admin": EDITOR, "sarah_k": READER, "edna": EDITOR, "norole": READER}
+            roles,
+            {
+                "admin": Role.EDITOR,
+                "sarah_k": Role.READER,
+                "edna": Role.EDITOR,
+                "norole": Role.READER,
+            },
         )
         admin = User.objects.get(username="admin")
-        self.assertEqual(admin.pk, deterministic_uuid("wp_user", 1))
+        self.assertEqual(admin.pk, wp_user_uuid(1))
         self.assertEqual(admin.password, WP_PHPASS)
         self.assertEqual(admin.date_joined, datetime(2026, 5, 19, 20, 28, 55, tzinfo=UTC))
 
@@ -312,13 +319,13 @@ class ImportWPUsersTests(KeysDirMixin, TestCase):
     def test_rerun_does_not_revert_rehash_or_role_change(self):
         import_users(self.rows)
         self.assertEqual(self.login("sarah_k", "hunter2").status_code, 200)
-        User.objects.filter(username="sarah_k").update(role=EDITOR)
+        User.objects.filter(username="sarah_k").update(role=Role.EDITOR)
         rehashed = User.objects.get(username="sarah_k").password
 
         import_users(self.rows)
         sarah = User.objects.get(username="sarah_k")
         self.assertEqual(sarah.password, rehashed)
-        self.assertEqual(sarah.role, EDITOR)
+        self.assertEqual(sarah.role, Role.EDITOR)
 
     def test_rerun_refreshes_profile_fields(self):
         import_users(self.rows)
@@ -336,9 +343,7 @@ class ImportWPUsersTests(KeysDirMixin, TestCase):
         ]
         self.assertEqual(import_users(renamed), {"created": 0, "updated": 4})
         usernames = {u.pk: u.username for u in User.objects.all()}
-        self.assertEqual(
-            usernames, {deterministic_uuid("wp_user", wp.id): wp.login for wp in renamed}
-        )
+        self.assertEqual(usernames, {wp_user_uuid(wp.id): wp.login for wp in renamed})
 
     def test_command_reads_source_and_prints_counts(self):
         out = StringIO()

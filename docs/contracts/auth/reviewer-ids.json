@@ -1,0 +1,11 @@
+{
+  "title": "WordPress user ids",
+  "description": "A WordPress user id maps to a UUID: uuid5(namespace, str(wp_user_id)). The auth service uses it as the user's primary key and the main app as the reviewer's, so the two link with no runtime call and no stored WP id (A3). Owner: auth service. Changing the namespace orphans every existing link, so it only changes with a data migration in both services.",
+  "x-owner": "auth service (S2)",
+  "x-contract-version": "1.0.0",
+  "namespace": "b88cc69f-2c32-5407-a15f-e0e254c8057a",
+  "examples": [
+    { "wp_user_id": 1, "uuid": "1fa2ae49-3568-5649-872f-96984fdeec39" },
+    { "wp_user_id": 2, "uuid": "0b49e386-5700-51ad-91de-e70869095fdc" }
+  ]
+}

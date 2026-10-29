@@ -2,11 +2,11 @@ from dataclasses import replace
 from datetime import datetime
 from decimal import Decimal
 
-from cauth import deterministic_uuid
 from django.db import connection
 from django.test import TestCase
 
 from .models import Brand, Industry, Review, Reviewer
+from .wp_ids import wp_user_uuid
 from .wp_import import WPPost, WPSource, WPTerm, WPUser, import_source
 
 T0 = datetime(2026, 5, 19, 20, 29, 2)
@@ -143,9 +143,7 @@ class ImportTests(TestCase):
         self.assertEqual(counts["reviewers"]["deleted"], 1)
         self.assertEqual(list(Brand.objects.values_list("wp_id", flat=True)), [7])
         self.assertEqual(list(Review.objects.values_list("wp_id", flat=True)), [17])
-        self.assertEqual(
-            list(Reviewer.objects.values_list("pk", flat=True)), [deterministic_uuid("wp_user", 3)]
-        )
+        self.assertEqual(list(Reviewer.objects.values_list("pk", flat=True)), [wp_user_uuid(3)])
         # Publishing again brings the rows back.
         counts = import_source(source())
         self.assertEqual(counts["brands"]["created"], 1)
@@ -173,10 +171,10 @@ class ImportTests(TestCase):
         import_source(source(brands=[brand(7, "acme-insurance", meta={"average_rating": "5"})]))
         self.assertEqual(Brand.objects.get(wp_id=7).legacy_average_rating, Decimal("5.0"))
 
-    def test_reviewer_keyed_by_deterministic_uuid_without_wp_id(self):
+    def test_reviewer_keyed_by_wp_user_uuid_without_wp_id(self):
         import_source(source())
         reviewer = Review.objects.get(wp_id=12).reviewer
-        self.assertEqual(reviewer.pk, deterministic_uuid("wp_user", 2))
+        self.assertEqual(reviewer.pk, wp_user_uuid(2))
         self.assertEqual(reviewer.display_name, "Sarah K.")
         self.assertEqual([f.name for f in Reviewer._meta.concrete_fields], ["id", "display_name"])
         # Only authors of imported reviews become reviewers, not every WP user.

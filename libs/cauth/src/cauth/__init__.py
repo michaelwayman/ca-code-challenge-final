@@ -6,24 +6,20 @@ from .errors import (
     UnknownKid,
     UnsupportedVersion,
 )
-from .ids import deterministic_uuid
-from .roles import EDITOR, READER, ROLES
-from .tokens import CLAIMS_VERSION, SUPPORTED_VERSIONS, verify
+from .tokens import CLAIMS_VERSION, SUPPORTED_VERSIONS, Claims, Role, verify
 
-__version__ = "0.2.1"
+__version__ = "0.3.0"
 
 __all__ = [
     "CLAIMS_VERSION",
-    "EDITOR",
-    "READER",
-    "ROLES",
     "SUPPORTED_VERSIONS",
-    "UnsupportedVersion",
     "BadSignature",
+    "Claims",
     "ExpiredToken",
     "MalformedToken",
+    "Role",
     "TokenError",
     "UnknownKid",
-    "deterministic_uuid",
+    "UnsupportedVersion",
     "verify",
 ]

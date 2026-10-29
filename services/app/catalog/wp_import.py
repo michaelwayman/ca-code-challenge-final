@@ -12,11 +12,11 @@ from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 
 import pymysql
-from cauth import deterministic_uuid
 from django.conf import settings
 from django.db import transaction
 
 from .models import Brand, Industry, Review, Reviewer
+from .wp_ids import wp_user_uuid
 
 PUBLISHED = "publish"
 TABLES = {Industry: "industries", Reviewer: "reviewers", Brand: "brands", Review: "reviews"}
@@ -210,7 +210,7 @@ def import_source(src: WPSource) -> dict[str, Counter]:
             continue
         reviewer_id = None
         if post.author in users:
-            reviewer_id = deterministic_uuid("wp_user", post.author)
+            reviewer_id = wp_user_uuid(post.author)
             reviewer_rows[reviewer_id] = {"display_name": users[post.author].display_name}
         review_rows[post.id] = {
             "brand_id": brand_id,

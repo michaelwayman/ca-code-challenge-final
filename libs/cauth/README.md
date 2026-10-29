@@ -1,16 +1,15 @@
 # cauth
 
-Small shared library: JWT verification, DRF auth classes, role constants, deterministic IDs.
+Small shared library: the access-token claims (`Claims`, `Role`), JWT verification and DRF auth classes.
 No Django project, settings or database needed; tests run standalone.
 
 ## Modules and who imports them
 
 | Module | Auth service (S2) | Main app (S1) |
 |---|---|---|
+| `cauth.tokens.Claims`, `Role` | builds the claims it issues (`Claims.to_payload`), stores roles | via `verify` and `IsEditor` |
 | `cauth.tokens.verify`, `CLAIMS_VERSION` | sanity checks / tests | via `cauth.drf` |
-| `cauth.roles` (`READER`, `EDITOR`) | stores and issues roles | via `IsEditor` |
 | `cauth.drf` (`JWTAuthentication`, `IsEditor`) | – | DRF settings; subclass `JWTAuthentication` and implement `get_jwks()` (cached JWKS fetch) |
-| `cauth.ids.deterministic_uuid` | wp_users import | reviewer link to auth user (A3) |
 
 ## Tests
 

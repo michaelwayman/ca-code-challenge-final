@@ -5,13 +5,15 @@ import json
 import re
 from pathlib import Path
 
-from cauth import EDITOR
+from cauth import Role
 from django.conf import settings
+from django.test import TestCase
 from jsonschema import Draft202012Validator
 
 from . import api
 from .test_api import make_brand
 from .test_edit import JWK, EditTestCase, jwks_response, token
+from .wp_ids import WP_USER_NAMESPACE, wp_user_uuid
 
 ROOT = Path(settings.BASE_DIR).parent  # /srv in the container, not run on a host
 SPEC = json.loads((ROOT / "docs" / "contracts" / "app" / "brands-api.openapi.json").read_text())
@@ -59,7 +61,7 @@ class ApiContractTests(EditTestCase):
             "/api/brands/acme-insurance/",
             {"short_description": "Fair prices."},
             content_type="application/json",
-            HTTP_AUTHORIZATION=f"Bearer {token(role=EDITOR)}",
+            HTTP_AUTHORIZATION=f"Bearer {token(role=Role.EDITOR)}",
         )
         self.assertEqual(patched.status_code, 200)
         self.assert_valid(response_schema("/api/brands/{slug}/", "patch", "200"), patched.json())
@@ -69,7 +71,7 @@ class ApiContractTests(EditTestCase):
         cases = {
             "400": ({"name": "x"}, token()),
             "401": ({"short_description": "x"}, None),
-            "403": ({"short_description": "x"}, token(role="reader")),
+            "403": ({"short_description": "x"}, token(role=Role.READER)),
         }
         for status, (data, bearer) in cases.items():
             with self.subTest(status):
@@ -111,3 +113,13 @@ class FrontendContractTests(EditTestCase):
         self.assertEqual(default, api.DEFAULT_ORDERING)
         self.assertLessEqual(page_size, api.BrandPagination.max_page_size)
         self.assertEqual(offered, {s + k for k in api.ORDERINGS for s in ("", "-")})
+
+
+class ReviewerIdContractTests(TestCase):
+    def test_wp_user_uuid_follows_the_contract(self):
+        contract = json.loads(
+            (ROOT / "docs" / "contracts" / "auth" / "reviewer-ids.json").read_text()
+        )
+        self.assertEqual(str(WP_USER_NAMESPACE), contract["namespace"])
+        for example in contract["examples"]:
+            self.assertEqual(str(wp_user_uuid(example["wp_user_id"])), example["uuid"])

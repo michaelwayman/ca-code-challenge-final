@@ -1,5 +1,5 @@
 bcrypt==4.2.1
-cauth==0.2.1
+cauth==0.3.0
 Django==5.2.7
 psycopg[binary]==3.2.10
 PyMySQL==1.1.1

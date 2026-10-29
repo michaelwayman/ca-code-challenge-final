@@ -1,7 +1,7 @@
 import hashlib
 import uuid
 
-from cauth import READER, ROLES
+from cauth import Role
 from django.contrib.auth.hashers import get_hasher
 from django.contrib.auth.models import AbstractUser
 from django.db import models
@@ -10,9 +10,11 @@ from .hashers import WP_HASH_PREFIXES
 
 
 class User(AbstractUser):
-    # UUID pk so imported WP users get deterministic_uuid('wp_user', id) (R10, A3).
+    # UUID pk so imported WP users get wp_user_uuid(id) (R10, A3).
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    role = models.CharField(max_length=16, choices=[(r, r) for r in ROLES], default=READER)
+    role = models.CharField(
+        max_length=16, choices=[(r.value, r.value) for r in Role], default=Role.READER
+    )
 
     def check_password(self, raw_password):
         # Imported WP hashes are stored verbatim (R10); verify, then rehash (R28).

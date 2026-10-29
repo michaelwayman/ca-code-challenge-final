@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "token-claims",
   "title": "Access token claims",
-  "description": "Claims inside an access token (RS256 JWT, 10 minute lifetime). Owner: auth service. Verified by the cauth library in the main app. `version` is the claims version: cauth accepts the current version N and N-1, so a breaking change ships expand-then-contract (see libs/README.md).",
+  "description": "Claims inside an access token (RS256 JWT, 10 minute lifetime). Owner: auth service. Verified by the cauth library in the main app. `version` is the claims version: cauth accepts the current version N and N-1, so a breaking change ships expand-then-contract (see libs/cauth/README.md).",
   "x-owner": "auth service (S2)",
   "x-contract-version": "1.0.0",
   "type": "object",

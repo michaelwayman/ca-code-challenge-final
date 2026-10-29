@@ -5,11 +5,12 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 
 import pymysql
-from cauth import EDITOR, READER, deterministic_uuid
+from cauth import Role
 from django.conf import settings
 from django.db import transaction
 
 from .models import User
+from .wp_ids import wp_user_uuid
 
 EDITOR_WP_ROLES = {"administrator", "editor"}
 _CAPABILITY = re.compile(r's:\d+:"([^"]+)";b:1;')
@@ -25,10 +26,10 @@ class WPUser:
     capabilities: str  # PHP-serialized {prefix}capabilities usermeta, "" if absent
 
 
-def map_role(capabilities: str) -> str:
+def map_role(capabilities: str) -> Role:
     """administrator/editor become editor, every other WP role becomes reader."""
     wp_roles = set(_CAPABILITY.findall(capabilities or ""))
-    return EDITOR if wp_roles & EDITOR_WP_ROLES else READER
+    return Role.EDITOR if wp_roles & EDITOR_WP_ROLES else Role.READER
 
 
 def fetch_wp_users() -> list[WPUser]:
@@ -52,10 +53,10 @@ def fetch_wp_users() -> list[WPUser]:
 
 @transaction.atomic
 def import_users(wp_users: list[WPUser]) -> dict[str, int]:
-    """Upsert by deterministic pk. Password and role are set on create only: after
+    """Upsert by the pk that wp_user_uuid derives. Password and role are set on create only: after
     that the auth service owns them (R13), so a re-run never reverts a rehash."""
     counts = {"created": 0, "updated": 0}
-    by_pk = {deterministic_uuid("wp_user", wp.id): wp for wp in wp_users}
+    by_pk = {wp_user_uuid(wp.id): wp for wp in wp_users}
     # Park every username that is about to change, so a WP rename into a login another
     # imported user only gives up later in the loop (or a swap) cannot hit the unique index.
     for pk, username in User.objects.filter(pk__in=by_pk).values_list("pk", "username"):

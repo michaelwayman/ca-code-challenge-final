@@ -1,8 +1,7 @@
 from rest_framework import authentication, exceptions, permissions
 
 from .errors import TokenError
-from .roles import EDITOR
-from .tokens import verify
+from .tokens import Claims, Role, verify
 
 
 class TokenUser:
@@ -11,10 +10,10 @@ class TokenUser:
     is_authenticated = True
     is_anonymous = False
 
-    def __init__(self, claims: dict):
+    def __init__(self, claims: Claims):
         self.claims = claims
-        self.id = self.pk = claims.get("sub")
-        self.role = claims.get("role")
+        self.id = self.pk = claims.user_id
+        self.role = claims.role
 
 
 class JWTAuthentication(authentication.BaseAuthentication):
@@ -47,5 +46,5 @@ class IsEditor(permissions.BasePermission):
     def has_permission(self, request, view):
         user = request.user
         return bool(
-            getattr(user, "is_authenticated", False) and getattr(user, "role", None) == EDITOR
+            getattr(user, "is_authenticated", False) and getattr(user, "role", None) == Role.EDITOR
         )
