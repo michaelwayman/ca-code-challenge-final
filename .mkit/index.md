@@ -23,7 +23,7 @@ R4 [P0 done] Brand detail page at /brand/<slug>/
 R5 [P0 done] Review detail page at /review/<slug>/
 R6 [P0 done] Brand listing API with filter, sort, pagination
 R7 [P1 done] Top review rule documented
-R8 [P0] Protected brand edit endpoint
+R8 [P0 done] Protected brand edit endpoint
 R9 [P1 done] Main app survives auth outage
 R10 [P0 done] Re-runnable wp_users import
 R11 [P0 done] Login issues access and refresh tokens

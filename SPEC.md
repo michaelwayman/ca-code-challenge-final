@@ -223,6 +223,7 @@
 - Layer: S1
 - Source: brief
 - Reopened: 2026-10-29
+- Built: 2026-10-29
 
 ### R9. Main app survives auth outage
 - Priority: P1
@@ -919,3 +920,4 @@
 | 2026-10-29 | REOPEN R21 (acceptance changed) | mkit |
 | 2026-10-29 | ALTER R21 | mkit |
 | 2026-10-29 | DONE R2 | mkit |
+| 2026-10-29 | DONE R8 | mkit |

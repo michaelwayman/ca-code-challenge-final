@@ -17,20 +17,22 @@ Build only what is listed. Out-of-scope items are decisions, not gaps. Anything 
 - S5 Dev tooling: Makefile lint and fmt targets, Ruff, Biome and Stylelint configs
 
 ## Build
-- **R2** [P0] (S1) Re-runnable WP migration command
-  - `manage.py import_wp` loads all brands, reviews and industries from the WP source
-  - running it twice leaves row counts identical (verified by a count query before and after)
-  - updates to a WP row are reflected on re-run
-  - the command prints created/updated/skipped counts
-  - rows are keyed on the WP post ID, slug is an attribute
-  - a test changes a slug in the source and re-runs: row updated, not duplicated
-  - import_wp reads WP data read-only from MariaDB over a connection configured by env vars (host, port, db, user, password)
-  - reviewer key is wp_user_uuid(wp_user_id) (uuid5 of brand-reviews:wp_user:<wp_user_id>), defined in the main app, with no call to auth and no wp_user_id column
-  - import mirrors the import set: rows now unpublished, trashed, deleted or invalid are deleted with cascades
-  - output has a deleted count
-  - drafts, reviews with a missing brand and ratings outside 1-5 are skipped
-  - ACF average_rating outside 0-5 is stored as null
-  - the MariaDB read and the Postgres sync are separate steps, so the mapping can be tested without a database
+- **R8** [P0] (S1) Protected brand edit endpoint
+  - PATCH /api/brands/<slug>/ with an editor token updates short_description and returns 200
+  - reader token returns 403
+  - no or invalid or expired token returns 401
+  - only short_description is writable
+  - GET stays public
+  - PATCH takes only short_description, stored in its own nullable column with a 1000-character cap (400 above)
+  - any other key gives 400 and writes nothing
+  - PUT gives 405
+  - response is the updated row
+  - public GET /api/brands/<slug>/ returns the listing row
+  - short_description is nullable
+  - NULL derives from excerpt or body
+  - an edited value round-trips exactly
+  - the 1000-character cap is enforced by the API and the response is 400 above it
+  - a PATCH loads the brand once
 
 ## Do NOT build
 - O1 WP admin and editor experience
