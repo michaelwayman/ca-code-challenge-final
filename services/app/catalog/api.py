@@ -108,7 +108,9 @@ class BrandDetail(generics.RetrieveUpdateAPIView):
         return brands()
 
     def partial_update(self, request, *args, **kwargs):
-        edit = BrandEditSerializer(self.get_object(), data=request.data)
+        # One load serves the edit and the response: save() updates the instance in place.
+        brand = self.get_object()
+        edit = BrandEditSerializer(brand, data=request.data)
         edit.is_valid(raise_exception=True)
         edit.save()
-        return Response(self.get_serializer(self.get_object()).data)
+        return Response(self.get_serializer(brand).data)

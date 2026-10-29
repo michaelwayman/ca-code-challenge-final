@@ -7,7 +7,9 @@ from unittest import mock
 import jwt
 from cauth import Claims, Role
 from cryptography.hazmat.primitives.asymmetric import rsa
+from django.db import connection
 from django.test import TestCase
+from django.test.utils import CaptureQueriesContext
 from jwt.algorithms import RSAAlgorithm
 
 from config.auth import jwks_cache
@@ -89,6 +91,13 @@ class BrandEditTests(EditTestCase):
                 self.assertEqual(listed["short_description"], value)
         # The imported excerpt is left alone for a WP re-import to keep rewriting.
         self.assertEqual(Brand.objects.get(slug="acme-insurance").excerpt, "Cheap cover.")
+
+    def test_patch_loads_the_brand_once(self):
+        with CaptureQueriesContext(connection) as queries:
+            response = self.patch({"short_description": "Fair prices."}, token())
+        self.assertEqual(response.status_code, 200, response.content)
+        loads = [q["sql"] for q in queries if 'FROM "catalog_brand"' in q["sql"]]
+        self.assertEqual(len(loads), 1, loads)
 
     def test_reader_is_forbidden(self):
         response = self.patch({"short_description": "x"}, token(role=Role.READER))
