@@ -33,10 +33,10 @@ services:
       WORDPRESS_DEBUG: "1"
     volumes:
       - wp_files:/var/www/html
-      - ./wp-content/plugins:/var/www/html/wp-content/plugins
-      - ./wp-content/mu-plugins:/var/www/html/wp-content/mu-plugins
-      - ./wp-content/themes/consumer-reviews:/var/www/html/wp-content/themes/consumer-reviews
-      - ./wp-content/uploads:/var/www/html/wp-content/uploads
+      - ./services/wordpress/wp-content/plugins:/var/www/html/wp-content/plugins
+      - ./services/wordpress/wp-content/mu-plugins:/var/www/html/wp-content/mu-plugins
+      - ./services/wordpress/wp-content/themes/consumer-reviews:/var/www/html/wp-content/themes/consumer-reviews
+      - ./services/wordpress/wp-content/uploads:/var/www/html/wp-content/uploads
     entrypoint:
       - bash
       - -c
@@ -66,10 +66,10 @@ services:
       WP_ADMIN_EMAIL: ${WP_ADMIN_EMAIL:-admin@example.com}
     volumes:
       - wp_files:/var/www/html
-      - ./wp-content/plugins:/var/www/html/wp-content/plugins
-      - ./wp-content/mu-plugins:/var/www/html/wp-content/mu-plugins
-      - ./wp-content/themes/consumer-reviews:/var/www/html/wp-content/themes/consumer-reviews
-      - ./wp-content/uploads:/var/www/html/wp-content/uploads
+      - ./services/wordpress/wp-content/plugins:/var/www/html/wp-content/plugins
+      - ./services/wordpress/wp-content/mu-plugins:/var/www/html/wp-content/mu-plugins
+      - ./services/wordpress/wp-content/themes/consumer-reviews:/var/www/html/wp-content/themes/consumer-reviews
+      - ./services/wordpress/wp-content/uploads:/var/www/html/wp-content/uploads
       - ./scripts:/scripts:ro
     entrypoint: ["wp", "--allow-root"]
 
@@ -106,7 +106,7 @@ services:
   auth:
     build:
       context: .
-      dockerfile: auth/Dockerfile
+      dockerfile: services/auth/Dockerfile
     depends_on:
       auth-db:
         condition: service_healthy
@@ -128,7 +128,7 @@ services:
       WP_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD:-wp}
       WP_TABLE_PREFIX: ${WORDPRESS_TABLE_PREFIX:-wp_}
     volumes:
-      - ./auth:/srv/auth
+      - ./services/auth:/srv/auth
       - ./docs/contracts:/srv/docs/contracts:ro
       - auth_keys:/keys
     healthcheck:
@@ -156,7 +156,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: app/Dockerfile
+      dockerfile: services/app/Dockerfile
     depends_on:
       app-db:
         condition: service_healthy
@@ -179,7 +179,7 @@ services:
       WP_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD:-wp}
       WP_TABLE_PREFIX: ${WORDPRESS_TABLE_PREFIX:-wp_}
     volumes:
-      - ./app:/srv/app
+      - ./services/app:/srv/app
       - ./frontend:/srv/frontend:ro
       - ./docs/contracts:/srv/docs/contracts:ro
     healthcheck:

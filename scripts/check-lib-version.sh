@@ -13,9 +13,9 @@ current=$(version_of < "$INIT")
 
 status=0
 for svc in app auth; do
-  pin=$(sed -n 's/^cauth==\([^ #]*\).*/\1/p' "$svc/requirements.txt")
+  pin=$(sed -n 's/^cauth==\([^ #]*\).*/\1/p' "services/$svc/requirements.txt")
   if [ "$pin" != "$current" ]; then
-    echo "FAIL: $svc/requirements.txt pins cauth==$pin but libs is $current"
+    echo "FAIL: services/$svc/requirements.txt pins cauth==$pin but libs is $current"
     status=1
   fi
 done

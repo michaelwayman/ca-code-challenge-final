@@ -72,7 +72,7 @@ No specific UI framework is mandated. Vanilla CSS, CSS modules, Tailwind, styled
 
 ### Pillar 4 — SCSS source files
 
-In [reference/theme.css](reference/theme.css) you will find the compiled CSS from the WordPress theme. Your job is to **produce the SCSS source files** that compile to equivalent CSS, organized however a senior engineer would organize them.
+In [docs/research/theme.css](docs/research/theme.css) you will find the compiled CSS from the WordPress theme. Your job is to **produce the SCSS source files** that compile to equivalent CSS, organized however a senior engineer would organize them.
 
 We are not grading byte-for-byte equivalence. We are grading the **structure**: design tokens, partials, naming conventions, separation of concerns, how easy it would be for another engineer to extend.
 
@@ -133,8 +133,8 @@ Come prepared to answer these on the call. There is no single right answer to an
 | Yoast SEO data | `wp_postmeta` keys starting with `_yoast_wpseo_` |
 
 The custom post types and ACF fields are defined in code at:
-- [wp-content/mu-plugins/cpt.php](wp-content/mu-plugins/cpt.php)
-- [wp-content/mu-plugins/acf-fields.php](wp-content/mu-plugins/acf-fields.php)
+- [services/wordpress/wp-content/mu-plugins/cpt.php](services/wordpress/wp-content/mu-plugins/cpt.php)
+- [services/wordpress/wp-content/mu-plugins/acf-fields.php](services/wordpress/wp-content/mu-plugins/acf-fields.php)
 
 Read these for the authoritative schema.
 

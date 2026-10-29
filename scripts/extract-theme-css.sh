@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Extract the compiled theme CSS from the running WordPress container and
-# commit it to reference/theme.css for candidates to recreate as SCSS source.
+# commit it to docs/research/theme.css for candidates to recreate as SCSS source.
 #
 # Run this ONCE (or whenever the theme stylesheet changes). The output is
 # committed to the repo so candidates do not need the WP stack running just
@@ -15,9 +15,9 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-REFERENCE_DIR="${REPO_ROOT}/reference"
+REFERENCE_DIR="${REPO_ROOT}/docs/research"
 OUTPUT_FILE="${REFERENCE_DIR}/theme.css"
-THEME_DIR="${REPO_ROOT}/wp-content/themes/consumer-reviews"
+THEME_DIR="${REPO_ROOT}/services/wordpress/wp-content/themes/consumer-reviews"
 
 mkdir -p "${REFERENCE_DIR}"
 

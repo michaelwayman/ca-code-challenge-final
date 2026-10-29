@@ -17,24 +17,10 @@ Build only what is listed. Out-of-scope items are decisions, not gaps. Anything 
 - S5 Dev tooling: Makefile lint and fmt targets, Ruff, Biome and Stylelint configs
 
 ## Build
-- **R22** [P0] (S4) BrandList fetches and renders brands
-  - component renders a card per row from GET /api/brands/ showing name, slug link to /brand/<slug>/, industry, rating, review count, short description and top review snippet
-  - pagination uses page and page_size and is a numbered list with Previous/Next: first and last page always shown, the current page and one neighbour each side, and an ellipsis for gaps (e.g. 1 … 7 [8] 9 … 18
-  - near either end it shows 5 consecutive pages so there is never a lone gap)
-  - each number is a button or link, the current one has aria-current=page, and Previous/Next are disabled at the ends
-  - Visual: at 375px the neighbours and the Previous/Next text are dropped (e.g. ‹ 1 … [8] … 18 ›) so it fits one row
-  - Visual: 1 column at 375px, 3 columns at 1280px
-  - cards use theme classes
-- **R24** [P0] (S4) BrandList loading, empty and error states
-  - first load shows skeleton cards matching the card grid's size with aria-busy and status text for screen readers
-  - on later fetches (filter, sort, page) the previous results stay visible, dimmed with aria-busy and a small spinner, and are replaced when the new data arrives
-  - no layout jump while loading (results area keeps its height, heading and pagination stay mounted)
-  - a response fetched in the last 30s for the same URL is shown with no loading state and no network request, and an older cached response is shown immediately and revalidated in the background, using the same window as R6's max-age
-  - motion respects prefers-reduced-motion
-  - zero results shows an empty message with a clear-filters button
-  - a failed request (API stopped) shows an error message with a Retry button that refetches
-  - stale responses from superseded requests are ignored
-  - Visual: each state readable at 375px and 1280px
+- **R32** [P0] (S5) Repository layout
+  - README has a "Repository layout" tree covering services/{wordpress,auth,app}, frontend/, libs/, docs/{research,contracts/<service>}, scripts/ and db/
+  - make layout-check runs in Docker and fails when the actual top-level entries, services/* or docs/* differ from the README tree, passes on a clean tree, and fails when a stray folder is added
+  - compose, Makefile, Dockerfiles and tests work after the move to services/ (make up, make lint and all test suites pass)
 
 ## Do NOT build
 - O1 WP admin and editor experience
@@ -52,7 +38,7 @@ Build only what is listed. Out-of-scope items are decisions, not gaps. Anything 
 - Success -> Runs from README with Docker only; WP permalinks kept; /api/brands/ filter/sort/paginate; only editor can PATCH; shared lib tests run standalone; every decision defensible. Judged on structure, not pixels
 - Headline scope -> In: re-runnable migration, 3 pages, brand API, BrandList (filter/sort/states/a11y/responsive), SCSS under frontend/scss, auth service with roles, protected PATCH, shared lib, README with modeling notes. Out: WP admin, Yoast output, review submission/search, registration/reset/social/MFA, login UI, image uploads, pixel parity
 - Database engine for both services -> Postgres, one container per service
-- Token lifetime and key distribution -> 10 min access token, RS256, public key via cached JWKS with kid rotation
+- Token lifetime and key distribution -> 10 min access token, RS256, public key via cached JWKS with kid rotation (restored; rotation with overlap kept for the key ring)
 - WP source: SQL dump, live DB or CSV, and how it is mounted into the containers (C1) -> Data is read directly from the live MariaDB, not a dump or CSV
 
 ## Unvalidated assumptions (flag if they break)

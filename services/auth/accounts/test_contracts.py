@@ -14,7 +14,7 @@ from .models import User
 from .tests import KeysDirMixin
 from .tokens import issue_access_token
 
-ROOT = Path(settings.BASE_DIR).parent  # /srv in the container, the repo root on a host
+ROOT = Path(settings.BASE_DIR).parent  # /srv in the container, not run on a host
 SCHEMA = json.loads((ROOT / "docs" / "contracts" / "auth" / "token-claims.schema.json").read_text())
 
 

@@ -45,6 +45,9 @@ R26 [P0 done] BrandList mounted on a Django page
 R27 [P0 done] README covering run, token, migration and decisions
 R28 [P0 done] WordPress password hasher
 R29 [P0 done] Lint and format via Docker
+R30 [P0 done] Service contracts
+R31 [P0 done] Library release discipline
+R32 [P0 done] Repository layout
 O1 [active] WP admin and editor experience
 O2 [active] Yoast SEO frontend output
 O3 [active] Review submission and search

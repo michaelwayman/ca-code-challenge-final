@@ -8,11 +8,11 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 WORKDIR /srv/app
 COPY --from=wheels /wheels /wheels
-COPY app/requirements.txt .
+COPY services/app/requirements.txt .
 # cauth comes only from the wheel built above, and must be the version pinned in requirements.txt
 # (the build fails when they differ); everything else comes from the index.
 RUN pip install --no-cache-dir --no-deps --no-index --find-links /wheels "$(grep '^cauth==' requirements.txt | cut -d' ' -f1)" \
  && pip install --no-cache-dir -r requirements.txt
-COPY app/ .
+COPY services/app/ .
 EXPOSE 8000
 CMD ["sh", "-c", "python manage.py migrate --noinput && exec python manage.py runserver 0.0.0.0:8000"]

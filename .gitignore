@@ -1,14 +1,14 @@
 .env
 .DS_Store
-wp-content/upgrade/
-wp-content/cache/
-wp-content/backup-db/
-wp-content/uploads/wp-personal-data-exports/
+services/wordpress/wp-content/upgrade/
+services/wordpress/wp-content/cache/
+services/wordpress/wp-content/backup-db/
+services/wordpress/wp-content/uploads/wp-personal-data-exports/
 *.log
 __pycache__/
 
 # Auth signing keys (private); in Docker they live in the auth_keys volume.
-auth/keys/
+services/auth/keys/
 
 # Interviewer-only material — never shipped to candidates.
 interviewer/

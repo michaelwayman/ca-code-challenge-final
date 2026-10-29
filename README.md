@@ -24,6 +24,43 @@ The compiled frontend is committed, so nothing else is needed; run `make fe-buil
 
 The WordPress database is seeded from `db/dump.sql` on first boot, and both imports read it live from MariaDB.
 
+## Repository layout
+
+```
+.
+├── services/
+│   ├── wordpress/        # source site: wp-content (theme, mu-plugins, plugins, uploads)
+│   ├── auth/             # auth service (Django): users, roles, tokens, JWKS
+│   └── app/              # main app (Django): catalog, pages, /api/brands/
+├── frontend/             # React BrandList, SCSS tree, Vite build
+├── libs/                 # cauth, the shared token library
+├── docs/
+│   ├── research/         # WordPress theme CSS the SCSS tree recreates
+│   └── contracts/
+│       ├── auth/         # token claims schema
+│       └── app/          # brands API schema
+├── scripts/              # seed, token, patch and check scripts
+├── db/                   # WordPress dump that seeds MariaDB
+├── docker-compose.yml
+├── Makefile
+├── README.md
+├── CHALLENGE.md
+├── HOW_I_USED_AI.md
+├── questions.md
+├── SPEC.md
+├── CLAUDE.md
+├── .claude/
+├── .mbuild/
+├── .mkit/
+├── .env.example
+├── .gitignore
+├── .stylelintrc.json
+├── biome.json
+└── ruff.toml
+```
+
+`make layout-check` fails when the top-level entries, `services/*`, `docs/*` or `docs/contracts/*` differ from this tree.
+
 ## Run the pieces
 
 ### Main app
@@ -75,7 +112,7 @@ Login also returns a refresh token. `POST /auth/refresh` returns a new access to
 
 ### When the auth service is down
 
-The main app never calls the auth service per request. It verifies tokens locally with the public keys from `http://auth:8001/.well-known/jwks.json`, cached in process (`app/config/auth.py`), and compose deliberately has no `depends_on: auth` for it.
+The main app never calls the auth service per request. It verifies tokens locally with the public keys from `http://auth:8001/.well-known/jwks.json`, cached in process (`services/app/config/auth.py`), and compose deliberately has no `depends_on: auth` for it.
 
 - **Reads** (`/api/brands/`, `/api/brands/<slug>/`, pages, `/healthz`) never touch auth and keep returning 200.
 - **Writes with a still-valid token** keep working: the key set is refetched every 5 minutes, and a failed refetch keeps the last good set. Revocation therefore rests on the 10-minute token lifetime.
@@ -108,7 +145,7 @@ make lib-test
 
 **Release steps (bump and pin).** The version lives in one place, `__version__` in `libs/src/cauth/__init__.py` (`pyproject.toml` reads it).
 1. Change the library and bump `__version__`.
-2. Change the exact pin (`cauth==X.Y.Z`) in `auth/requirements.txt` and `app/requirements.txt` to match.
+2. Change the exact pin (`cauth==X.Y.Z`) in `services/auth/requirements.txt` and `services/app/requirements.txt` to match.
 3. `make lib-test`, then `make lib-check` (fails if `libs/` changed against `main` without a bump, or a pin lags the version).
 4. `make up`. Each Dockerfile builds the wheel from `libs/` and installs only that wheel, with `--no-index`; the build fails if its version is not the pinned one, so a service can never run an unpinned local copy.
 

@@ -520,6 +520,41 @@
 - Source: change
 - Built: 2026-10-27
 
+### R30. Service contracts
+- Priority: P0
+- Status: active
+- Acceptance:
+  - token-claims contract documents fields, types and version semantics, with an owner and a version
+  - brand listing and PATCH API schema documents params, pagination shape and error bodies, with an owner and a version
+  - test passes claims built by the auth service issuer through the cauth verifier
+  - test validates /api/brands/ and PATCH responses against the API schema in the main app
+  - test validates the frontend fixtures against the API schema
+  - page-size and ordering values are defined once or tied by a test across api.py and url.js
+- Layer: S3
+- Built: 2026-10-28
+
+### R31. Library release discipline
+- Priority: P0
+- Status: active
+- Acceptance:
+  - a check fails when files under libs/ change without a cauth version bump
+  - the version lives in one place (pyproject.toml and __version__ cannot drift)
+  - both services install the pinned built wheel of that version rather than an unversioned local path
+  - README states the bump-and-pin release steps
+- Layer: S3
+- Built: 2026-10-28
+
+### R32. Repository layout
+- Priority: P0
+- Status: active
+- Acceptance:
+  - README has a "Repository layout" tree covering services/{wordpress,auth,app}, frontend/, libs/, docs/{research,contracts/<service>}, scripts/ and db/
+  - make layout-check runs in Docker and fails when the actual top-level entries, services/* or docs/* differ from the README tree, passes on a clean tree, and fails when a stray folder is added
+  - compose, Makefile, Dockerfiles and tests work after the move to services/ (make up, make lint and all test suites pass)
+- Layer: S5
+- Source: change
+- Built: 2026-10-28
+
 ## Out of scope
 
 <!-- O: decided against, with Why and Revisit (what would change our mind). Dropped, not deferred. -->
@@ -849,3 +884,8 @@
 | 2026-10-28 | REOPEN R26 (acceptance changed) | mkit |
 | 2026-10-28 | ALTER R26 | mkit |
 | 2026-10-28 | DONE R26 | mkit |
+| 2026-10-28 | ADD R30: Service contracts | mkit |
+| 2026-10-28 | ADD R31: Library release discipline | mkit |
+| 2026-10-28 | DONE R30 R31 | mkit |
+| 2026-10-28 | ADD R32: Repository layout | mkit |
+| 2026-10-28 | DONE R32 | mkit |

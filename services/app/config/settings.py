@@ -31,9 +31,8 @@ TEMPLATES = [
 
 # Compiled CSS/JS from frontend/dist (mounted at /srv/frontend); runserver serves it (O8).
 STATIC_URL = "/static/"
-STATICFILES_DIRS = [
-    p for p in [Path("/srv/frontend/dist"), BASE_DIR.parent / "frontend" / "dist"] if p.exists()
-]
+_FRONTEND_DIST = [Path("/srv/frontend/dist"), BASE_DIR.parent.parent / "frontend" / "dist"]
+STATICFILES_DIRS = [p for p in _FRONTEND_DIST if p.exists()]
 
 ROOT_URLCONF = "config.urls"
 WSGI_APPLICATION = "config.wsgi.application"

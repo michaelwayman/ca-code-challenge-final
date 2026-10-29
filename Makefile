@@ -21,6 +21,7 @@ help:
 	@echo "  lib-test        Run the shared library tests in Docker"
 	@echo "  lib-check       Fail if libs/ changed without a cauth version bump (BASE=main)"
 	@echo "  contract-test   Run the service contract tests (needs make up)"
+	@echo "  layout-check    Fail if the repo layout differs from the README tree"
 	@echo "  lint / fmt      Lint or format everything in Docker"
 	@echo "  fe-build        Build the SCSS and React bundle"
 
@@ -145,3 +146,9 @@ contract-test:
 
 lib-test:
 	docker run --rm -v "$(CURDIR)/libs":/work -w /work python:3.12-slim sh -c "pip install -q -e '.[test]' && pytest -q"
+
+.PHONY: layout-check
+
+# Fails when top-level entries, services/*, docs/* or docs/contracts/* differ from the README tree.
+layout-check:
+	docker run --rm -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0=/work -v "$(CURDIR)":/work -w /work --entrypoint sh alpine/git:v2.47.2 scripts/check-layout.sh

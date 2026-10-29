@@ -11,7 +11,7 @@ const INDUSTRIES = [
   { slug: "telecom", name: "Telecom" },
 ];
 
-// The same file the API contract test validates (app/catalog/test_contracts.py).
+// The same file the API contract test validates (services/app/catalog/test_contracts.py).
 const brand = (over = {}) => ({ ...fixture.results[0], ...over });
 
 const page = (results, count = results.length) => ({
