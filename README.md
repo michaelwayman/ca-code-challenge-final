@@ -106,7 +106,13 @@ The response sends `Cache-Control: public, max-age=30, stale-while-revalidate=12
 make lib-test
 ```
 
-**How a new version reaches each service:** bump `version` in `libs/pyproject.toml`, build the wheel, change the exact pin (`cauth==X.Y.Z`) in `auth/requirements.txt` and `app/requirements.txt`, then `make up`.
+**Release steps (bump and pin).** The version lives in one place, `__version__` in `libs/src/cauth/__init__.py` (`pyproject.toml` reads it).
+1. Change the library and bump `__version__`.
+2. Change the exact pin (`cauth==X.Y.Z`) in `auth/requirements.txt` and `app/requirements.txt` to match.
+3. `make lib-test`, then `make lib-check` (fails if `libs/` changed against `main` without a bump, or a pin lags the version).
+4. `make up`. Each Dockerfile builds the wheel from `libs/` and installs only that wheel, with `--no-index`; the build fails if its version is not the pinned one, so a service can never run an unpinned local copy.
+
+Service contracts (token claims, brands API) live in `contracts/` with an owner and a version each; `make contract-test` checks the code against them.
 
 **Which module each service imports:** the auth service imports `cauth.roles` and `cauth.ids.deterministic_uuid` (and `cauth.tokens` in tests); the main app imports `cauth.drf` (`JWTAuthentication`, `IsEditor`), which uses `cauth.tokens.verify`, and `deterministic_uuid` for reviewer links.
 

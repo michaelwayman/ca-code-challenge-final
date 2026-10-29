@@ -129,6 +129,7 @@ services:
       WP_TABLE_PREFIX: ${WORDPRESS_TABLE_PREFIX:-wp_}
     volumes:
       - ./auth:/srv/auth
+      - ./contracts:/srv/contracts:ro
       - auth_keys:/keys
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/healthz')"]
@@ -180,6 +181,7 @@ services:
     volumes:
       - ./app:/srv/app
       - ./frontend:/srv/frontend:ro
+      - ./contracts:/srv/contracts:ro
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')"]
       interval: 5s

@@ -19,6 +19,8 @@ help:
 	@echo "  token           Print an access token (AUTH_USER, AUTH_PASS; default admin/admin)"
 	@echo "  patch-brand     Log in and PATCH a brand (SLUG=..., DESC=...)"
 	@echo "  lib-test        Run the shared library tests in Docker"
+	@echo "  lib-check       Fail if libs/ changed without a cauth version bump (BASE=main)"
+	@echo "  contract-test   Run the service contract tests (needs make up)"
 	@echo "  lint / fmt      Lint or format everything in Docker"
 	@echo "  fe-build        Build the SCSS and React bundle"
 
@@ -91,7 +93,7 @@ AUTH_PASS ?= admin
 SLUG ?= acme-insurance
 DESC ?= Fair prices, slow claims.
 
-.PHONY: import import-wp import-users token patch-brand admin-password operator rotate-key auth-stop auth-start app-restart lib-test seed-demo unseed-demo
+.PHONY: lib-check contract-test import import-wp import-users token patch-brand admin-password operator rotate-key auth-stop auth-start app-restart lib-test seed-demo unseed-demo
 
 import: import-wp import-users
 
@@ -130,6 +132,16 @@ auth-start:
 
 app-restart:
 	$(COMPOSE) restart app
+
+# Fails when libs/ changed against BASE without a cauth version bump, or the pins lag it.
+BASE ?= main
+lib-check:
+	docker run --rm -e BASE=$(BASE) -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0=/work -v "$(CURDIR)":/work -w /work --entrypoint sh alpine/git:v2.47.2 scripts/check-lib-version.sh
+
+# Contract tests need the rebuilt images (jsonschema) and the contracts/ mount.
+contract-test:
+	$(COMPOSE) exec -T auth python manage.py test accounts.test_contracts
+	$(COMPOSE) exec -T app python manage.py test catalog.test_contracts
 
 lib-test:
 	docker run --rm -v "$(CURDIR)/libs":/work -w /work python:3.12-slim sh -c "pip install -q -e '.[test]' && pytest -q"

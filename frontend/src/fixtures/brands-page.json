@@ -1,0 +1,32 @@
+{
+  "count": 2,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "name": "Acme Insurance Co.",
+      "slug": "acme-insurance",
+      "industry": { "name": "Insurance", "slug": "insurance" },
+      "average_rating": 3.9,
+      "review_count": 12,
+      "short_description": "A long-running insurer.",
+      "top_review": {
+        "title": "Umbrella was easy",
+        "slug": "umbrella",
+        "rating": 5,
+        "reviewer": "Sarah K.",
+        "published_at": "2026-05-19T00:00:00Z",
+        "snippet": "Painless."
+      }
+    },
+    {
+      "name": "Bolt Bank",
+      "slug": "bolt-bank",
+      "industry": null,
+      "average_rating": null,
+      "review_count": 0,
+      "short_description": "",
+      "top_review": null
+    }
+  ]
+}

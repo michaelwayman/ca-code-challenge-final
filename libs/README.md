@@ -18,6 +18,10 @@ No Django project, settings or database needed; tests run standalone.
 python -m venv .venv && .venv/bin/pip install -e '.[test]' && .venv/bin/pytest
 ```
 
+## Releasing
+
+The version is `__version__` in `src/cauth/__init__.py`; `pyproject.toml` reads it. Any change under `libs/` needs a bump (`make lib-check`), then update the `cauth==` pin in `auth/requirements.txt` and `app/requirements.txt`. See the root README.
+
 ## Claims version compatibility
 
 Tokens carry a `version` claim. `verify` accepts the current `CLAIMS_VERSION` (N) and N-1, and

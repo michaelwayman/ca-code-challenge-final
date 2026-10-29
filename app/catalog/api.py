@@ -16,6 +16,7 @@ from config.auth import AuthServiceJWT
 from .models import Brand, Review
 
 SNIPPET_WORDS = 30
+DEFAULT_ORDERING = "name"
 
 # ?ordering= value -> sort expression; a leading "-" reverses it.
 ORDERINGS = {
@@ -159,10 +160,10 @@ class BrandList(generics.ListAPIView):
     def ordering(self):
         """Unknown values fall back to name. Brands without reviews sort last either way;
         name and id break ties so pages never overlap."""
-        value = self.request.query_params.get("ordering", "name")
+        value = self.request.query_params.get("ordering", DEFAULT_ORDERING)
         key = value.removeprefix("-")
         if key not in ORDERINGS:
-            value, key = "name", "name"
+            value, key = DEFAULT_ORDERING, DEFAULT_ORDERING
         expr = ORDERINGS[key]
         first = expr.desc(nulls_last=True) if value.startswith("-") else expr.asc(nulls_last=True)
         return [first, "name", "id"]

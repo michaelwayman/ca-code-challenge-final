@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import axe from "axe-core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import BrandList from "./BrandList.jsx";
+import fixture from "./fixtures/brands-page.json";
 import { pageItems, pagerItems } from "./url.js";
 
 const INDUSTRIES = [
@@ -10,21 +11,8 @@ const INDUSTRIES = [
   { slug: "telecom", name: "Telecom" },
 ];
 
-const brand = (over = {}) => ({
-  name: "Acme Insurance Co.",
-  slug: "acme-insurance",
-  industry: { name: "Insurance", slug: "insurance" },
-  average_rating: 3.9,
-  review_count: 12,
-  short_description: "A long-running insurer.",
-  top_review: {
-    title: "Umbrella was easy",
-    slug: "umbrella",
-    rating: 5,
-    snippet: "Painless.",
-  },
-  ...over,
-});
+// The same file the API contract test validates (app/catalog/test_contracts.py).
+const brand = (over = {}) => ({ ...fixture.results[0], ...over });
 
 const page = (results, count = results.length) => ({
   count,

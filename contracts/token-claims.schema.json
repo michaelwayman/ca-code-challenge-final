@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "token-claims",
+  "title": "Access token claims",
+  "description": "Claims inside an access token (RS256 JWT, 10 minute lifetime). Owner: auth service. Verified by the cauth library in the main app. `version` is the claims version: cauth accepts the current version N and N-1, so a breaking change ships expand-then-contract (see libs/README.md).",
+  "x-owner": "auth service (S2)",
+  "x-contract-version": "1.0.0",
+  "type": "object",
+  "required": ["sub", "role", "iat", "exp", "version"],
+  "additionalProperties": false,
+  "properties": {
+    "sub": { "type": "string", "description": "Auth user id (UUID)." },
+    "role": { "enum": ["reader", "editor"], "description": "Role at issue time; a role change lands on the next refresh." },
+    "iat": { "type": "integer", "description": "Issued at, seconds since the epoch." },
+    "exp": { "type": "integer", "description": "Expiry, seconds since the epoch." },
+    "version": { "enum": [1, 2], "description": "Claims version. The values are the versions cauth.SUPPORTED_VERSIONS accepts (N and N-1); a test ties them." }
+  }
+}
