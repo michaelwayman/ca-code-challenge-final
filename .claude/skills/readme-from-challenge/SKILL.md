@@ -9,7 +9,7 @@ Builds two files so they answer what `CHALLENGE.md` asks for, and nothing else:
 - `README.md`: short. Run instructions, token and protected call, library tests, migration, lint, and the author's own sections.
 - `questions.md`: the "Decisions you will defend live" questions as a table (question, answer, where it lives).
 
-Mechanical content comes from the repo. The question answers are drafted from the repo and confirmed by the user before anything is written. The author's own writing is never regenerated.
+Mechanical content comes from the repo. Paths are the `services/` layout (`services/app`, `services/auth`, `libs/cauth`). The question answers are drafted from the repo and confirmed by the user before anything is written. The author's own writing is never regenerated.
 
 ## The author's own words (never touch)
 `.claude/skills/readme-from-challenge/author-answers.md` holds the sections the user wrote themselves: "Modeling decisions", "What I would do differently with more time" and "Where I chose the AI's default" (under the heading `## Modeling decisions, what I'd do differently, and AI defaults`).
@@ -18,6 +18,9 @@ Mechanical content comes from the repo. The question answers are drafted from th
 - If the file is missing, ask the user for those answers. Do not write them yourself.
 - If the user asks to change an answer, edit `author-answers.md`, then rebuild.
 
+## The author's intro (never touch)
+`.claude/skills/readme-from-challenge/author-intro.md` is the section "Working on this project: mkit and mbuild". Copy it, below its leading HTML comment, into `README.md` **verbatim**, directly under the title paragraph and above "Quick start". Same rules as above: never reword, never regenerate; if the file is missing, ask the user.
+
 ## 1. Read the requirements
 - `CHALLENGE.md`, section "What to deliver": the bullets under `A README.md with:`.
 - `CHALLENGE.md`, section "Decisions you will defend live": the numbered questions. Keep each question's text verbatim.
@@ -25,7 +28,7 @@ Mechanical content comes from the repo. The question answers are drafted from th
 
 ## 2. Collect facts from the repo, not memory
 Read the files and run the cheap commands to confirm they work:
-- `Makefile`: the targets. The README documents `make` commands only (`make up`, `make import`, `make token`, `make patch-brand`, `make lib-test`, `make lint`, `make fmt`, ...). If a step has no target, add one to the Makefile instead of putting a raw `docker`, `curl` or `manage.py` line in the README.
+- `Makefile`: the targets. Prefer a `make` target where one exists (`make up`, `make import`, `make token`, `make patch-brand`, `make lib-test`, `make lint`, `make fmt`, `make layout-check`, ...), but not everything has to be one: use a plain `docker`, `curl` or `manage.py` command when it is clearer, and make sure it works as written.
 - `docker-compose.yml`: service names, ports. `.env.example` for config.
 - Auth: login URL and request shape (`services/auth/accounts/urls.py`, `views.py`), the seeded editor account, the protected endpoint (`services/app/catalog/api.py`).
 - Library: `libs/cauth/pyproject.toml` version, `libs/cauth/README.md`, how Dockerfiles pin it.
@@ -45,12 +48,13 @@ Show the `questions.md` table and the list of TODO/proposed items. Ask the user 
 
 ## 6. Write the files
 - `questions.md`: a short intro, then the table.
-- `README.md`: overview and quick start, run instructions, token and protected call, library tests and upgrades, migration, lint and format, a short pointer to `questions.md`, the author's sections (verbatim from `author-answers.md`), what production would need. Keep it short: link to `questions.md` instead of repeating the table.
+- `README.md`: overview, the author's mkit/mbuild intro (verbatim), quick start, the "Repository layout" tree (keep it; update it when the layout changes), run instructions, token and protected call, library tests and upgrades, migration, lint and format, a short pointer to `questions.md`, the author's sections (verbatim from `author-answers.md`), what production would need. Keep it short: link to `questions.md` instead of repeating the table.
 
 ## 7. Check
 - Every README bullet in CHALLENGE.md has a heading, and every spec-mandated bullet from step 1 is covered.
 - All questions appear verbatim in `questions.md`.
 - The README's author sections are byte-identical to `author-answers.md` (diff them).
-- The README contains no raw `docker`, `curl` or `python manage.py` commands.
-- The main `make` targets run on a clean clone: `make up`, `make import` (twice), `make token`, `make patch-brand`, `make lib-test`, `make lint`.
+- Every command in the README works as written.
+- The "Repository layout" tree is still present and `make layout-check` passes (R32).
+- The main `make` targets run on a clean clone: `make up`, `make import` (twice), `make token`, `make patch-brand`, `make lib-test`, `make lint`, `make layout-check`.
 Say what you could not verify. Do not push; the user does.
