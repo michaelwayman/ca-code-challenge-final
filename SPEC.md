@@ -124,10 +124,11 @@
   - output has a deleted count
   - drafts, reviews with a missing brand and ratings outside 1-5 are skipped
   - ACF average_rating outside 0-5 is stored as null
+  - the MariaDB read and the Postgres sync are separate steps, so the mapping can be tested without a database
 - Layer: S1
 - Source: brief
-- Reopened: 2026-10-28
-- Built: 2026-10-28
+- Reopened: 2026-10-29
+- Built: 2026-10-29
 
 ### R3. Homepage with hero and recent reviews
 - Priority: P0
@@ -218,10 +219,10 @@
   - NULL derives from excerpt or body
   - an edited value round-trips exactly
   - the 1000-character cap is enforced by the API and the response is 400 above it
+  - a PATCH loads the brand once
 - Layer: S1
 - Source: brief
-- Reopened: 2026-10-27
-- Built: 2026-10-27
+- Reopened: 2026-10-29
 
 ### R9. Main app survives auth outage
 - Priority: P1
@@ -395,9 +396,11 @@
   - every selector group in reference/theme.css (.site-header, .hero, .card, .grid, .badge, .stars, .pagination, .review-item and the rest) has a home partial
   - the 37 var(--) tokens are defined once in abstracts
   - README gives the compile command and states where to add a new component partial
+  - font sizes and spacing come from shared tokens
+  - the class naming convention (flat component names, descendant selectors scoped under the component root) is documented in frontend/scss
 - Layer: S4
 - Source: brief
-- Built: 2026-10-27
+- Reopened: 2026-10-29
 
 ### R22. BrandList fetches and renders brands
 - Priority: P0
@@ -410,10 +413,11 @@
   - Visual: at 375px the neighbours and the Previous/Next text are dropped (e.g. ‹ 1 … [8] … 18 ›) so it fits one row
   - Visual: 1 column at 375px, 3 columns at 1280px
   - cards use theme classes
+  - at 900px and below the grid shows two columns
+  - the breakpoint is a shared token
 - Layer: S4
 - Source: brief
-- Reopened: 2026-10-28
-- Built: 2026-10-28
+- Reopened: 2026-10-29
 
 ### R23. BrandList filter and sort with URL-synced state
 - Priority: P0
@@ -906,3 +910,12 @@
 | 2026-10-28 | ALTER R30 | mkit |
 | 2026-10-28 | ALTER T3 | mkit |
 | 2026-10-28 | DONE R2 R10 R16 R17 R30 | mkit |
+| 2026-10-29 | REOPEN R2 (acceptance changed) | mkit |
+| 2026-10-29 | ALTER R2 | mkit |
+| 2026-10-29 | REOPEN R8 (acceptance changed) | mkit |
+| 2026-10-29 | ALTER R8 | mkit |
+| 2026-10-29 | REOPEN R22 (acceptance changed) | mkit |
+| 2026-10-29 | ALTER R22 | mkit |
+| 2026-10-29 | REOPEN R21 (acceptance changed) | mkit |
+| 2026-10-29 | ALTER R21 | mkit |
+| 2026-10-29 | DONE R2 | mkit |

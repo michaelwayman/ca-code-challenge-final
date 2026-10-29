@@ -3,10 +3,10 @@ from datetime import datetime
 from decimal import Decimal
 
 from django.db import connection
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 
 from .models import Brand, Industry, Review, Reviewer
-from .wp_import import WPPost, WPSource, WPTerm, WPUser, import_source, wp_user_uuid
+from .wp_import import WPPost, WPSource, WPTerm, WPUser, import_source, map_source, wp_user_uuid
 
 T0 = datetime(2026, 5, 19, 20, 29, 2)
 
@@ -59,6 +59,40 @@ class SchemaTests(TestCase):
         self.assertEqual(acme.average_rating, 4)
         self.assertEqual(acme.review_count, 2)
         self.assertEqual(acme.legacy_average_rating, Decimal("4.2"))
+
+
+class MappingTests(SimpleTestCase):
+    """map_source is pure: these run with no database."""
+
+    def test_maps_published_rows_keyed_on_wp_id(self):
+        m = map_source(source())
+        self.assertEqual(set(m.brands), {7, 8})
+        self.assertEqual(m.brands[7]["industry_wp_id"], 2)
+        self.assertEqual(m.brands[7]["founded_year"], 1985)
+        self.assertEqual(m.reviews[13]["brand_wp_id"], 7)
+        self.assertEqual(m.reviews[13]["reviewer_id"], wp_user_uuid(2))
+        self.assertEqual(list(m.reviewers), [wp_user_uuid(2)])
+
+    def test_skips_drafts_missing_brand_and_bad_ratings(self):
+        m = map_source(
+            source(
+                brands=[brand(7, "acme-insurance"), brand(9, "draft-co", status="draft")],
+                reviews=[
+                    review(12, "ok", 7),
+                    review(13, "no-brand", 99),
+                    review(14, "bad-rating", 7, rating="6"),
+                    review(15, "draft-brand", 9),
+                ],
+            )
+        )
+        self.assertEqual(set(m.reviews), {12})
+        self.assertEqual(m.skipped["brands"], 1)
+        self.assertEqual(m.skipped["reviews"], 3)
+
+    def test_out_of_range_average_rating_is_null(self):
+        meta = {"average_rating": "7"}
+        m = map_source(source(brands=[brand(7, "acme-insurance", meta=meta)], reviews=[]))
+        self.assertIsNone(m.brands[7]["legacy_average_rating"])
 
 
 class ImportTests(TestCase):

@@ -23,7 +23,7 @@ R4 [P0 done] Brand detail page at /brand/<slug>/
 R5 [P0 done] Review detail page at /review/<slug>/
 R6 [P0 done] Brand listing API with filter, sort, pagination
 R7 [P1 done] Top review rule documented
-R8 [P0 done] Protected brand edit endpoint
+R8 [P0] Protected brand edit endpoint
 R9 [P1 done] Main app survives auth outage
 R10 [P0 done] Re-runnable wp_users import
 R11 [P0 done] Login issues access and refresh tokens
@@ -36,8 +36,8 @@ R17 [P0 done] Token verification
 R18 [P0 done] DRF authentication and permission classes
 R19 [P0 done] Library tests run standalone
 R20 [P1 done] Claims version compatibility
-R21 [P0 done] SCSS source tree compiling to equivalent CSS
-R22 [P0 done] BrandList fetches and renders brands
+R21 [P0] SCSS source tree compiling to equivalent CSS
+R22 [P0] BrandList fetches and renders brands
 R23 [P0 done] BrandList filter and sort with URL-synced state
 R24 [P0 done] BrandList loading, empty and error states
 R25 [P0 done] BrandList accessibility

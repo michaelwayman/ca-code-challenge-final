@@ -171,31 +171,35 @@ def _sync(model, key_field: str, rows: dict, all_counts: dict[str, Counter]) -> 
             counts["unchanged"] += 1
 
 
-@transaction.atomic
-def import_source(src: WPSource) -> dict[str, Counter]:
-    counts = {name: Counter() for name in TABLES.values()}
+@dataclass
+class Mapped:
+    """Row values per table, keyed by WP id. Foreign keys are still WP ids (industry_wp_id,
+    brand_wp_id); sync swaps them for primary keys. Built with no database."""
 
-    _sync(
-        Industry,
-        "wp_id",
-        {t.id: {"name": t.name, "slug": t.slug} for t in src.industries},
-        counts,
-    )
-    industry_pk = dict(Industry.objects.values_list("wp_id", "pk"))
+    industries: dict = field(default_factory=dict)
+    brands: dict = field(default_factory=dict)
+    reviewers: dict = field(default_factory=dict)
+    reviews: dict = field(default_factory=dict)
+    skipped: Counter = field(default_factory=Counter)  # table name -> rows skipped
 
-    brand_rows = {}
+
+def map_source(src: WPSource) -> Mapped:
+    """Pure step: what WP rows become, which are skipped. No database."""
+    out = Mapped()
+    out.industries = {t.id: {"name": t.name, "slug": t.slug} for t in src.industries}
+
     for post in src.brands:
         if post.status != PUBLISHED:
-            counts["brands"]["skipped"] += 1
+            out.skipped["brands"] += 1
             continue
-        industry_ids = [industry_pk[t] for t in post.term_ids if t in industry_pk]
-        brand_rows[post.id] = {
+        # One industry per brand: WP allows several terms, the lowest term id wins.
+        industry = next((t for t in post.term_ids if t in out.industries), None)
+        out.brands[post.id] = {
             "name": post.title,
             "slug": post.slug,
             "description": post.content,
             "excerpt": post.excerpt,
-            # One industry per brand: WP allows several terms, the lowest term id wins.
-            "industry_id": industry_ids[0] if industry_ids else None,
+            "industry_wp_id": industry,
             "website_url": post.meta.get("website_url", ""),
             "founded_year": _int(post.meta.get("founded_year")),
             "headquarters": post.meta.get("headquarters", ""),
@@ -205,23 +209,20 @@ def import_source(src: WPSource) -> dict[str, Counter]:
             "published_at": _aware(post.date),
             "modified_at": _aware(post.modified),
         }
-    _sync(Brand, "wp_id", brand_rows, counts)
-    brand_pk = dict(Brand.objects.values_list("wp_id", "pk"))
 
     users = {u.id: u for u in src.users}
-    reviewer_rows, review_rows = {}, {}
     for post in src.reviews:
-        brand_id = brand_pk.get(_int(post.meta.get("brand")))
+        brand_wp_id = _int(post.meta.get("brand"))
         rating = _int(post.meta.get("rating"))
-        if post.status != PUBLISHED or brand_id is None or rating not in range(1, 6):
-            counts["reviews"]["skipped"] += 1
+        if post.status != PUBLISHED or brand_wp_id not in out.brands or rating not in range(1, 6):
+            out.skipped["reviews"] += 1
             continue
         reviewer_id = None
         if post.author in users:
             reviewer_id = wp_user_uuid(post.author)
-            reviewer_rows[reviewer_id] = {"display_name": users[post.author].display_name}
-        review_rows[post.id] = {
-            "brand_id": brand_id,
+            out.reviewers[reviewer_id] = {"display_name": users[post.author].display_name}
+        out.reviews[post.id] = {
+            "brand_wp_id": brand_wp_id,
             "reviewer_id": reviewer_id,
             "title": post.title,
             "slug": post.slug,
@@ -231,6 +232,34 @@ def import_source(src: WPSource) -> dict[str, Counter]:
             "published_at": _aware(post.date),
             "modified_at": _aware(post.modified),
         }
-    _sync(Reviewer, "id", reviewer_rows, counts)
-    _sync(Review, "wp_id", review_rows, counts)
+    return out
+
+
+def _with_pk(rows: dict, wp_key: str, pk_key: str, pks: dict) -> dict:
+    """Replace a WP-id reference in each row with the referenced row's primary key."""
+    return {
+        k: {**{n: v for n, v in row.items() if n != wp_key}, pk_key: pks.get(row[wp_key])}
+        for k, row in rows.items()
+    }
+
+
+@transaction.atomic
+def import_source(src: WPSource) -> dict[str, Counter]:
+    """Sync step: write the mapped rows to Postgres and mirror the import set."""
+    mapped = map_source(src)
+    counts = {name: Counter() for name in TABLES.values()}
+    for name, n in mapped.skipped.items():
+        counts[name]["skipped"] += n
+
+    _sync(Industry, "wp_id", mapped.industries, counts)
+    industry_pk = dict(Industry.objects.values_list("wp_id", "pk"))
+    _sync(
+        Brand,
+        "wp_id",
+        _with_pk(mapped.brands, "industry_wp_id", "industry_id", industry_pk),
+        counts,
+    )
+    brand_pk = dict(Brand.objects.values_list("wp_id", "pk"))
+    _sync(Reviewer, "id", mapped.reviewers, counts)
+    _sync(Review, "wp_id", _with_pk(mapped.reviews, "brand_wp_id", "brand_id", brand_pk), counts)
     return counts
