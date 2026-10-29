@@ -1,5 +1,5 @@
 """Service contracts (R30): the brands API schema in docs/contracts/ against the real responses,
-the frontend fixture, and the constants api.py and frontend/src/url.js each define."""
+the frontend fixture, and the constants api.py and frontend/src/lib/constants.js each define."""
 
 import json
 import re
@@ -15,7 +15,7 @@ from .test_edit import JWK, EditTestCase, jwks_response, token
 
 ROOT = Path(settings.BASE_DIR).parent  # /srv in the container, not run on a host
 SPEC = json.loads((ROOT / "docs" / "contracts" / "app" / "brands-api.openapi.json").read_text())
-URL_JS = (ROOT / "frontend" / "src" / "url.js").read_text()
+URL_JS = (ROOT / "frontend" / "src" / "lib" / "constants.js").read_text()
 FIXTURE = json.loads((ROOT / "frontend" / "src" / "fixtures" / "brands-page.json").read_text())
 
 
@@ -104,7 +104,7 @@ class FrontendContractTests(EditTestCase):
         errors = [e.message for e in validator("BrandPage").iter_errors(FIXTURE)]
         self.assertEqual(errors, [])
 
-    def test_url_js_constants_agree_with_api(self):
+    def test_frontend_constants_agree_with_api(self):
         page_size = int(re.search(r"PAGE_SIZE = (\d+);", URL_JS).group(1))
         default = re.search(r'DEFAULT_ORDERING = "([^"]+)"', URL_JS).group(1)
         offered = set(re.findall(r'\{ value: "([^"]+)"', URL_JS))

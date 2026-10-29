@@ -89,7 +89,15 @@ Its own Django project, container and Postgres. `import_wp_users` creates one us
 
 ### React component and SCSS
 
-`frontend/src/BrandList.jsx` is mounted on `/brands/` by `main.jsx`; Django passes the industry options through `json_script`.
+`frontend/src/main.jsx` mounts `<BrandList />` on `/brands/`; Django passes the industry options through `json_script`. The source is split by job:
+
+| Folder | What is in it |
+|---|---|
+| `components/` | `BrandList` (wires the pieces), `BrandFilters`, `BrandResults`, `BrandCard`, `SkeletonCard`, `Stars`, `Pagination` |
+| `hooks/` | `useUrlState` (list state in the URL, history and popstate), `useBrandsQuery` (fetch, cache, stale-response guard, retry) |
+| `lib/` | Pure modules with no React: `constants`, `query-string`, `pagination`, `response-cache` |
+
+Each has its own test next to it; `npm test` runs them all (`make fe-test`).
 
 ```bash
 make fe-build   # npm ci + sass + vite build -> frontend/dist/css/main.css, frontend/dist/js/brand-list.js
