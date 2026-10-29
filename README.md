@@ -46,7 +46,7 @@ The WordPress database is seeded from `db/dump.sql` on first boot, and both impo
 ├── Makefile              # every command: up, import, token, lint, tests, layout-check
 ├── README.md             # this file
 ├── CHALLENGE.md          # the original challenge brief
-├── ai-usage.md           # how AI was used on this submission
+├── ai-workflow.md        # how AI was used on this submission
 ├── questions.md          # live-defense questions with my answers
 ├── SPEC.md               # scope, constraints and decisions (managed by mkit)
 ├── CLAUDE.md             # instructions for Claude Code in this repo
@@ -183,6 +183,17 @@ make import-users   # wp_users -> auth users
 make lint   # ruff check + format --check, biome check, stylelint (all via Docker)
 make fmt    # apply the fixes
 ```
+
+## Working on this project: mkit and mbuild
+
+This repo is built and maintained with two Claude Code plugins, **mkit** and **mbuild**, both in [github.com/michaelwayman/mkit](https://github.com/michaelwayman/mkit) (mbuild lives in its `mbuild/` folder). I developed them alongside this project, specifically for it, and they are required to work on it the way it is set up: `SPEC.md` is the source of truth and is changed only through them, never by hand. `CLAUDE.md` tells the agent the same. The app itself runs with Docker alone; the plugins are only for changing the code.
+
+| Plugin | What it does here |
+|---|---|
+| **mkit** | Owns the spec. `/mkit:frame` produced `SPEC.md` (requirements R, constraints C, out-of-scope O, decisions); `mkit show R3` reads one item, `mkit brief R3` gives the builder only what that requirement needs, `mkit add` logs bugs and ideas to `.mkit/inbox.md`, `/mkit:change` alters scope. |
+| **mbuild** | Builds from the spec one slice at a time (`/mbuild:build`, plan in `.mbuild/plan.md`), checks every acceptance bullet before `mkit done`, and `/mbuild:review` checks the result against the spec. Verification records are in `.mbuild/auto/`. |
+
+To change something: log it with `mkit add "..." --bug|--feature|--adjust`, or run `/mkit:change` when it touches scope, then `/mbuild:build`. How this went in practice is in [ai-workflow.md](ai-workflow.md).
 
 ## Decisions I'd defend live
 
