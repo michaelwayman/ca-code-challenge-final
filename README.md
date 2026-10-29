@@ -42,22 +42,22 @@ The WordPress database is seeded from `db/dump.sql` on first boot, and both impo
 │       └── app/          # brands API schema
 ├── scripts/              # seed, token, patch and check scripts
 ├── db/                   # WordPress dump that seeds MariaDB
-├── docker-compose.yml
-├── Makefile
-├── README.md
-├── CHALLENGE.md
-├── HOW_I_USED_AI.md
-├── questions.md
-├── SPEC.md
-├── CLAUDE.md
-├── .claude/
-├── .mbuild/
-├── .mkit/
-├── .env.example
+├── docker-compose.yml    # the whole stack: WordPress + MariaDB, auth, app, and a Postgres each
+├── Makefile              # every command: up, import, token, lint, tests, layout-check
+├── README.md             # this file
+├── CHALLENGE.md          # the original challenge brief
+├── HOW_I_USED_AI.md      # how AI was used on this submission
+├── questions.md          # live-defense questions with my answers
+├── SPEC.md               # scope, constraints and decisions (managed by mkit)
+├── CLAUDE.md             # instructions for Claude Code in this repo
+├── .claude/              # project skills (README generation)
+├── .mbuild/              # build plan and per-slice verification records
+├── .mkit/                # mkit working state: brief, inbox, index
+├── .env.example          # copy to .env before make up
 ├── .gitignore
-├── .stylelintrc.json
-├── biome.json
-└── ruff.toml
+├── .stylelintrc.json     # SCSS lint config
+├── biome.json            # JS/React lint and format config
+└── ruff.toml             # Python lint and format config
 ```
 
 `make layout-check` fails when the top-level entries, `services/*`, `docs/*` or `docs/contracts/*` differ from this tree.
