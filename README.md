@@ -46,7 +46,7 @@ The WordPress database is seeded from `db/dump.sql` on first boot, and both impo
 ├── Makefile              # every command: up, import, token, lint, tests, layout-check
 ├── README.md             # this file
 ├── CHALLENGE.md          # the original challenge brief
-├── HOW_I_USED_AI.md      # how AI was used on this submission
+├── ai-usage.md           # how AI was used on this submission
 ├── questions.md          # live-defense questions with my answers
 ├── SPEC.md               # scope, constraints and decisions (managed by mkit)
 ├── CLAUDE.md             # instructions for Claude Code in this repo
