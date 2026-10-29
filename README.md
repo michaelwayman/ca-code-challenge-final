@@ -32,11 +32,11 @@ The WordPress database is seeded from `db/dump.sql` on first boot, and both impo
 │   ├── wordpress/        # source site: wp-content (theme, mu-plugins, plugins, uploads)
 │   ├── auth/             # auth service (Django): users, roles, tokens, JWKS
 │   └── app/              # main app (Django): catalog, pages, /api/brands/
-├── frontend/             # React BrandList, SCSS tree, Vite build
+├── frontend/             # React BrandList + SCSS, built with Node/Vite; the app mounts frontend/dist
 ├── libs/
 │   └── cauth/            # the shared token library
 ├── docs/
-│   ├── research/         # WordPress theme CSS the SCSS tree recreates
+│   ├── research/         # reference input: the WP theme CSS the SCSS tree recreates
 │   └── contracts/
 │       ├── auth/         # token claims schema
 │       └── app/          # brands API schema
