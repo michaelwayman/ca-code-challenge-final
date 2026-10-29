@@ -16,7 +16,7 @@ class User(AbstractUser):
         max_length=16, choices=[(r.value, r.value) for r in Role], default=Role.READER
     )
 
-    def check_password(self, raw_password: str) -> bool:
+    def check_password(self, raw_password):
         # Imported WP hashes are stored verbatim (R10); verify, then rehash (R28).
         if not self.password.startswith(WP_HASH_PREFIXES):
             return super().check_password(raw_password)

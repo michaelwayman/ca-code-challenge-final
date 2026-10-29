@@ -9,9 +9,7 @@ token is older than ACCESS_TOKEN_TTL.
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import cast
 
-from cauth import JWK, JWKS
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from django.conf import settings
@@ -28,7 +26,7 @@ def _keys_dir() -> Path:
     return Path(settings.AUTH_KEYS_DIR)
 
 
-_loaded: tuple[tuple[object, ...], list[SigningKey]] | None = None
+_loaded: tuple[tuple, list[SigningKey]] | None = None
 
 
 def load_keys() -> list[SigningKey]:
@@ -41,10 +39,7 @@ def load_keys() -> list[SigningKey]:
         keys = [
             SigningKey(
                 kid=p.stem,
-                private_key=cast(
-                    rsa.RSAPrivateKey,
-                    serialization.load_pem_private_key(p.read_bytes(), password=None),
-                ),
+                private_key=serialization.load_pem_private_key(p.read_bytes(), password=None),
             )
             for p in paths
         ]
@@ -76,11 +71,9 @@ def add_key() -> str:
     return kid
 
 
-def jwks() -> JWKS:
-    keys: list[JWK] = []
+def jwks() -> dict:
+    keys = []
     for key in load_keys():
         jwk = RSAAlgorithm.to_jwk(key.private_key.public_key(), as_dict=True)
-        keys.append(
-            JWK(kty=jwk["kty"], n=jwk["n"], e=jwk["e"], kid=key.kid, alg="RS256", use="sig")
-        )
+        keys.append({**jwk, "kid": key.kid, "alg": "RS256", "use": "sig"})
     return {"keys": keys}

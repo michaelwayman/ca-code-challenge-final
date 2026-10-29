@@ -15,9 +15,6 @@ test = ["pytest>=8", "django>=5,<6"]
 [tool.setuptools.dynamic]
 version = { attr = "cauth.__version__" }  # the one place the version lives
 
-[tool.setuptools.package-data]
-cauth = ["py.typed"]  # PEP 561: services type-check against the library
-
 [tool.setuptools.packages.find]
 where = ["src"]
 

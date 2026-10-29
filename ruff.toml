@@ -4,9 +4,4 @@ extend-exclude = ["services/wordpress", "docs/research"]
 src = ["services/auth", "services/app"]  # service roots; cauth stays third-party (installed, pinned)
 
 [lint]
-select = ["E", "F", "I", "B", "UP", "ANN"]
-
-[lint.per-file-ignores]
-"**/test*.py" = ["ANN"]
-"**/tests/**" = ["ANN"]
-"**/migrations/**" = ["ANN"]
+select = ["E", "F", "I", "B", "UP"]

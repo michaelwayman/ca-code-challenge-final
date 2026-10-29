@@ -208,16 +208,6 @@ make lint   # ruff check + format --check, biome check, stylelint (all via Docke
 make fmt    # apply the fixes
 ```
 
-Ruff's `ANN` rules in `make lint` require parameter and return annotations on every function outside tests and migrations.
-
-## Type checking
-
-```bash
-make typecheck   # mypy --strict on libs/cauth, services/auth and services/app (Docker)
-```
-
-Runs in a `python:3.12-slim` container with `mypy`, `django-stubs` and `djangorestframework-stubs` pinned in `scripts/typecheck.sh`, the services' own requirements installed, and `cauth` installed from the library source so the services are checked against its shipped types (`py.typed`). Each project has its own config in `typecheck/` because the Django plugin needs one settings module per service. It exits 0 on a clean tree and non-zero on any type error. Tests and migrations are not checked.
-
 ## Decisions I'd defend live
 
 The eight questions from CHALLENGE.md, with my answers and where each one lives in the repo, are in [questions.md](questions.md).

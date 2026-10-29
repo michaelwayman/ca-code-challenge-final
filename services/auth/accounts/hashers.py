@@ -25,7 +25,6 @@ What it deliberately does not do
 import base64
 import hashlib
 import hmac
-from typing import Any
 
 import bcrypt
 from django.contrib.auth.hashers import BasePasswordHasher
@@ -43,7 +42,7 @@ def _encode64(data: bytes) -> str:
     chunk of 1 or 2 bytes yields 2 or 3 characters. The 16-byte MD5 digest gives 22 characters.
     Standard base64 differs in both byte order and alphabet, so it cannot be used here.
     """
-    out: list[str] = []
+    out = []
     for i in range(0, len(data), 3):
         chunk = data[i : i + 3]
         value = int.from_bytes(chunk, "little")
@@ -101,7 +100,7 @@ class WordPressPasswordHasher(BasePasswordHasher):
 
     algorithm = "wordpress"
 
-    def verify(self, password: str, encoded: str) -> bool:
+    def verify(self, password, encoded):
         """True if `password` matches the WP hash `encoded`; False for any other format."""
         raw = password.encode()
         if encoded.startswith("$wp$2y$"):
@@ -112,15 +111,15 @@ class WordPressPasswordHasher(BasePasswordHasher):
             return computed is not None and constant_time_compare(computed, encoded)
         return False
 
-    def encode(self, password: str, salt: str) -> str:
+    def encode(self, password, salt):
         raise NotImplementedError("WordPress hashes are verified on import, never created.")
 
-    def decode(self, encoded: str) -> dict[str, str | None]:
+    def decode(self, encoded):
         return {"algorithm": "wordpress", "hash": encoded, "salt": None}
 
-    def safe_summary(self, encoded: str) -> dict[Any, Any]:
+    def safe_summary(self, encoded):
         return {"algorithm": "wordpress", "hash": f"{encoded[:7]}…"}
 
-    def harden_runtime(self, password: str, encoded: str) -> None:
+    def harden_runtime(self, password, encoded):
         # Django calls this to equalise login timing for stale hashes; nothing to harden here.
         pass

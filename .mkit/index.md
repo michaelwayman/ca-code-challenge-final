@@ -50,7 +50,6 @@ R30 [P0 done] Service contracts
 R31 [P0 done] Library release discipline
 R32 [P0 done] Repository layout
 R33 [P1 done] Auth and brand-edit workflow script
-R34 [P1 done] Backend type annotations and checker
 O1 [active] WP admin and editor experience
 O2 [active] Yoast SEO frontend output
 O3 [active] Review submission and search
@@ -77,4 +76,3 @@ T8 [active] Django runserver
 T9 [active] Ruff
 T10 [active] Biome
 T11 [active] Stylelint
-T12 [active] mypy with django-stubs

@@ -2,14 +2,10 @@
 count, one for brands with their stats and industry, one for every brand's top review (R7).
 A single brand is public to read and editable by editors, short_description only (R8)."""
 
-from collections.abc import Sequence
-
 from cauth.drf import IsEditor
-from django.db.models import F, Func, OrderBy, Prefetch, QuerySet, Window
+from django.db.models import F, Prefetch, Window
 from django.db.models.functions import NullIf, RowNumber
 from rest_framework import generics, pagination, permissions
-from rest_framework.authentication import BaseAuthentication
-from rest_framework.request import Request
 from rest_framework.response import Response
 
 from config.auth import AuthServiceJWT
@@ -20,7 +16,7 @@ from .serializers import BrandEditSerializer, BrandListSerializer
 DEFAULT_ORDERING = "name"
 
 # ?ordering= value -> sort expression; a leading "-" reverses it.
-ORDERINGS: dict[str, F | Func] = {
+ORDERINGS = {
     "name": F("name"),
     "avg_rating": F("average_rating"),
     # NULL for zero reviews so nulls_last puts unreviewed brands last in both directions.
@@ -28,7 +24,7 @@ ORDERINGS: dict[str, F | Func] = {
 }
 
 
-def top_review_prefetch() -> "Prefetch[str, QuerySet[Review], str]":
+def top_review_prefetch():
     """Top review = highest rating, then newest (published_at, then wp_id as the last
     tie-break). One windowed query covers every brand on the page."""
     ranked = (
@@ -51,7 +47,7 @@ class BrandPagination(pagination.PageNumberPagination):
     max_page_size = 100
 
 
-def brands() -> QuerySet[Brand]:
+def brands():
     return (
         Brand.objects.with_stats()
         .select_related("industry")
@@ -59,19 +55,19 @@ def brands() -> QuerySet[Brand]:
     )
 
 
-class BrandList(generics.ListAPIView[Brand]):
+class BrandList(generics.ListAPIView):
     """GET /api/brands/?industry=<slug>&industry=...&ordering=-avg_rating&page=2&page_size=10"""
 
     serializer_class = BrandListSerializer
     pagination_class = BrandPagination
 
-    def list(self, request: Request, *args: object, **kwargs: object) -> Response:
+    def list(self, request, *args, **kwargs):
         # The listing is public and read-only: let browsers reuse repeat filter/sort/page URLs.
         response = super().list(request, *args, **kwargs)
         response["Cache-Control"] = "public, max-age=30, stale-while-revalidate=120"
         return response
 
-    def get_queryset(self) -> QuerySet[Brand]:
+    def get_queryset(self):
         qs = brands()
         # Blank values (a cleared filter form sends ?industry=) mean "no filter".
         industries = [s for s in self.request.query_params.getlist("industry") if s]
@@ -79,7 +75,7 @@ class BrandList(generics.ListAPIView[Brand]):
             qs = qs.filter(industry__slug__in=industries)
         return qs.order_by(*self.ordering())
 
-    def ordering(self) -> Sequence[OrderBy | str]:
+    def ordering(self):
         """Unknown values fall back to name. Brands without reviews sort last either way;
         name and id break ties so pages never overlap."""
         value = self.request.query_params.get("ordering", DEFAULT_ORDERING)
@@ -91,27 +87,27 @@ class BrandList(generics.ListAPIView[Brand]):
         return [first, "name", "id"]
 
 
-class BrandDetail(generics.RetrieveUpdateAPIView[Brand]):
+class BrandDetail(generics.RetrieveUpdateAPIView):
     """GET /api/brands/<slug>/ is public; PATCH needs an editor token. No PUT."""
 
     serializer_class = BrandListSerializer
     lookup_field = "slug"
     http_method_names = ["get", "patch", "head", "options"]
 
-    def reading(self) -> bool:
+    def reading(self):
         return self.request.method in permissions.SAFE_METHODS
 
-    def get_authenticators(self) -> list[BaseAuthentication]:
+    def get_authenticators(self):
         # Reads never look at the token, so they work with a stale one or with auth down (R9).
         return [] if self.reading() else [AuthServiceJWT()]
 
-    def get_permissions(self) -> list[permissions.BasePermission]:
+    def get_permissions(self):
         return [permissions.AllowAny()] if self.reading() else [IsEditor()]
 
-    def get_queryset(self) -> QuerySet[Brand]:
+    def get_queryset(self):
         return brands()
 
-    def partial_update(self, request: Request, *args: object, **kwargs: object) -> Response:
+    def partial_update(self, request, *args, **kwargs):
         # One load serves the edit and the response: save() updates the instance in place.
         brand = self.get_object()
         edit = BrandEditSerializer(brand, data=request.data)

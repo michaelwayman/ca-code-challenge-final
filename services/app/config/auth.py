@@ -9,13 +9,11 @@ import logging
 import threading
 import time
 import urllib.request
-from typing import TypeGuard
 
-from cauth import JWKS, Claims, UnknownKid
-from cauth.drf import JWTAuthentication, TokenUser
+from cauth import UnknownKid
+from cauth.drf import JWTAuthentication
 from django.conf import settings
 from rest_framework import exceptions
-from rest_framework.request import Request
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +24,7 @@ class KeysUnavailable(exceptions.APIException):
     default_code = "keys_unavailable"
 
 
-def is_jwks(data: object) -> TypeGuard[JWKS]:
+def is_jwks(data):
     """A malformed key set is treated like a failed fetch, so it can never reach the
     verifier and turn every write into a 500."""
     keys = data.get("keys") if isinstance(data, dict) else None
@@ -39,17 +37,17 @@ class JWKSCache:
     timeout per window rather than one per request. Refetches for an unknown kid share that
     window, so a flood of forged kids cannot hammer the auth service."""
 
-    def __init__(self, url: str, max_age: float, retry_after: float, timeout: float) -> None:
+    def __init__(self, url, max_age, retry_after, timeout):
         self.url = url
         self.max_age = max_age
         self.retry_after = retry_after
         self.timeout = timeout
         self._lock = threading.Lock()
-        self._jwks: JWKS | None = None
+        self._jwks = None
         self._expires_at = 0.0
         self._next_attempt = 0.0
 
-    def get(self) -> JWKS:
+    def get(self):
         with self._lock:
             now = time.monotonic()
             if now >= self._expires_at and now >= self._next_attempt:
@@ -58,7 +56,7 @@ class JWKSCache:
                 raise KeysUnavailable()
             return self._jwks
 
-    def refresh(self) -> bool:
+    def refresh(self):
         """Refetch now (an unknown kid may mean the auth service rotated keys).
         Returns True only when a new key set was fetched."""
         with self._lock:
@@ -68,12 +66,12 @@ class JWKSCache:
             self._next_attempt = now + self.retry_after
             return self._fetch(now)
 
-    def clear(self) -> None:
+    def clear(self):
         with self._lock:
             self._jwks = None
             self._expires_at = self._next_attempt = 0.0
 
-    def _fetch(self, now: float) -> bool:
+    def _fetch(self, now):
         try:
             with urllib.request.urlopen(self.url, timeout=self.timeout) as response:
                 jwks = json.load(response)
@@ -98,10 +96,10 @@ jwks_cache = JWKSCache(
 
 
 class AuthServiceJWT(JWTAuthentication):
-    def get_jwks(self) -> JWKS:
+    def get_jwks(self):
         return jwks_cache.get()
 
-    def authenticate(self, request: Request) -> tuple[TokenUser, Claims] | None:
+    def authenticate(self, request):
         try:
             return super().authenticate(request)
         except exceptions.AuthenticationFailed as exc:
