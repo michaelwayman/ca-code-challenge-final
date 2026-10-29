@@ -17,23 +17,31 @@ Build only what is listed. Out-of-scope items are decisions, not gaps. Anything 
 - S5 Dev tooling: Makefile lint and fmt targets, Ruff, Biome and Stylelint configs
 
 ## Build
-- **R21** [P0] (S4) SCSS source tree compiling to equivalent CSS
-  - `sass frontend/scss/main.scss` succeeds with no warnings
-  - every selector group in reference/theme.css (.site-header, .hero, .card, .grid, .badge, .stars, .pagination, .review-item and the rest) has a home partial
-  - the 37 var(--) tokens are defined once in abstracts
-  - README gives the compile command and states where to add a new component partial
-  - font sizes and spacing come from shared tokens
-  - the class naming convention (flat component names, descendant selectors scoped under the component root) is documented in frontend/scss
-- **R22** [P0] (S4) BrandList fetches and renders brands
-  - component renders a card per row from GET /api/brands/ showing name, slug link to /brand/<slug>/, industry, rating, review count, short description and top review snippet
-  - pagination uses page and page_size and is a numbered list with Previous/Next: first and last page always shown, the current page and one neighbour each side, and an ellipsis for gaps (e.g. 1 … 7 [8] 9 … 18
-  - near either end it shows 5 consecutive pages so there is never a lone gap)
-  - each number is a button or link, the current one has aria-current=page, and Previous/Next are disabled at the ends
-  - Visual: at 375px the neighbours and the Previous/Next text are dropped (e.g. ‹ 1 … [8] … 18 ›) so it fits one row
-  - Visual: 1 column at 375px, 3 columns at 1280px
-  - cards use theme classes
-  - at 900px and below the grid shows two columns
-  - the breakpoint is a shared token
+- **R27** [P0] (S1) README covering run, token, migration and decisions
+  - README has sections to run the main app, auth service and React component
+  - README shows getting a token and calling PATCH with plain curl and points to make auth-flow
+  - run the library tests and how a new version reaches each service
+  - run and safely re-run the migration
+  - modeling decisions, what to do differently, and where AI defaults were kept
+  - following it on a clean clone with docker compose up works
+  - README states the project is dev-grade and lists what production would need
+  - README notes WP password hashes are carried over and upgraded to Django's default on first login
+  - README documents make lint and make fmt
+- **R31** [P0] (S3) Library release discipline
+  - the version lives in one place (pyproject.toml and __version__ cannot drift)
+  - both services install the pinned built wheel of that version rather than an unversioned local path
+  - README states the bump-and-pin release steps
+- **R32** [P0] (S5) Repository layout
+  - README has a "Repository layout" tree covering services/{wordpress,auth,app}, frontend/, libs/, docs/{research,contracts/<service>}, scripts/ and db/
+  - compose, Makefile, Dockerfiles and tests work after the move to services/ (make up, make lint and all test suites pass)
+- **R33** [P1] (S5) Auth and brand-edit workflow script
+  - make auth-flow runs scripts/auth-flow.sh with curl against the compose stack and prints numbered human-readable steps (Step 1, Step 2, ...) saying what is being tried and what came back
+  - happy path: editor login returns a token, PATCH /api/brands/<slug>/ with it returns 200 and the new short_description, public GET shows the same value
+  - failure cases: no token returns 401, wrong password returns 401, garbage token returns 401, reader token returns 403, unknown slug returns 404, extra key returns 400, description over 1000 characters returns 400, PUT returns 405
+  - with auth stopped, GET /api/brands/ returns 200 and a still-valid token still PATCHes, and after make app-restart a PATCH returns 503
+  - each outcome is asserted and the script exits non-zero on the first mismatch
+  - auth is started again at the end even on failure
+  - replaces make token and make patch-brand
 
 ## Do NOT build
 - O1 WP admin and editor experience
@@ -62,3 +70,4 @@ Build only what is listed. Out-of-scope items are decisions, not gaps. Anything 
 - A6 Token verification without iss/aud/alg pinning or refetch limits is acceptable for this scope
 - A7 R20 N and N-1 claims support is worth its cost in a small library
 - A8 MariaDB is reachable from the containers (compose service or host address) with Docker as the only prerequisite
+- A9 The host has curl for make auth-flow, alongside Docker

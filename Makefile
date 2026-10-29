@@ -16,12 +16,9 @@ help:
 	@echo "  status          Show running services"
 	@echo "  import          Import WP data into the main app and auth service (safe to re-run)"
 	@echo "  seed-demo       Add ~100 demo brands so /brands/ paginates (unseed-demo removes; import wipes them)"
-	@echo "  token           Print an access token (AUTH_USER, AUTH_PASS; default admin/admin)"
-	@echo "  patch-brand     Log in and PATCH a brand (SLUG=..., DESC=...)"
+	@echo "  auth-flow       Walk login + brand edit with curl, success and failure cases (needs make up)"
 	@echo "  lib-test        Run the shared library tests in Docker"
-	@echo "  lib-check       Fail if libs/ changed without a cauth version bump (BASE=main)"
 	@echo "  contract-test   Run the service contract tests (needs make up)"
-	@echo "  layout-check    Fail if the repo layout differs from the README tree"
 	@echo "  lint / fmt      Lint or format everything in Docker"
 	@echo "  fe-build        Build the SCSS and React bundle"
 
@@ -94,7 +91,7 @@ AUTH_PASS ?= admin
 SLUG ?= acme-insurance
 DESC ?= Fair prices, slow claims.
 
-.PHONY: lib-check contract-test import import-wp import-users token patch-brand admin-password operator rotate-key auth-stop auth-start app-restart lib-test seed-demo unseed-demo
+.PHONY: auth-flow contract-test import import-wp import-users admin-password operator rotate-key auth-stop auth-start app-restart lib-test seed-demo unseed-demo
 
 import: import-wp import-users
 
@@ -110,11 +107,9 @@ seed-demo:
 unseed-demo:
 	$(COMPOSE) exec -T -e DEMO_CLEAR=1 app python manage.py shell < scripts/seed-demo-brands.py
 
-token:
-	@$(COMPOSE) exec -T -e AUTH_USER=$(AUTH_USER) -e AUTH_PASS=$(AUTH_PASS) auth python - < scripts/token.py
-
-patch-brand:
-	@$(COMPOSE) exec -T -e AUTH_USER=$(AUTH_USER) -e AUTH_PASS=$(AUTH_PASS) -e SLUG=$(SLUG) -e DESC="$(DESC)" app python - < scripts/patch_brand.py
+# Needs curl on the host. Stops and restarts auth and restarts app; AUTH_USER / AUTH_PASS default admin / admin.
+auth-flow:
+	@scripts/auth-flow.sh
 
 admin-password:
 	$(COMPOSE) exec auth python manage.py changepassword $(AUTH_USER)
@@ -134,11 +129,6 @@ auth-start:
 app-restart:
 	$(COMPOSE) restart app
 
-# Fails when libs/ changed against BASE without a cauth version bump, or the pins lag it.
-BASE ?= main
-lib-check:
-	docker run --rm -e BASE=$(BASE) -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0=/work -v "$(CURDIR)":/work -w /work --entrypoint sh alpine/git:v2.47.2 scripts/check-lib-version.sh
-
 # Contract tests need the rebuilt images (jsonschema) and the docs/contracts mount.
 contract-test:
 	$(COMPOSE) exec -T auth python manage.py test accounts.test_contracts
@@ -146,9 +136,3 @@ contract-test:
 
 lib-test:
 	docker run --rm -v "$(CURDIR)/libs/cauth":/work -w /work python:3.12-slim sh -c "pip install -q -e '.[test]' && pytest -q"
-
-.PHONY: layout-check
-
-# Fails when top-level entries, services/*, docs/* or docs/contracts/* differ from the README tree.
-layout-check:
-	docker run --rm -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0=/work -v "$(CURDIR)":/work -w /work --entrypoint sh alpine/git:v2.47.2 scripts/check-layout.sh

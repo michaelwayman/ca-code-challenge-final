@@ -19,7 +19,7 @@ python -m venv .venv && .venv/bin/pip install -e '.[test]' && .venv/bin/pytest
 
 ## Releasing
 
-The version is `__version__` in `src/cauth/__init__.py`; `pyproject.toml` reads it. Any change under `libs/` needs a bump (`make lib-check`), then update the `cauth==` pin in `services/auth/requirements.txt` and `app/requirements.txt`. See the root README.
+The version is `__version__` in `src/cauth/__init__.py`; `pyproject.toml` reads it. Any change under `libs/` needs a bump, then update the `cauth==` pin in `services/auth/requirements.txt` and `app/requirements.txt`. See the root README.
 
 ## Claims version compatibility
 

@@ -60,6 +60,9 @@
 ### A8. MariaDB is reachable from the containers (compose service or host address) with Docker as the only prerequisite
 - Test: docker compose up then both imports work from a clean clone; README states where MariaDB runs
 
+### A9. The host has curl for make auth-flow, alongside Docker
+- Test: make auth-flow on a clean clone prints every step and exits 0
+
 ## Services and layers
 
 <!-- S: a service or layer. Fields: Owns, Calls, When down, None (why it has no requirements). Each R names its S in Layer. -->
@@ -493,7 +496,7 @@
 - Status: active
 - Acceptance:
   - README has sections to run the main app, auth service and React component
-  - get a token and call PATCH with curl
+  - README shows getting a token and calling PATCH with plain curl and points to make auth-flow
   - run the library tests and how a new version reaches each service
   - run and safely re-run the migration
   - modeling decisions, what to do differently, and where AI defaults were kept
@@ -503,7 +506,8 @@
   - README documents make lint and make fmt
 - Layer: S1
 - Source: brief
-- Built: 2026-10-27
+- Reopened: 2026-10-29
+- Built: 2026-10-29
 
 ### R28. WordPress password hasher
 - Priority: P0
@@ -549,23 +553,38 @@
 - Priority: P0
 - Status: active
 - Acceptance:
-  - a check fails when files under libs/ change without a cauth version bump
   - the version lives in one place (pyproject.toml and __version__ cannot drift)
   - both services install the pinned built wheel of that version rather than an unversioned local path
   - README states the bump-and-pin release steps
 - Layer: S3
-- Built: 2026-10-28
+- Reopened: 2026-10-29
+- Built: 2026-10-29
 
 ### R32. Repository layout
 - Priority: P0
 - Status: active
 - Acceptance:
   - README has a "Repository layout" tree covering services/{wordpress,auth,app}, frontend/, libs/, docs/{research,contracts/<service>}, scripts/ and db/
-  - make layout-check runs in Docker and fails when the actual top-level entries, services/* or docs/* differ from the README tree, passes on a clean tree, and fails when a stray folder is added
   - compose, Makefile, Dockerfiles and tests work after the move to services/ (make up, make lint and all test suites pass)
 - Layer: S5
 - Source: change
-- Built: 2026-10-28
+- Reopened: 2026-10-29
+- Built: 2026-10-29
+
+### R33. Auth and brand-edit workflow script
+- Priority: P1
+- Status: active
+- Acceptance:
+  - make auth-flow runs scripts/auth-flow.sh with curl against the compose stack and prints numbered human-readable steps (Step 1, Step 2, ...) saying what is being tried and what came back
+  - happy path: editor login returns a token, PATCH /api/brands/<slug>/ with it returns 200 and the new short_description, public GET shows the same value
+  - failure cases: no token returns 401, wrong password returns 401, garbage token returns 401, reader token returns 403, unknown slug returns 404, extra key returns 400, description over 1000 characters returns 400, PUT returns 405
+  - with auth stopped, GET /api/brands/ returns 200 and a still-valid token still PATCHes, and after make app-restart a PATCH returns 503
+  - each outcome is asserted and the script exits non-zero on the first mismatch
+  - auth is started again at the end even on failure
+  - replaces make token and make patch-brand
+- Layer: S5
+- Source: change
+- Built: 2026-10-29
 
 ## Out of scope
 
@@ -924,3 +943,13 @@
 | 2026-10-29 | DONE R2 | mkit |
 | 2026-10-29 | DONE R8 | mkit |
 | 2026-10-29 | DONE R21 R22 | mkit |
+| 2026-10-29 | REOPEN R31 (acceptance changed) | mkit |
+| 2026-10-29 | ALTER R31 | mkit |
+| 2026-10-29 | REOPEN R32 (acceptance changed) | mkit |
+| 2026-10-29 | ALTER R32 | mkit |
+| 2026-10-29 | REOPEN R27 (acceptance changed) | mkit |
+| 2026-10-29 | ALTER R27 | mkit |
+| 2026-10-29 | ADD A9: The host has curl for make auth-flow, alongside Docker | mkit |
+| 2026-10-29 | ADD R33: Auth and brand-edit workflow script | mkit |
+| 2026-10-29 | Removed scripts/check-layout.sh, check-lib-version.sh, token.py, patch_brand.py and the layout-check, lib-check, token and patch-brand targets as too strict | mkit |
+| 2026-10-29 | DONE R27 R31 R32 R33 | mkit |

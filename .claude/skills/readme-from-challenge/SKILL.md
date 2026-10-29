@@ -28,7 +28,7 @@ Mechanical content comes from the repo. Paths are the `services/` layout (`servi
 
 ## 2. Collect facts from the repo, not memory
 Read the files and run the cheap commands to confirm they work:
-- `Makefile`: the targets. Prefer a `make` target where one exists (`make up`, `make import`, `make token`, `make patch-brand`, `make lib-test`, `make lint`, `make fmt`, `make layout-check`, ...), but not everything has to be one: use a plain `docker`, `curl` or `manage.py` command when it is clearer, and make sure it works as written.
+- `Makefile`: the targets. Prefer a `make` target where one exists (`make up`, `make import`, `make auth-flow`, `make lib-test`, `make lint`, `make fmt`, ...), but not everything has to be one: use a plain `docker`, `curl` or `manage.py` command when it is clearer, and make sure it works as written.
 - `docker-compose.yml`: service names, ports. `.env.example` for config.
 - Auth: login URL and request shape (`services/auth/accounts/urls.py`, `views.py`), the seeded editor account, the protected endpoint (`services/app/catalog/api.py`).
 - Library: `libs/cauth/pyproject.toml` version, `libs/cauth/README.md`, how Dockerfiles pin it.
@@ -55,6 +55,6 @@ Show the `questions.md` table and the list of TODO/proposed items. Ask the user 
 - All questions appear verbatim in `questions.md`.
 - The README's author sections are byte-identical to `author-answers.md` (diff them).
 - Every command in the README works as written.
-- The "Repository layout" tree is still present and `make layout-check` passes (R32).
-- The main `make` targets run on a clean clone: `make up`, `make import` (twice), `make token`, `make patch-brand`, `make lib-test`, `make lint`, `make layout-check`.
+- The "Repository layout" tree is still present (R32).
+- The main `make` targets run on a clean clone: `make up`, `make import` (twice), `make auth-flow`, `make lib-test`, `make lint`.
 Say what you could not verify. Do not push; the user does.

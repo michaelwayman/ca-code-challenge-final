@@ -11,6 +11,7 @@ A5 [unvalidated] Refresh tokens have a bounded lifetime and a stolen one is tole
 A6 [unvalidated] Token verification without iss/aud/alg pinning or refetch limits is acceptable for this scope
 A7 [unvalidated] R20 N and N-1 claims support is worth its cost in a small library
 A8 [unvalidated] MariaDB is reachable from the containers (compose service or host address) with Docker as the only prerequisite
+A9 [unvalidated] The host has curl for make auth-flow, alongside Docker
 S1 [active] Main app (Django)
 S2 [active] Auth service (Django)
 S3 [active] Shared library (Python package)
@@ -48,6 +49,7 @@ R29 [P0 done] Lint and format via Docker
 R30 [P0 done] Service contracts
 R31 [P0 done] Library release discipline
 R32 [P0 done] Repository layout
+R33 [P1 done] Auth and brand-edit workflow script
 O1 [active] WP admin and editor experience
 O2 [active] Yoast SEO frontend output
 O3 [active] Review submission and search

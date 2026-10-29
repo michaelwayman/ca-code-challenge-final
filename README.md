@@ -55,10 +55,10 @@ The WordPress database is seeded from `db/dump.sql` on first boot, and both impo
 │   └── contracts/
 │       ├── auth/         # token claims schema
 │       └── app/          # brands API schema
-├── scripts/              # seed, token, patch and check scripts
+├── scripts/              # seed scripts and the auth-flow.sh walkthrough
 ├── db/                   # WordPress dump that seeds MariaDB
 ├── docker-compose.yml    # the whole stack: WordPress + MariaDB, auth, app, and a Postgres each
-├── Makefile              # every command: up, import, token, lint, tests, layout-check
+├── Makefile              # every command: up, import, auth-flow, lint, tests
 ├── README.md             # this file
 ├── CHALLENGE.md          # the original challenge brief
 ├── ai-workflow.md        # how AI was used on this submission
@@ -75,7 +75,6 @@ The WordPress database is seeded from `db/dump.sql` on first boot, and both impo
 └── ruff.toml             # Python lint and format config
 ```
 
-`make layout-check` fails when the top-level entries, `services/*`, `docs/*` or `docs/contracts/*` differ from this tree.
 
 ## Run the pieces
 
@@ -112,11 +111,13 @@ The SCSS tree under `frontend/scss/` is compiled with `sass frontend/scss/main.s
 `PATCH /api/brands/<slug>/` needs an editor's access token from the auth service. WordPress's `admin` user is an editor; on a fresh import its password is `admin`.
 
 ```bash
-make token                                        # prints an access token for admin / admin
-make patch-brand SLUG=acme-insurance DESC="Fair prices, slow claims."   # logs in, then PATCHes the brand
+TOKEN=$(curl -s -X POST localhost:8001/auth/login -H 'Content-Type: application/json' \
+  -d '{"username":"admin","password":"admin"}' | sed -E 's/.*"access_token": *"([^"]*)".*/\1/')
+curl -s -X PATCH localhost:8000/api/brands/acme-insurance/ -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{"short_description":"Fair prices, slow claims."}'
 ```
 
-`make token` and `make patch-brand` take `AUTH_USER` and `AUTH_PASS` (default `admin` / `admin`). Underneath they call `POST /auth/login` on the auth service and `PATCH /api/brands/<slug>/` on the main app with the bearer token.
+`make auth-flow` runs the whole workflow for you with `curl` (needs `curl` on the host and `make up` first). It prints `Step 1`, `Step 2`, and so on, with what it tries and what came back, and stops with a non-zero exit at the first outcome that is not the expected one. It covers the editor login and a successful PATCH, the public GET showing the edit, and every row in the table below, then the outage drill under "When the auth service is down". It briefly stops and restarts auth and restarts the app, always starts auth again, creates and removes a throwaway reader account, and puts the brand's description back. `AUTH_USER` and `AUTH_PASS` default to `admin` / `admin`.
 
 | Request | Response |
 |---|---|
@@ -143,7 +144,7 @@ The main app never calls the auth service per request. It verifies tokens locall
 - **Cold cache** (main app restarted while auth is down): there is nothing to verify against, so writes fail closed with **503** `Signing keys unavailable`.
 - A failed fetch is not retried for 30 seconds, and a token with an unknown `kid` triggers an immediate refetch, at most once per 30 seconds.
 
-Try it: `make auth-stop`, then `make patch-brand` fails at login (auth is down) but `/api/brands/` still returns 200; with a token you already hold, a `PATCH` still succeeds; after `make app-restart` the same `PATCH` returns 503; `make auth-start` restores it.
+Try it by hand: `make auth-stop`, then a new login fails but `/api/brands/` still returns 200; with a token you already hold, a `PATCH` still succeeds; after `make app-restart` the same `PATCH` returns 503; `make auth-start` restores it. `make auth-flow` does all of this and checks it.
 
 ## Brand listing API
 
@@ -170,7 +171,7 @@ make lib-test
 **Release steps (bump and pin).** The version lives in one place, `__version__` in `libs/cauth/src/cauth/__init__.py` (`pyproject.toml` reads it).
 1. Change the library and bump `__version__`.
 2. Change the exact pin (`cauth==X.Y.Z`) in `services/auth/requirements.txt` and `services/app/requirements.txt` to match.
-3. `make lib-test`, then `make lib-check` (fails if `libs/` changed against `main` without a bump, or a pin lags the version).
+3. `make lib-test`.
 4. `make up`. Each Dockerfile builds the wheel from `libs/cauth/` and installs only that wheel, with `--no-index`; the build fails if its version is not the pinned one, so a service can never run an unpinned local copy.
 
 Service contracts (token claims, brands API) live in `docs/contracts/<service>/` with an owner and a version each; `make contract-test` checks the code against them.
