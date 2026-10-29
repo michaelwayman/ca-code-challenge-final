@@ -28,7 +28,7 @@ Read the files and run the cheap commands to confirm they work:
 - `Makefile`: the targets. The README documents `make` commands only (`make up`, `make import`, `make token`, `make patch-brand`, `make lib-test`, `make lint`, `make fmt`, ...). If a step has no target, add one to the Makefile instead of putting a raw `docker`, `curl` or `manage.py` line in the README.
 - `docker-compose.yml`: service names, ports. `.env.example` for config.
 - Auth: login URL and request shape (`services/auth/accounts/urls.py`, `views.py`), the seeded editor account, the protected endpoint (`services/app/catalog/api.py`).
-- Library: `libs/pyproject.toml` version, `libs/README.md`, how Dockerfiles pin it.
+- Library: `libs/cauth/pyproject.toml` version, `libs/cauth/README.md`, how Dockerfiles pin it.
 - Migration: command names and flags (`services/app/catalog/management/commands/`, `services/auth/accounts/management/commands/`).
 Report any command that fails instead of documenting it. To prove the quick start, run it in a fresh `git clone` with fresh volumes (a different directory name gives a separate compose project), then `docker compose down -v` there.
 

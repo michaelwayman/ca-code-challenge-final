@@ -5,7 +5,7 @@
 set -eu
 
 BASE=${BASE:-main}
-INIT=libs/src/cauth/__init__.py
+INIT=libs/cauth/src/cauth/__init__.py
 version_of() { sed -n 's/^__version__ = "\(.*\)"/\1/p'; }
 
 current=$(version_of < "$INIT")

@@ -145,7 +145,7 @@ contract-test:
 	$(COMPOSE) exec -T app python manage.py test catalog.test_contracts
 
 lib-test:
-	docker run --rm -v "$(CURDIR)/libs":/work -w /work python:3.12-slim sh -c "pip install -q -e '.[test]' && pytest -q"
+	docker run --rm -v "$(CURDIR)/libs/cauth":/work -w /work python:3.12-slim sh -c "pip install -q -e '.[test]' && pytest -q"
 
 .PHONY: layout-check
 

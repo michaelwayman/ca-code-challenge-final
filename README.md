@@ -33,7 +33,8 @@ The WordPress database is seeded from `db/dump.sql` on first boot, and both impo
 │   ├── auth/             # auth service (Django): users, roles, tokens, JWKS
 │   └── app/              # main app (Django): catalog, pages, /api/brands/
 ├── frontend/             # React BrandList, SCSS tree, Vite build
-├── libs/                 # cauth, the shared token library
+├── libs/
+│   └── cauth/            # the shared token library
 ├── docs/
 │   ├── research/         # WordPress theme CSS the SCSS tree recreates
 │   └── contracts/
@@ -143,11 +144,11 @@ The response sends `Cache-Control: public, max-age=30, stale-while-revalidate=12
 make lib-test
 ```
 
-**Release steps (bump and pin).** The version lives in one place, `__version__` in `libs/src/cauth/__init__.py` (`pyproject.toml` reads it).
+**Release steps (bump and pin).** The version lives in one place, `__version__` in `libs/cauth/src/cauth/__init__.py` (`pyproject.toml` reads it).
 1. Change the library and bump `__version__`.
 2. Change the exact pin (`cauth==X.Y.Z`) in `services/auth/requirements.txt` and `services/app/requirements.txt` to match.
 3. `make lib-test`, then `make lib-check` (fails if `libs/` changed against `main` without a bump, or a pin lags the version).
-4. `make up`. Each Dockerfile builds the wheel from `libs/` and installs only that wheel, with `--no-index`; the build fails if its version is not the pinned one, so a service can never run an unpinned local copy.
+4. `make up`. Each Dockerfile builds the wheel from `libs/cauth/` and installs only that wheel, with `--no-index`; the build fails if its version is not the pinned one, so a service can never run an unpinned local copy.
 
 Service contracts (token claims, brands API) live in `docs/contracts/<service>/` with an owner and a version each; `make contract-test` checks the code against them.
 

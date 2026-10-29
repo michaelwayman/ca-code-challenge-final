@@ -1,8 +1,8 @@
 # Build context is the repo root so the shared library in libs/ is reachable.
 FROM python:3.12-slim AS wheels
 WORKDIR /build
-COPY libs/ ./libs/
-RUN pip wheel --no-deps --wheel-dir /wheels ./libs
+COPY libs/cauth/ ./cauth/
+RUN pip wheel --no-deps --wheel-dir /wheels ./cauth
 
 FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
