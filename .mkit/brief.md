@@ -17,31 +17,25 @@ Build only what is listed. Out-of-scope items are decisions, not gaps. Anything 
 - S5 Dev tooling: Makefile lint and fmt targets, Ruff, Biome and Stylelint configs
 
 ## Build
-- **R27** [P0] (S1) README covering run, token, migration and decisions
-  - README has sections to run the main app, auth service and React component
-  - README shows getting a token and calling PATCH with plain curl and points to make auth-flow
-  - run the library tests and how a new version reaches each service
-  - run and safely re-run the migration
-  - modeling decisions, what to do differently, and where AI defaults were kept
-  - following it on a clean clone with docker compose up works
-  - README states the project is dev-grade and lists what production would need
-  - README notes WP password hashes are carried over and upgraded to Django's default on first login
-  - README documents make lint and make fmt
-- **R31** [P0] (S3) Library release discipline
-  - the version lives in one place (pyproject.toml and __version__ cannot drift)
-  - both services install the pinned built wheel of that version rather than an unversioned local path
-  - README states the bump-and-pin release steps
-- **R32** [P0] (S5) Repository layout
-  - README has a "Repository layout" tree covering services/{wordpress,auth,app}, frontend/, libs/, docs/{research,contracts/<service>}, scripts/ and db/
-  - compose, Makefile, Dockerfiles and tests work after the move to services/ (make up, make lint and all test suites pass)
-- **R33** [P1] (S5) Auth and brand-edit workflow script
-  - make auth-flow runs scripts/auth-flow.sh with curl against the compose stack and prints numbered human-readable steps (Step 1, Step 2, ...) saying what is being tried and what came back
-  - happy path: editor login returns a token, PATCH /api/brands/<slug>/ with it returns 200 and the new short_description, public GET shows the same value
-  - failure cases: no token returns 401, wrong password returns 401, garbage token returns 401, reader token returns 403, unknown slug returns 404, extra key returns 400, description over 1000 characters returns 400, PUT returns 405
-  - with auth stopped, GET /api/brands/ returns 200 and a still-valid token still PATCHes, and after make app-restart a PATCH returns 503
-  - each outcome is asserted and the script exits non-zero on the first mismatch
-  - auth is started again at the end even on failure
-  - replaces make token and make patch-brand
+- **R6** [P0] (S1) Brand listing API with filter, sort, pagination
+  - GET /api/brands/ returns count/next/previous/results
+  - each row has name, slug, industry, average_rating, review_count, short_description, top_review snippet
+  - ?industry=<slug> (repeatable) filters
+  - ?ordering=-avg_rating, -review_count and name sort
+  - ?page= and ?page_size= paginate with a max page size
+  - unauthenticated call succeeds
+  - query count is constant per page (asserted in a test)
+  - page_size default 20, max 100
+  - ordering also accepts ascending avg_rating and review_count and -name
+  - unknown ordering falls back to name
+  - ties break on name then id
+  - row shapes: industry {name, slug} or null
+  - average_rating to one decimal
+  - short_description is excerpt else tag-stripped body, 22 words (the WordPress theme's wp_trim_words limit)
+  - top_review has title, slug, rating, reviewer, published_at and a 30-word snippet
+  - JSON renderer only
+  - reads need no authentication
+  - GET /api/brands/ sends Cache-Control: public, max-age=30, stale-while-revalidate=120 (covered by a test)
 
 ## Do NOT build
 - O1 WP admin and editor experience

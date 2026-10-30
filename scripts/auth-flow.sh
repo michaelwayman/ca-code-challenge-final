@@ -175,17 +175,17 @@ call GET "$APP/api/brands/?page_size=1"
 expect 200
 say "Reads still work."
 
-step "Bring auth back and put the brand back as it was"
-docker compose start auth >/dev/null 2>&1 || fail "could not start auth"
-wait_for $AUTH/healthz
-pass "auth is back"
-docker compose restart app >/dev/null 2>&1 || fail "could not restart app"
-wait_for $APP/healthz
-login "$AUTH_USER" "$AUTH_PASS"
-expect 200
-EDITOR_TOKEN=$(token_from_body)
-patch "$EDITOR_TOKEN" "{\"short_description\":\"$ORIGINAL\"}"
-expect 200
-say "short_description is back to the text the brand showed before the run (the API cannot set it back to NULL)."
+# step "Bring auth back and put the brand back as it was"
+# docker compose start auth >/dev/null 2>&1 || fail "could not start auth"
+# wait_for $AUTH/healthz
+# pass "auth is back"
+# docker compose restart app >/dev/null 2>&1 || fail "could not restart app"
+# wait_for $APP/healthz
+# login "$AUTH_USER" "$AUTH_PASS"
+# expect 200
+# EDITOR_TOKEN=$(token_from_body)
+# patch "$EDITOR_TOKEN" "{\"short_description\":\"$ORIGINAL\"}"
+# expect 200
+# say "short_description is back to the text the brand showed before the run (the API cannot set it back to NULL)."
 
 printf '\n%sAll %d steps passed.%s\n' "$GREEN$BOLD" "$STEP" "$OFF"

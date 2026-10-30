@@ -91,6 +91,16 @@ class BrandListTests(TestCase):
         zephyr = next(r for r in self.get()["results"] if r["slug"] == "zephyr-mobile")
         self.assertEqual(zephyr["short_description"], "Fast 5G")
 
+    def test_derived_short_description_is_cut_to_22_words_but_top_review_snippet_to_30(self):
+        words = " ".join(f"w{i}" for i in range(1, 41))
+        brand = make_brand("long-text", description=f"<p>{words}</p>")
+        make_review(brand, 4, body=f"<p>{words}</p>")
+        row = next(r for r in self.get()["results"] if r["slug"] == "long-text")
+        self.assertEqual(row["short_description"], " ".join(f"w{i}" for i in range(1, 23)) + "…")
+        self.assertEqual(
+            row["top_review"]["snippet"], " ".join(f"w{i}" for i in range(1, 31)) + "…"
+        )
+
     def test_snippets_decode_html_entities(self):
         brand = make_brand("fish-shop", description="<p>Fish &amp; chips &#8211; it&#8217;s</p>")
         make_review(brand, 4, body="<p>Tom &amp; Jerry&#8217;s at AT&T</p>")

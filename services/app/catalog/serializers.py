@@ -2,7 +2,7 @@
 
 from rest_framework import serializers
 
-from .text import snippet
+from .text import DESCRIPTION_WORDS, snippet
 
 
 class IndustrySerializer(serializers.Serializer):
@@ -38,7 +38,7 @@ class BrandListSerializer(serializers.Serializer):
         # An editor's value, blank included, is returned exactly as saved.
         if brand.short_description is not None:
             return brand.short_description
-        return snippet(brand.excerpt or brand.description)
+        return snippet(brand.excerpt or brand.description, DESCRIPTION_WORDS)
 
     def get_top_review(self, brand):
         top = brand.top_reviews[0] if brand.top_reviews else None

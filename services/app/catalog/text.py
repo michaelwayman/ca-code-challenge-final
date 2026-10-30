@@ -4,7 +4,8 @@ from html.parser import HTMLParser
 
 from django.utils.text import Truncator
 
-SNIPPET_WORDS = 30
+SNIPPET_WORDS = 30  # top-review snippet
+DESCRIPTION_WORDS = 22  # brand short description fallback; the WP theme's wp_trim_words limit
 
 
 class _TextExtractor(HTMLParser):
@@ -19,8 +20,8 @@ class _TextExtractor(HTMLParser):
         self.parts.append(data)
 
 
-def snippet(html):
+def snippet(html, words=SNIPPET_WORDS):
     parser = _TextExtractor()
     parser.feed(html)
     parser.close()
-    return Truncator("".join(parser.parts)).words(SNIPPET_WORDS)
+    return Truncator("".join(parser.parts)).words(words)

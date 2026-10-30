@@ -183,15 +183,15 @@
   - ties break on name then id
   - row shapes: industry {name, slug} or null
   - average_rating to one decimal
-  - short_description is excerpt else tag-stripped body, 30 words
+  - short_description is excerpt else tag-stripped body, 22 words (the WordPress theme's wp_trim_words limit)
   - top_review has title, slug, rating, reviewer, published_at and a 30-word snippet
   - JSON renderer only
   - reads need no authentication
   - GET /api/brands/ sends Cache-Control: public, max-age=30, stale-while-revalidate=120 (covered by a test)
 - Layer: S1
 - Source: brief
-- Reopened: 2026-10-27
-- Built: 2026-10-28
+- Reopened: 2026-10-30
+- Built: 2026-10-30
 
 ### R7. Top review rule documented
 - Priority: P1
@@ -953,3 +953,6 @@
 | 2026-10-29 | ADD R33: Auth and brand-edit workflow script | mkit |
 | 2026-10-29 | Removed scripts/check-layout.sh, check-lib-version.sh, token.py, patch_brand.py and the layout-check, lib-check, token and patch-brand targets as too strict | mkit |
 | 2026-10-29 | DONE R27 R31 R32 R33 | mkit |
+| 2026-10-30 | REOPEN R6 (acceptance changed) | mkit |
+| 2026-10-30 | ALTER R6 | mkit |
+| 2026-10-30 | DONE R6 | mkit |

@@ -148,7 +148,7 @@ Try it by hand: `make auth-stop`, then a new login fails but `/api/brands/` stil
 
 ## Brand listing API
 
-`GET /api/brands/` is public and returns `{count, next, previous, results}`. Each row has `name`, `slug`, `industry` (`{name, slug}` or null), `average_rating` (mean of review ratings to one decimal, null with no reviews), `review_count`, `short_description` and `top_review` (`title`, `slug`, `rating`, `reviewer`, `published_at`, 30-word `snippet`, or null).
+`GET /api/brands/` is public and returns `{count, next, previous, results}`. Each row has `name`, `slug`, `industry` (`{name, slug}` or null), `average_rating` (mean of review ratings to one decimal, null with no reviews), `review_count`, `short_description` (the editor's text, else the excerpt or body cut to 22 words like the WP theme) and `top_review` (`title`, `slug`, `rating`, `reviewer`, `published_at`, 30-word `snippet`, or null).
 
 | Parameter | Effect |
 |---|---|
