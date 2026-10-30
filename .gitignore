@@ -12,3 +12,7 @@ services/auth/keys/
 
 # Interviewer-only material — never shipped to candidates.
 interviewer/
+
+# Interview prep and Playwright screenshots; local only.
+study-sheet.md
+.playwright-mcp/
